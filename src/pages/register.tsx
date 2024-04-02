@@ -348,11 +348,6 @@ export default function Register() {
   if (displayState === DisplayState.PASSKEY) {
     return (
       <FormStepLayout
-        title="zkSummit11 x Cursive"
-        // description={new Date().toLocaleDateString("en-US", {
-        //   month: "long",
-        //   day: "numeric",
-        // })}
         description="Set up socials to share when others tap your badge, and register to encrypt data you collect from others."
         className="pt-4"
         onSubmit={handleSubmitWithPasskey}
@@ -416,10 +411,6 @@ export default function Register() {
     return (
       <FormStepLayout
         title="zkSummit11 x Cursive"
-        // description={new Date().toLocaleDateString("en-US", {
-        //   month: "long",
-        //   day: "numeric",
-        // })}
         description="Choose a master password to encrypt your data."
         className="pt-4"
         onSubmit={handleSubmitWithPassword}

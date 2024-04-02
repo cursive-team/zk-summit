@@ -17,7 +17,6 @@ import {
   getUsers,
 } from "@/lib/client/localStorage";
 import { JUB_SIGNAL_MESSAGE_TYPE } from "@/lib/client/jubSignal";
-import { PointCard } from "@/components/cards/PointCard";
 import { SnapshotModal } from "@/components/modals/SnapshotModal";
 import { Button } from "@/components/Button";
 import { formatDate } from "@/lib/shared/utils";
@@ -28,10 +27,6 @@ import { ArtworkSnapshot } from "@/components/artwork/ArtworkSnapshot";
 import useSettings from "@/hooks/useSettings";
 import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
-import { ClaveInfo, getUserClaveInfo } from "@/lib/client/clave";
-import { toast } from "sonner";
-import { Modal } from "@/components/modals/Modal";
-import QRCode from "react-qr-code";
 
 interface ContactCardProps {
   name: string;
@@ -125,7 +120,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                {"Connected with"} <u>{name}</u>
+                {"Tapped by "} <u>{name}</u>
               </>
             }
             icon={<CircleCard icon="person" />}
@@ -139,7 +134,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                <u>{name}</u> {"connected with you"}
+                {"You tapped "} <u>{name}</u>
               </>
             }
             icon={<CircleCard icon="person" />}
@@ -153,7 +148,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                {"Visited"} <u>{name}</u>
+                {"Attended talk "} <u>{name}</u>
               </>
             }
             icon={<CircleCard icon="location" />}
@@ -168,7 +163,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
             icon={<CircleCard icon="proof" />}
             title={
               <>
-                {"Completed "} <u>{name}</u>
+                {"Made a proof "} <u>{name}</u>
               </>
             }
             description={date}
@@ -197,12 +192,10 @@ export default function Social() {
   const { getState } = useStateMachine({ updateStateFromAction });
   const { pageWidth } = useSettings();
   const [showSnapshotModal, setShowSnapshotModal] = useState(false);
-  const [cashOutOpen, setCashOutOpen] = useState(false);
   const [profile, setProfile] = useState<Profile>();
   const [numConnections, setNumConnections] = useState<number>(0);
   const [tabsItems, setTabsItems] = useState<TabsProps["items"]>();
   const [isLoading, setLoading] = useState(false);
-  const [claveInfo, setClaveInfo] = useState<ClaveInfo>();
 
   const isMenuOpen = getState().isMenuOpen ?? false;
 
@@ -394,16 +387,10 @@ export default function Social() {
         return;
       }
 
-      // User is logged in, set profile and buidl balance
+      // User is logged in, set profile
       setProfile(profileData);
-      try {
-        const userClaveInfo = await getUserClaveInfo();
-        setClaveInfo(userClaveInfo);
-      } catch (error) {
-        console.error("Failed to get user clave info:", error);
-      }
 
-      // If page is reloaded, load messages and refresh clave info
+      // If page is reloaded, load messages
       const navigationEntries = window.performance.getEntriesByType(
         "navigation"
       ) as PerformanceNavigationTiming[];
@@ -442,29 +429,6 @@ export default function Social() {
   if (!profile || !tabsItems) return null;
   return (
     <>
-      <Modal isOpen={cashOutOpen} setIsOpen={setCashOutOpen} withBackButton>
-        <h2 className="text-center text-sm text-gray-12">
-          Scan this at BUIDL Store or the Clave booth to mint your quest BUIDL
-          to your Clave wallet.
-        </h2>
-        <QRCode
-          size={100}
-          className="ml-auto p-4 h-auto w-full max-w-full"
-          value={`${window.location.origin}/mint/${profile.signaturePublicKey}`}
-          viewBox={`0 0 100 100`}
-        />
-        {claveInfo?.buidlBalance !== undefined &&
-          claveInfo?.claveBalance !== undefined && (
-            <>
-              <h2 className="text-center text-sm text-gray-12">
-                Quest BUIDL: {claveInfo?.serverBalance}
-              </h2>
-              <h2 className="text-center text-sm text-gray-12">
-                Clave BUIDL: {claveInfo?.claveBalance}
-              </h2>
-            </>
-          )}
-      </Modal>
       <SnapshotModal
         isOpen={showSnapshotModal}
         setIsOpen={setShowSnapshotModal}
@@ -495,11 +459,6 @@ export default function Social() {
                 <h2 className="text-xl font-gray-12 font-light">
                   {profile?.displayName}
                 </h2>
-                {claveInfo?.buidlBalance ? (
-                  <PointCard point={claveInfo.buidlBalance} />
-                ) : (
-                  <PointCard point={0} />
-                )}
               </div>
               <span className="text-sm font-light text-gray-10">
                 {numConnections === 1
@@ -510,22 +469,6 @@ export default function Social() {
             <Link href="/leaderboard">
               <Button size="sm">View leaderboard</Button>
             </Link>
-            {claveInfo?.claveWalletAddress ? (
-              <Button onClick={() => setCashOutOpen(true)} size="sm">
-                Sync with Clave
-              </Button>
-            ) : claveInfo?.claveInviteLink ? (
-              <Button
-                onClick={() =>
-                  window.open(claveInfo?.claveInviteLink, "_blank")
-                }
-                size="sm"
-              >
-                Get Clave invite
-              </Button>
-            ) : (
-              <></>
-            )}
           </div>
         </div>
       </div>

@@ -3,15 +3,16 @@ import prisma from "@/lib/server/prisma";
 import { object, string, boolean } from "yup";
 import { EmptyResponse, ErrorResponse } from "@/types";
 import { verifyAuthToken } from "@/lib/server/auth";
-import { displayNameRegex } from "@/lib/shared/utils";
+import {
+  telegramUsernameRegex,
+  twitterUsernameRegex,
+} from "@/lib/shared/utils";
 
 const updateProfileSchema = object({
   authToken: string().required(),
-  displayName: string().optional(),
-  wantsServerCustody: boolean().optional(),
-  allowsAnalytics: boolean().optional(),
-  passwordSalt: string().optional(),
-  passwordHash: string().optional(),
+  twitterUsername: string().optional().default(undefined),
+  telegramUsername: string().optional().default(undefined),
+  bio: string().optional().default(undefined),
 });
 
 export default async function handler(
@@ -37,20 +38,28 @@ export default async function handler(
     return res.status(500).json({ error: "Internal Server Error" });
   }
 
-  const {
-    authToken,
-    displayName,
-    wantsServerCustody,
-    allowsAnalytics,
-    passwordSalt,
-    passwordHash,
-  } = validatedData;
+  const { authToken, twitterUsername, telegramUsername, bio } = validatedData;
 
-  if (!displayName || /^\s|\s$/.test(displayName) || displayName.length > 20) {
-    return res.status(400).json({
-      error:
-        "Display name cannot have leading or trailing whitespace and must be less than or equal to 20 characters",
-    });
+  if (
+    twitterUsername &&
+    twitterUsername !== "@" &&
+    !twitterUsernameRegex.test(twitterUsername)
+  ) {
+    return res.status(400).json({ error: "Invalid Twitter username" });
+  }
+
+  if (
+    telegramUsername &&
+    telegramUsername !== "@" &&
+    !telegramUsernameRegex.test(telegramUsername)
+  ) {
+    return res.status(400).json({ error: "Invalid Telegram username" });
+  }
+
+  if (bio && bio.length > 200) {
+    return res
+      .status(400)
+      .json({ error: "Bio must be less than or equal to 200 characters" });
   }
 
   // Update user
@@ -74,11 +83,9 @@ export default async function handler(
         id: userId,
       },
       data: {
-        displayName: displayName,
-        wantsServerCustody: wantsServerCustody,
-        allowsAnalytics: allowsAnalytics,
-        passwordSalt: passwordSalt,
-        passwordHash: passwordHash,
+        twitter: twitterUsername,
+        telegram: telegramUsername,
+        bio,
       },
     });
   } catch (error) {

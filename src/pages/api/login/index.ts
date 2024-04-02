@@ -1,12 +1,28 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/server/prisma";
 import { ErrorResponse } from "../../../types";
-import { generateAuthToken } from "@/lib/server/auth";
-import { LoginResponse } from "./verify_code";
+import { AuthTokenResponse, generateAuthToken } from "@/lib/server/auth";
+import { BackupResponse } from "../backup";
+
+export type LoginResponse =
+  | {
+      authToken: AuthTokenResponse;
+      backup: BackupResponse;
+      password:
+        | {
+            salt: string;
+            hash: string;
+          }
+        | undefined;
+      twitterUsername?: string;
+      telegramUsername?: string;
+      bio?: string;
+    }
+  | ErrorResponse;
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<LoginResponse | ErrorResponse>
+  res: NextApiResponse<LoginResponse>
 ) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
@@ -54,6 +70,9 @@ export default async function handler(
         salt: user.passwordSalt,
         hash: user.passwordHash,
       },
+      twitterUsername: user.twitter ? user.twitter : undefined,
+      telegramUsername: user.telegram ? user.telegram : undefined,
+      bio: user.bio ? user.bio : undefined,
     };
     return res.status(200).json(responseData);
   } catch (error) {

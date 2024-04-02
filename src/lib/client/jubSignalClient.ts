@@ -242,40 +242,55 @@ const processEncryptedMessages = async (args: {
         }
       case JUB_SIGNAL_MESSAGE_TYPE.OUTBOUND_TAP:
         try {
-          if (metadata.fromPublicKey !== recipientPublicKey) {
-            throw new Error(
-              "Invalid message: outbound tap messages must be sent from self"
+          // An outbound tap sent from self is just to update the note
+          if (metadata.fromPublicKey === recipientPublicKey) {
+            const { name, pk, note } = await outboundTapMessageSchema.validate(
+              data
             );
-          }
+            const userId = await hashPublicKeyToUUID(pk);
+            const user = users[userId];
+            if (user) {
+              user.note = note;
 
-          const { name, pk, note } = await outboundTapMessageSchema.validate(
-            data
-          );
-          const userId = await hashPublicKeyToUUID(pk);
-          const user = users[userId];
-          if (user) {
-            user.name = name;
-            user.encPk = pk;
-            user.note = note;
-            user.outTs = metadata.timestamp.toISOString();
-
-            users[userId] = user;
+              users[userId] = user;
+            } else {
+              users[userId] = {
+                name,
+                encPk: pk,
+                note,
+                outTs: metadata.timestamp.toISOString(),
+              };
+            }
           } else {
-            users[userId] = {
-              name,
-              encPk: pk,
-              note,
-              outTs: metadata.timestamp.toISOString(),
-            };
-          }
+            const { name, pk, note } = await outboundTapMessageSchema.validate(
+              data
+            );
+            const userId = await hashPublicKeyToUUID(pk);
+            const user = users[userId];
+            if (user) {
+              user.name = name;
+              user.encPk = pk;
+              user.note = note;
+              user.outTs = metadata.timestamp.toISOString();
 
-          const activity = {
-            type: JUB_SIGNAL_MESSAGE_TYPE.OUTBOUND_TAP,
-            name,
-            id: userId,
-            ts: metadata.timestamp.toISOString(),
-          };
-          activities.push(activity);
+              users[userId] = user;
+            } else {
+              users[userId] = {
+                name,
+                encPk: pk,
+                note,
+                outTs: metadata.timestamp.toISOString(),
+              };
+            }
+
+            const activity = {
+              type: JUB_SIGNAL_MESSAGE_TYPE.OUTBOUND_TAP,
+              name,
+              id: userId,
+              ts: metadata.timestamp.toISOString(),
+            };
+            activities.push(activity);
+          }
         } catch (error) {
           console.error(
             "Invalid outbound tap message received from server: ",

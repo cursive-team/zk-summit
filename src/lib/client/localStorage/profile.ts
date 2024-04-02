@@ -21,10 +21,10 @@ export const profileSchema = object({
   displayName: string().required(),
   encryptionPublicKey: string().required(),
   signaturePublicKey: string().required(),
-  twitterUsername: string().optional(),
-  telegramUsername: string().optional(),
-  farcasterUsername: string().optional(),
-  bio: string().optional(),
+  twitterUsername: string().optional().default(undefined),
+  telegramUsername: string().optional().default(undefined),
+  farcasterUsername: string().optional().default(undefined),
+  bio: string().optional().default(undefined),
 });
 
 export const saveProfile = (profile: Profile): void => {

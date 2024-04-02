@@ -19,6 +19,9 @@ export type LoginResponse =
             hash: string;
           }
         | undefined;
+      twitter?: string;
+      telegram?: string;
+      bio?: string;
     }
   | ErrorResponse;
 

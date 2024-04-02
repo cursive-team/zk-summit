@@ -13,14 +13,21 @@ import {
   getProfile,
   updateUserFromTap,
   getLocationSignature,
+  getUsers,
+  fetchUserByUUID,
 } from "@/lib/client/localStorage";
-import { encryptLocationTapMessage } from "@/lib/client/jubSignal";
+import {
+  encryptInboundTapMessage,
+  encryptLocationTapMessage,
+  encryptOutboundTapMessage,
+} from "@/lib/client/jubSignal";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { toast } from "sonner";
 import { Spinner } from "@/components/Spinner";
 import { getHaLoArgs } from "@/lib/client/libhalo";
 import { sigCardTapResponseSchema } from "./api/tap/sig_card";
 import { fixBJJSig } from "@/lib/shared/libhalo";
+import { hashPublicKeyToUUID } from "@/lib/client/utils";
 
 export default function Tap() {
   const router = useRouter();
@@ -30,10 +37,75 @@ export default function Tap() {
     useState<LocationTapResponse>();
 
   // Save the newly tapped person to local storage and redirect to their profile
+  // Send jubSignal message to self and other user
   const processPersonTap = useCallback(
     async (person: PersonTapResponse) => {
-      const userId = await updateUserFromTap(person);
-      router.push("/users/" + userId + "/share");
+      const userId = await hashPublicKeyToUUID(person.encryptionPublicKey);
+
+      const authToken = getAuthToken();
+      const profile = getProfile();
+      const keys = getKeys();
+
+      if (!authToken || authToken.expiresAt < new Date() || !profile || !keys) {
+        toast.error("You must be logged in to connect");
+        router.push("/login");
+        return;
+      }
+
+      const user = fetchUserByUUID(userId);
+      if (user && user.sig) {
+        toast.error("You have already met this user!");
+        router.push("/users/" + userId + "?tap=true");
+        return;
+      }
+
+      const senderPrivateKey = keys.encryptionPrivateKey;
+      const thisUserPublicKey = profile.encryptionPublicKey;
+      const otherUserPublicKey = person.encryptionPublicKey;
+      const encryptedInboundMessage = await encryptInboundTapMessage({
+        twitterUsername: person.twitter,
+        telegramUsername: person.telegram,
+        bio: person.bio,
+        signaturePublicKey: person.signaturePublicKey,
+        signatureMessage: person.signatureMessage,
+        signature: person.signature,
+        senderPrivateKey,
+        recipientPublicKey: thisUserPublicKey,
+      });
+
+      const encryptedOutboundMessage = await encryptOutboundTapMessage({
+        displayName: profile.displayName,
+        encryptionPublicKey: thisUserPublicKey,
+        senderPrivateKey,
+        recipientPublicKey: otherUserPublicKey,
+      });
+
+      // Send user tap as encrypted jubSignal message to self
+      // Simultaneously send outbound tap to other user
+      try {
+        await loadMessages({
+          forceRefresh: false,
+          messageRequests: [
+            {
+              encryptedMessage: encryptedInboundMessage,
+              recipientPublicKey: thisUserPublicKey,
+            },
+            {
+              encryptedMessage: encryptedOutboundMessage,
+              recipientPublicKey: otherUserPublicKey,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error("Error sending message updates to server: ", error);
+        toast.error(
+          "An error occured while processing the tap. Please try again."
+        );
+        router.push("/");
+        return;
+      }
+
+      router.push("/users/" + userId + "?tap=true");
     },
     [router]
   );
@@ -110,7 +182,7 @@ export default function Tap() {
     ) => {
       const authToken = getAuthToken();
       if (authToken) {
-        router.push(`/not-registered-friend`);
+        router.push(`/friend_not_registered`);
         return;
       }
       router.push(`/register?iykRef=${iykRef}${getMockRefUrlParam(mockRef)}`);
@@ -132,7 +204,9 @@ export default function Tap() {
     const handlePersonTap = async (person: PersonTapResponse) => {
       const authToken = getAuthToken();
       if (!authToken || authToken.expiresAt < new Date()) {
-        setPendingPersonTapResponse(person);
+        // If user is not logged in, redirect to login
+        router.push("/login");
+        // setPendingPersonTapResponse(person);
       } else {
         processPersonTap(person);
       }
@@ -141,7 +215,9 @@ export default function Tap() {
     const handleLocationTap = async (location: LocationTapResponse) => {
       const authToken = getAuthToken();
       if (!authToken || authToken.expiresAt < new Date()) {
-        setPendingLocationTapResponse(location);
+        // If user is not logged in, redirect to login
+        router.push("/login");
+        // setPendingLocationTapResponse(location);
       } else {
         processLocationTap(location);
       }

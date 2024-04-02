@@ -3,8 +3,10 @@ import { useRouter } from "next/router";
 import { hashPassword } from "@/lib/client/utils";
 import {
   deleteAccountFromLocalStorage,
+  getProfile,
   loadBackup,
   saveAuthToken,
+  saveProfile,
 } from "@/lib/client/localStorage";
 import { decryptBackupString } from "@/lib/shared/backup";
 import { Button } from "@/components/Button";
@@ -105,7 +107,14 @@ export default function Login() {
       return;
     }
 
-    const { authToken, backup, password: passwordData } = await response.json();
+    const {
+      authToken,
+      backup,
+      password: passwordData,
+      twitterUsername,
+      telegramUsername,
+      bio,
+    } = await response.json();
     if (!authToken) {
       console.error("No auth token found");
       toast.error("Error logging in. Please try again.");
@@ -133,6 +142,22 @@ export default function Login() {
     // Populate localStorage with auth and backup data to load messages
     saveAuthToken(authToken);
     loadBackup(decryptedBackupData);
+
+    const profile = getProfile();
+    if (!profile) {
+      console.error("Profile not found");
+      deleteAccountFromLocalStorage();
+      toast.error("Error logging in. Please try again.");
+      setLoading(false);
+      return;
+    } else {
+      saveProfile({
+        ...profile,
+        twitterUsername,
+        telegramUsername,
+        bio,
+      });
+    }
 
     try {
       await loadMessages({ forceRefresh: true });

@@ -52,16 +52,11 @@ const Profile = ({ handleSignout }: ProfileProps) => {
   };
 
   const updateProfile = async () => {
-    const {
-      wantsServerCustody,
-      displayName,
-      allowsAnalytics,
-      twitterUsername = "",
-      telegramUsername = "",
-      farcasterUsername = "",
-      bio = "",
-    } = getState().profile;
+    const { displayName, twitterUsername, telegramUsername, bio } =
+      getState().profile;
+
     setLoading(true);
+
     const authToken = getAuthToken();
     if (!authToken || authToken.expiresAt < new Date()) {
       handleSignout();
@@ -77,16 +72,6 @@ const Profile = ({ handleSignout }: ProfileProps) => {
       return;
     }
 
-    let passwordSalt, passwordHash;
-    if (!wantsServerCustody && previousProfile.wantsServerCustody) {
-      if (!password || password !== confirmPassword) {
-        toast.error("Invalid password");
-        return;
-      }
-      passwordSalt = generateSalt();
-      passwordHash = await hashPassword(password, passwordSalt);
-    }
-
     const response = await fetch("/api/user/update_profile", {
       method: "POST",
       headers: {
@@ -94,11 +79,9 @@ const Profile = ({ handleSignout }: ProfileProps) => {
       },
       body: JSON.stringify({
         authToken: authToken.value,
-        displayName,
-        wantsServerCustody,
-        allowsAnalytics,
-        passwordSalt,
-        passwordHash,
+        twitterUsername,
+        telegramUsername,
+        bio,
       }),
     });
 
@@ -113,65 +96,15 @@ const Profile = ({ handleSignout }: ProfileProps) => {
 
     const profile = {
       displayName,
-      email: previousProfile.email,
       encryptionPublicKey: previousProfile.encryptionPublicKey,
       signaturePublicKey: previousProfile.signaturePublicKey,
-      wantsServerCustody,
-      allowsAnalytics,
-      twitterUsername:
-        twitterUsername === "@" ? undefined : twitterUsername.slice(1),
-      telegramUsername:
-        telegramUsername === "@" ? undefined : telegramUsername.slice(1),
-      farcasterUsername:
-        farcasterUsername === "@" ? undefined : farcasterUsername.slice(1),
-      bio: bio === "" ? undefined : bio,
+      twitterUsername,
+      telegramUsername,
+      bio,
     };
     saveProfile(profile);
 
     clearFormValues();
-    // Create new backup
-    let backupData = createBackup();
-    if (!backupData) {
-      console.error("Error creating backup!");
-      toast.error("Error creating backup! Please try again.");
-      setLoading(false); // reset login
-      return;
-    }
-
-    const masterPassword =
-      !wantsServerCustody && previousProfile.wantsServerCustody
-        ? password
-        : inputPassword;
-    if (!wantsServerCustody && !masterPassword) {
-      console.error("Master password required");
-      toast.error("Master password required");
-      setLoading(false); // reset login
-      return;
-    }
-
-    // Encrypt backup data if user wants self custody
-    const backup = wantsServerCustody
-      ? backupData
-      : encryptBackupString(backupData, previousProfile.email, masterPassword!);
-
-    const backupResponse = await fetch("/api/backup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        backup,
-        wantsServerCustody,
-        authToken: authToken.value,
-      }),
-    });
-
-    if (!backupResponse.ok) {
-      console.error("Error saving backup!");
-      toast.error("Error saving backup! Please try again.");
-      setLoading(false); // reset login
-      return;
-    }
 
     setPreviousProfile(profile);
     setLoading(false);
@@ -192,19 +125,6 @@ const Profile = ({ handleSignout }: ProfileProps) => {
       console.error(
         "Could not connect to profile. Please refresh and try again."
       );
-      return;
-    }
-    const { wantsServerCustody } = formValues ?? false;
-
-    // User now wants self custody, need to set password
-    if (!wantsServerCustody && previousProfile.wantsServerCustody) {
-      updateProfileViewState(ProfileDisplayState.CHOOSE_PASSWORD);
-      return;
-    }
-
-    // User needs to input self custody password to save new backup
-    if (!wantsServerCustody) {
-      updateProfileViewState(ProfileDisplayState.INPUT_PASSWORD);
       return;
     }
 

@@ -47,11 +47,6 @@ export const ProfileSchema = object({
     .max(20, "Display name must be less than 20 characters.")
     .trim()
     .required("This field is required."),
-  email: string()
-    .email("Invalid email address.")
-    .required("This field is required."),
-  wantsServerCustody: boolean().required(),
-  allowsAnalytics: boolean().required(),
   twitterUsername: string()
     .matches(twitterUsernameRegex, {
       message: "Invalid Twitter username.",
@@ -62,13 +57,6 @@ export const ProfileSchema = object({
   telegramUsername: string()
     .matches(telegramUsernameRegex, {
       message: "Invalid Telegram username.",
-      excludeEmptyString: true,
-    })
-    .trim()
-    .optional(),
-  farcasterUsername: string()
-    .matches(farcasterUsernameRegex, {
-      message: "Invalid Farcaster username.",
       excludeEmptyString: true,
     })
     .trim()

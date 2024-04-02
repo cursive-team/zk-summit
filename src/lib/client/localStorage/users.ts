@@ -49,6 +49,9 @@ export const updateUserFromTap = async (
       ...user,
       name: userUpdate.displayName,
       encPk: userUpdate.encryptionPublicKey,
+      x: userUpdate.twitter,
+      tg: userUpdate.telegram,
+      bio: userUpdate.bio,
     };
 
     users[userId] = updatedUser;
@@ -56,6 +59,9 @@ export const updateUserFromTap = async (
     const newUser = {
       name: userUpdate.displayName,
       encPk: userUpdate.encryptionPublicKey,
+      x: userUpdate.twitter,
+      tg: userUpdate.telegram,
+      bio: userUpdate.bio,
     };
 
     users[userId] = newUser;

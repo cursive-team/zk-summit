@@ -1,10 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/server/prisma";
 import { object, string } from "yup";
-import { decryptBackupString, encryptBackupString } from "@/lib/shared/backup";
+import { decryptBackupString } from "@/lib/shared/backup";
 import { verifyAuthToken } from "../../lib/server/auth";
 import { EmptyResponse, ErrorResponse } from "../../types";
-import { backupSchema } from "@/lib/client/localStorage";
 
 export type EncryptedBackupData = {
   encryptedData: string;
@@ -75,7 +74,7 @@ export default async function handler(
       iv,
     });
   } else if (req.method === "POST") {
-    const { backup, wantsServerCustody, authToken } = req.body;
+    const { backup, authToken } = req.body;
 
     // Validate authToken
     const userId = await verifyAuthToken(authToken);
@@ -83,7 +82,7 @@ export default async function handler(
       return res.status(401).json({ error: "Invalid or expired auth token" });
     }
 
-    // Retrieve user and check wantsServerCustody matches
+    // Retrieve user
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -91,64 +90,25 @@ export default async function handler(
       return res.status(404).json({ error: "User not found" });
     }
 
-    // For safety, check that wantsServerCustody matches
-    if (user.wantsServerCustody !== wantsServerCustody) {
-      return res.status(400).json({ error: "Mismatch in custody preference" });
-    }
-
-    if (wantsServerCustody) {
-      // If wantsServerCustody, backup must be a string
-      if (typeof backup !== "string") {
-        return res.status(400).json({ error: "Invalid backup" });
+    // Backup must be an object with encryptedData, authenticationTag, and iv
+    try {
+      const backupData = encryptedBackupDataSchema.validateSync(backup);
+      if (!backupData) {
+        throw new Error("Invalid backup");
       }
 
-      try {
-        const parsedBackup = JSON.parse(backup);
-        const validatedBackup = backupSchema.validateSync(parsedBackup);
-        if (!validatedBackup) {
-          throw new Error("Invalid backup");
-        }
-      } catch (error) {
-        return res.status(400).json({ error: "Invalid backup" });
-      }
-      const serverEncryptionEmail = process.env.SERVER_ENCRYPTION_EMAIL!;
-      const serverEncryptionPassword = process.env.SERVER_ENCRYPTION_PASSWORD!;
-      const { encryptedData, authenticationTag, iv } = encryptBackupString(
-        backup,
-        serverEncryptionEmail,
-        serverEncryptionPassword
-      );
-
+      const { encryptedData, authenticationTag, iv } = backupData;
       await prisma.backup.create({
         data: {
           userId: user.id,
           encryptedData,
           authenticationTag,
           iv,
-          isServerEncrypted: true,
+          isServerEncrypted: false,
         },
       });
-    } else {
-      // If !wantsServerCustody, backup must be an object with encryptedData, authenticationTag, and iv
-      try {
-        const backupData = encryptedBackupDataSchema.validateSync(backup);
-        if (!backupData) {
-          throw new Error("Invalid backup");
-        }
-
-        const { encryptedData, authenticationTag, iv } = backupData;
-        await prisma.backup.create({
-          data: {
-            userId: user.id,
-            encryptedData,
-            authenticationTag,
-            iv,
-            isServerEncrypted: false,
-          },
-        });
-      } catch (error) {
-        return res.status(400).json({ error: "Invalid backup" });
-      }
+    } catch (error) {
+      return res.status(400).json({ error: "Invalid backup" });
     }
 
     return res.status(200).json({});

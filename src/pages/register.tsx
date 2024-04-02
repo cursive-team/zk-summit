@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 import { generateEncryptionKeyPair } from "@/lib/client/encryption";
@@ -12,54 +12,54 @@ import {
   saveProfile,
 } from "@/lib/client/localStorage";
 import { encryptBackupString } from "@/lib/shared/backup";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
+import { FormStepLayout } from "@/layouts/FormStepLayout";
 import { toast } from "sonner";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { encryptRegisteredMessage } from "@/lib/client/jubSignal/registered";
-import { RegisterStepForm } from "@/components/registerFormSteps";
-import { RegisterStepCode } from "@/components/registerFormSteps/code";
-import { RegisterSocial } from "@/components/registerFormSteps/social";
-import { RegisterCustody } from "@/components/registerFormSteps/custody";
-import { useStateMachine } from "little-state-machine";
-import updateStateFromAction from "@/lib/shared/updateAction";
-import { RegisterPassword } from "@/components/registerFormSteps/password";
-import useSettings from "@/hooks/useSettings";
-import { ArtworkSnapshot } from "@/components/artwork/ArtworkSnapshot";
-import { InputDescription } from "@/components/input/InputWrapper";
-import { Icons } from "@/components/Icons";
-import { RegisterQuickStart } from "@/components/registerFormSteps/quickStart";
-import { Button } from "@/components/Button";
+import {
+  generateAuthenticationOptions,
+  generateRegistrationOptions,
+  GenerateRegistrationOptionsOpts as RegistrationOptions,
+  GenerateAuthenticationOptionsOpts as AuthenticationOptions,
+} from "@simplewebauthn/server";
+import {
+  startAuthentication,
+  startRegistration,
+} from "@simplewebauthn/browser";
+import { sha256 } from "js-sha256";
+import {
+  telegramUsernameRegex,
+  twitterUsernameRegex,
+} from "@/lib/shared/utils";
 
 enum DisplayState {
-  INPUT_EMAIL,
-  INPUT_CODE,
-  INPUT_SOCIAL,
-  QUICK_START,
-  CHOOSE_CUSTODY,
-  INPUT_PASSWORD,
-  CREATING_ACCOUNT,
+  PASSKEY,
+  PASSWORD,
 }
 
 export default function Register() {
   const router = useRouter();
-  const { getState } = useStateMachine({ updateStateFromAction });
-  const { pageWidth } = useSettings();
-
-  const wantsServerCustody = getState()?.register?.wantsServerCustody ?? false;
-  const allowsAnalytics = getState()?.register?.allowsAnalytics ?? false;
-
   const [displayState, setDisplayState] = useState<DisplayState>(
-    DisplayState.QUICK_START
+    DisplayState.PASSKEY
   );
+  const [displayName, setDisplayName] = useState<string>();
+  const [twitter, setTwitter] = useState<string>("@");
+  const [telegram, setTelegram] = useState<string>("@");
+  const [bio, setBio] = useState<string>();
+  const [password, setPassword] = useState<string>();
+  const [confirmPassword, setConfirmPassword] = useState<string>();
   const [iykRef, setIykRef] = useState<string>("");
   const [mockRef, setMockRef] = useState<string>();
-  const [signatureKeyArt, setSignatureKeyArt] = useState<string>();
-  const [accountCreated, setAccountCreated] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (router.query.iykRef) {
       setIykRef(router.query.iykRef as string);
     } else {
       toast.error("Please tap your card to link it to your account.");
+      return;
     }
 
     if (router.query.mockRef) {
@@ -67,31 +67,168 @@ export default function Register() {
     }
   }, [router.query]);
 
-  const artworkSize = pageWidth - 64;
+  const checkUsernameIsUnique = async (
+    displayName: string
+  ): Promise<boolean> => {
+    const response = await fetch(
+      `/api/register/check_username?displayName=${displayName}`
+    );
+    if (!response.ok) {
+      console.error(
+        `HTTP error when checking username uniqueness! status: ${response.status}`
+      );
+      return false;
+    }
 
-  const handleCreateAccount = async () => {
-    setDisplayState(DisplayState.CREATING_ACCOUNT);
+    const data = await response.json();
+
+    return data.isUnique;
+  };
+
+  const handleCreateWithPassword = async () => {
+    if (!iykRef) {
+      toast.error("Please tap your card to link it to your account.");
+      return;
+    }
+
+    if (
+      !displayName ||
+      /^\s|\s$/.test(displayName) ||
+      displayName.length > 20
+    ) {
+      toast.error(
+        "Display name cannot have leading or trailing whitespace and must be less than or equal to 20 characters"
+      );
+      return;
+    }
+
+    if (twitter !== "@" && !twitterUsernameRegex.test(twitter)) {
+      toast.error("Please enter a valid Twitter username.");
+      return;
+    }
+
+    if (telegram !== "@" && !telegramUsernameRegex.test(telegram)) {
+      toast.error("Please enter a valid Telegram username.");
+      return;
+    }
+
+    if (bio && bio.length > 200) {
+      toast.error("Bio must be 200 characters or less.");
+      return;
+    }
+
+    const isUsernameUnique = await checkUsernameIsUnique(displayName);
+    if (!isUsernameUnique) {
+      toast.error("Username is already taken.");
+      return;
+    }
+
+    setDisplayState(DisplayState.PASSWORD);
+  };
+
+  const handleCreateWithPasskey = () => {
+    setDisplayState(DisplayState.PASSKEY);
+  };
+
+  const handleSubmitWithPasskey = async (e: FormEvent<Element>) => {
+    e.preventDefault();
+
+    if (!iykRef) {
+      toast.error("Please tap your card to link it to your account.");
+      return;
+    }
+
+    if (
+      !displayName ||
+      /^\s|\s$/.test(displayName) ||
+      displayName.length > 20
+    ) {
+      toast.error(
+        "Display name cannot have leading or trailing whitespace and must be 20 characters or less"
+      );
+      return;
+    }
+
+    if (twitter && !twitterUsernameRegex.test(twitter)) {
+      toast.error("Please enter a valid Twitter username.");
+      return;
+    }
+
+    if (telegram && !telegramUsernameRegex.test(telegram)) {
+      toast.error("Please enter a valid Telegram username.");
+      return;
+    }
+
+    if (bio && bio.length > 200) {
+      toast.error("Bio must be 200 characters or less.");
+      return;
+    }
+
+    setLoading(true);
+
+    const isUsernameUnique = await checkUsernameIsUnique(displayName);
+    if (!isUsernameUnique) {
+      toast.error("Username is already taken.");
+      return;
+    }
+
+    const registrationOptions = await generateRegistrationOptions({
+      rpName: "zk-summit",
+      rpID: window.location.hostname,
+      userID: displayName,
+      userName: "ZK Summit 11",
+      attestationType: "none",
+    });
+
+    try {
+      const { id, response: authResponse } = await startRegistration(
+        registrationOptions
+      );
+      const authPublicKey = authResponse.publicKey;
+      if (!authPublicKey) {
+        throw new Error("No public key returned from authenticator");
+      }
+
+      await createAccount(displayName, id, authPublicKey);
+    } catch (error) {
+      console.error("Error creating account: ", error);
+      toast.error("Authentication failed! Please try again.");
+      setLoading(false);
+      return;
+    }
+  };
+
+  const handleSubmitWithPassword = async (e: FormEvent<Element>) => {
+    e.preventDefault();
+
+    if (!displayName || !password) {
+      toast.error("Please enter a username and password.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+
+    await createAccount(displayName, password, undefined);
+  };
+
+  const createAccount = async (
+    displayName: string,
+    password: string,
+    authPublicKey: string | undefined
+  ) => {
+    setLoading(true);
 
     const { privateKey, publicKey } = await generateEncryptionKeyPair();
     const { signingKey, verifyingKey } = generateSignatureKeyPair();
-    setSignatureKeyArt(verifyingKey);
-
-    // get the values from the state
-    const {
-      email,
-      displayName,
-      telegramUsername,
-      twitterUsername,
-      farcasterUsername,
-      bio,
-      password,
-    } = getState().register;
 
     let passwordSalt, passwordHash;
-    if (!wantsServerCustody) {
-      passwordSalt = generateSalt();
-      passwordHash = await hashPassword(password, passwordSalt);
-    }
+    passwordSalt = generateSalt();
+    passwordHash = await hashPassword(password, passwordSalt);
 
     const response = await fetch("/api/register/create_account", {
       method: "POST",
@@ -101,21 +238,22 @@ export default function Register() {
       body: JSON.stringify({
         iykRef,
         mockRef,
-        email,
         displayName,
-        wantsServerCustody,
-        allowsAnalytics,
-        passwordSalt,
-        passwordHash,
         encryptionPublicKey: publicKey,
         signaturePublicKey: verifyingKey,
+        passwordSalt,
+        passwordHash,
+        authPublicKey,
+        twitter,
+        telegram,
+        bio,
       }),
     });
 
     if (!response.ok) {
       console.error(`HTTP error! status: ${response.status}`);
       toast.error("Error creating account! Please try again.");
-      setDisplayState(DisplayState.INPUT_EMAIL);
+      setLoading(false);
       return;
     }
 
@@ -123,7 +261,7 @@ export default function Register() {
     if (!data.value || !data.expiresAt) {
       console.error("Account created, but no auth token returned.");
       toast.error("Account created, but error logging in! Please try again.");
-      setDisplayState(DisplayState.INPUT_EMAIL);
+      setLoading(false);
       return;
     }
 
@@ -133,17 +271,12 @@ export default function Register() {
       encryptionPrivateKey: privateKey,
       signaturePrivateKey: signingKey,
     });
-
     saveProfile({
+      displayName,
       encryptionPublicKey: publicKey,
       signaturePublicKey: verifyingKey,
-      wantsServerCustody,
-      allowsAnalytics,
-      displayName,
-      email,
-      twitterUsername,
-      telegramUsername,
-      farcasterUsername,
+      twitterUsername: twitter,
+      telegramUsername: telegram,
       bio,
     });
     saveAuthToken({
@@ -155,13 +288,11 @@ export default function Register() {
     if (!backupData) {
       console.error("Error creating backup!");
       toast.error("Error creating backup! Please try again.");
+      setLoading(false);
       return;
     }
 
-    // Encrypt backup data if user wants self custody
-    const backup = wantsServerCustody
-      ? backupData
-      : encryptBackupString(backupData, email, password);
+    const backup = encryptBackupString(backupData, displayName, password);
 
     const backupResponse = await fetch("/api/backup", {
       method: "POST",
@@ -170,7 +301,6 @@ export default function Register() {
       },
       body: JSON.stringify({
         backup,
-        wantsServerCustody,
         authToken: data.value,
       }),
     });
@@ -178,6 +308,7 @@ export default function Register() {
     if (!backupResponse.ok) {
       console.error(`HTTP error! status: ${backupResponse.status}`);
       toast.error("Error storing backup! Please try again.");
+      setLoading(false);
       return;
     }
 
@@ -205,212 +336,119 @@ export default function Register() {
     } catch (error) {
       console.error("Error sending registration tap to server: ", error);
       toast.error("An error occured while registering.");
+      setLoading(false);
       return;
     }
 
-    setAccountCreated(true);
+    toast.success("Account created and backed up!");
+    setLoading(false);
+    router.push("/");
   };
 
-  return (
-    <>
-      {displayState === DisplayState.QUICK_START && (
-        <RegisterQuickStart
-          iykRef={iykRef}
-          mockRef={mockRef}
-          onSuccess={(wantsServerCustody: boolean) => {
-            console.log("wantsServerCustody", wantsServerCustody);
-            wantsServerCustody
-              ? setDisplayState(DisplayState.INPUT_CODE)
-              : setDisplayState(DisplayState.INPUT_PASSWORD);
-          }}
+  if (displayState === DisplayState.PASSKEY) {
+    return (
+      <FormStepLayout
+        title="zkSummit11 x Cursive"
+        // description={new Date().toLocaleDateString("en-US", {
+        //   month: "long",
+        //   day: "numeric",
+        // })}
+        description="Set up socials to share when others tap your badge, and register to encrypt data you collect from others."
+        className="pt-4"
+        onSubmit={handleSubmitWithPasskey}
+      >
+        <Input
+          type="text"
+          id="displayName"
+          label="Username (*)"
+          placeholder="Tom Smith"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
         />
-      )}
-      {displayState === DisplayState.INPUT_CODE && (
-        <RegisterStepCode
-          iykRef={iykRef}
-          mockRef={mockRef}
-          onBack={() => {
-            setDisplayState(DisplayState.QUICK_START);
-          }}
-          onSuccess={async () => {
-            await handleCreateAccount();
-          }}
+        <Input
+          type="text"
+          id="twitter"
+          label="Twitter"
+          placeholder="@tomsmith"
+          value={twitter}
+          onChange={(e) =>
+            setTwitter(
+              e.target.value.charAt(0) === "@"
+                ? e.target.value
+                : "@" + e.target.value
+            )
+          }
         />
-      )}
-      {displayState === DisplayState.INPUT_PASSWORD && (
-        <RegisterPassword
-          iykRef={iykRef}
-          mockRef={mockRef}
-          onBack={() => {
-            setDisplayState(DisplayState.QUICK_START);
-          }}
-          onSuccess={async () => {
-            await handleCreateAccount();
-          }}
+        <Input
+          type="text"
+          id="telegram"
+          label="Telegram"
+          placeholder="@tomsmith"
+          value={telegram}
+          onChange={(e) =>
+            setTelegram(
+              e.target.value.charAt(0) === "@"
+                ? e.target.value
+                : "@" + e.target.value
+            )
+          }
         />
-      )}
-      {displayState === DisplayState.CREATING_ACCOUNT && (
-        <div className="flex flex-col justify-center my-auto mx-auto text-center">
-          {signatureKeyArt && (
-            <>
-              <div className="mx-auto">
-                <ArtworkSnapshot
-                  width={artworkSize}
-                  height={artworkSize}
-                  pubKey={signatureKeyArt}
-                  isVisible
-                />
-              </div>
-              <div className={`flex flex-col gap-2 mt-8 px-10`}>
-                <InputDescription>
-                  This is your unique stamp that you will share with other
-                  ETHDenver attendees upon tap.
-                </InputDescription>
-                <InputDescription>
-                  Each stamp is attached with a signature for others to
-                  verifiably prove they met you.
-                </InputDescription>
-                <InputDescription>
-                  Your final stamp collection can be minted as an NFT! Browse
-                  its history from your profile.
-                </InputDescription>
-              </div>
-            </>
-          )}
-          <div className="mt-8">
-            {accountCreated ? (
-              <Button
-                onClick={() => {
-                  toast.success("Account created and backed up!");
-                  router.push("/");
-                }}
-              >
-                Enter BUIDLQuest!
-              </Button>
-            ) : (
-              <div className="flex flex-col gap-4 text-center">
-                <div className="mx-auto">
-                  <Icons.loading size={28} className="animate-spin" />
-                </div>
-                <span className="text-sm text-gray-11 leading-5 font-light">
-                  Your account is being created.
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-  );
-
-  // keeping old code here for easy port
-  return (
-    <>
-      {displayState === DisplayState.INPUT_EMAIL && (
-        <RegisterStepForm
-          iykRef={iykRef}
-          mockRef={mockRef}
-          onSuccess={() => {
-            setDisplayState(DisplayState.INPUT_CODE);
-          }}
+        <Input
+          type="text"
+          id="bio"
+          label="Bio"
+          placeholder="Your organization, website, other info"
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
         />
-      )}
-      {displayState === DisplayState.INPUT_CODE && (
-        <RegisterStepCode
-          iykRef={iykRef}
-          mockRef={mockRef}
-          onBack={() => {
-            setDisplayState(DisplayState.INPUT_EMAIL);
-          }}
-          onSuccess={() => {
-            setDisplayState(DisplayState.INPUT_SOCIAL);
-          }}
+        <Button type="submit">
+          {loading ? "Creating Account..." : "Register with passkey"}
+        </Button>
+        <span
+          className="text-center text-sm"
+          onClick={handleCreateWithPassword}
+        >
+          <u>Register with password instead</u>
+        </span>
+      </FormStepLayout>
+    );
+  } else if (displayState === DisplayState.PASSWORD) {
+    return (
+      <FormStepLayout
+        title="zkSummit11 x Cursive"
+        // description={new Date().toLocaleDateString("en-US", {
+        //   month: "long",
+        //   day: "numeric",
+        // })}
+        description="Choose a master password to encrypt your data."
+        className="pt-4"
+        onSubmit={handleSubmitWithPassword}
+      >
+        <Input
+          type="password"
+          id="password"
+          label="Password"
+          placeholder="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
-      )}
-      {displayState === DisplayState.INPUT_SOCIAL && (
-        <RegisterSocial
-          iykRef={iykRef}
-          mockRef={mockRef}
-          onBack={() => {
-            //no need to get back to code, redirect to email input
-            setDisplayState(DisplayState.INPUT_EMAIL);
-          }}
-          onSuccess={() => {
-            setDisplayState(DisplayState.CHOOSE_CUSTODY);
-          }}
+        <Input
+          type="password"
+          id="confirmPassword"
+          label="Confirm Password"
+          placeholder="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
         />
-      )}
-      {displayState === DisplayState.CHOOSE_CUSTODY && (
-        <RegisterCustody
-          iykRef={iykRef}
-          mockRef={mockRef}
-          onBack={() => {
-            //no need to get back to code, redirect to email input
-            setDisplayState(DisplayState.INPUT_SOCIAL);
-          }}
-          onSuccess={async () => {
-            if (wantsServerCustody) {
-              await handleCreateAccount();
-            } else {
-              setDisplayState(DisplayState.INPUT_PASSWORD);
-            }
-          }}
-        />
-      )}
-      {displayState === DisplayState.INPUT_PASSWORD && (
-        <RegisterPassword
-          iykRef={iykRef}
-          mockRef={mockRef}
-          onBack={() => {
-            setDisplayState(DisplayState.CHOOSE_CUSTODY);
-          }}
-          onSuccess={async () => {
-            await handleCreateAccount();
-          }}
-        />
-      )}
-      {displayState === DisplayState.CREATING_ACCOUNT && (
-        <div className="flex flex-col justify-center my-auto mx-auto text-center">
-          {signatureKeyArt && (
-            <>
-              <div className="mx-auto">
-                <ArtworkSnapshot
-                  width={artworkSize}
-                  height={artworkSize}
-                  pubKey={signatureKeyArt}
-                  isVisible
-                />
-              </div>
-              <div className={`flex flex-col gap-2 mt-4 px-10`}>
-                <InputDescription>
-                  This is your unique stamp that you will share with other
-                  ETHDenver attendees upon tap.
-                </InputDescription>
-                <InputDescription>
-                  Each stamp is attached with a signature for others to
-                  verifiably prove they met you.
-                </InputDescription>
-                <InputDescription>
-                  Your stamp collection can be minted as an NFT at the end of
-                  the event!
-                </InputDescription>
-              </div>
-            </>
-          )}
-          <div className="mt-8">
-            <div className="flex flex-col gap-4 text-center">
-              <div className="mx-auto">
-                <Icons.loading size={28} className="animate-spin" />
-              </div>
-              <span className="text-sm text-gray-11 leading-5 font-light">
-                Your account is being created.
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
+        <Button type="submit">
+          {loading ? "Creating Account..." : "Register"}
+        </Button>
+        <span className="text-center text-sm" onClick={handleCreateWithPasskey}>
+          <u>Register with passkey instead</u>
+        </span>
+      </FormStepLayout>
+    );
+  }
 }
 
 Register.getInitialProps = () => {

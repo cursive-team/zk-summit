@@ -8,8 +8,8 @@ import {
 const ENCRYPTION_KEY_LENGTH = 32; // AES-256 keys are 32 bytes
 const IV_LENGTH = 12; // 12 byte IV for GCM mode
 const SALT = "zk-is-cool"; // We want deterministic encryption based on email and password
-const ITERATIONS = 100000; // Number of iterations for PBKDF2
-const DIGEST = "sha512"; // Digest method for PBKDF2
+const ITERATIONS = 1000; // Number of iterations for PBKDF2
+const DIGEST = "sha256"; // Digest method for PBKDF2
 
 /**
  * Derives an encryption key from an email and password.

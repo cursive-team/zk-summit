@@ -1,32 +1,30 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/server/prisma";
-import { object, string, boolean } from "yup";
+import { object, string } from "yup";
 import { ErrorResponse } from "@/types";
+import { AuthTokenResponse, generateAuthToken } from "@/lib/server/auth";
 import {
-  AuthTokenResponse,
-  generateAuthToken,
-  verifySigninCode,
-} from "@/lib/server/auth";
-import { displayNameRegex } from "@/lib/shared/utils";
+  telegramUsernameRegex,
+  twitterUsernameRegex,
+} from "@/lib/shared/utils";
 import {
   ChipType,
   getChipIdFromIykRef,
   getChipTypeFromChipId,
-  verifyEmailForChipId,
 } from "@/lib/server/iyk";
-import { getClaveInviteLink } from "@/lib/server/clave";
 
 const createAccountSchema = object({
   iykRef: string().required(),
   mockRef: string().optional().default(undefined),
-  email: string().email().trim().lowercase().required(),
   displayName: string().trim().required(),
-  wantsServerCustody: boolean().required(),
-  allowsAnalytics: boolean().required(),
   encryptionPublicKey: string().required(),
   signaturePublicKey: string().required(),
-  passwordSalt: string().optional(),
-  passwordHash: string().optional(),
+  passwordSalt: string().optional().default(undefined),
+  passwordHash: string().optional().default(undefined),
+  authPublicKey: string().optional().default(undefined),
+  twitter: string().optional().default(undefined),
+  telegram: string().optional().default(undefined),
+  bio: string().optional().default(undefined),
 });
 
 export default async function handler(
@@ -55,14 +53,15 @@ export default async function handler(
   const {
     iykRef,
     mockRef,
-    email,
     displayName,
-    wantsServerCustody,
-    allowsAnalytics,
     encryptionPublicKey,
     signaturePublicKey,
     passwordSalt,
     passwordHash,
+    authPublicKey,
+    twitter,
+    telegram,
+    bio,
   } = validatedData;
 
   if (/^\s|\s$/.test(displayName) || displayName.length > 20) {
@@ -70,6 +69,20 @@ export default async function handler(
       error:
         "Display name cannot have leading or trailing whitespace and must be less than or equal to 20 characters",
     });
+  }
+
+  if (twitter && twitter !== "@" && !twitterUsernameRegex.test(twitter)) {
+    return res.status(400).json({ error: "Invalid Twitter username" });
+  }
+
+  if (telegram && telegram !== "@" && !telegramUsernameRegex.test(telegram)) {
+    return res.status(400).json({ error: "Invalid Telegram username" });
+  }
+
+  if (bio && bio.length > 200) {
+    return res
+      .status(400)
+      .json({ error: "Bio must be less than or equal to 200 characters" });
   }
 
   // Validate iykRef corresponds to an unregistered person chip
@@ -83,63 +96,37 @@ export default async function handler(
   if (chipType !== ChipType.PERSON) {
     return res.status(400).json({ error: "Invalid iykRef" });
   }
-  const existingUser = await prisma.user.findUnique({
+  const existingChipUser = await prisma.user.findUnique({
     where: {
       chipId,
     },
   });
-  if (existingUser) {
+  if (existingChipUser) {
     return res.status(400).json({ error: "Card already registered" });
   }
 
-  if (!mockRef) {
-    const emailMatchesChipId = verifyEmailForChipId(chipId, email);
-    if (!emailMatchesChipId) {
-      return res.status(400).json({ error: "Email does not match iykRef" });
-    }
-  }
-
-  // Fetch a clave invite code
-  const claveInviteCodeResponse = await fetch(
-    "https://api.getclave.io/api/v1/waitlist/codes/single",
-    {
-      method: "POST",
-      headers: {
-        "x-api-key": process.env.CLAVE_API_KEY!,
-      },
-    }
-  );
-  if (!claveInviteCodeResponse.ok) {
-    return res.status(400).json({ error: "Failed to fetch Clave invite code" });
-  }
-
-  const { code: claveInviteCode } = await claveInviteCodeResponse.json();
-  if (!claveInviteCode) {
-    return res.status(500).json({ error: "Clave invite code not received" });
-  }
-
-  let claveInviteLink: string;
-  try {
-    claveInviteLink = await getClaveInviteLink(email, claveInviteCode);
-  } catch (error) {
-    console.error("Error generating Clave invite link:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+  const existingUsername = await prisma.user.findUnique({
+    where: {
+      displayName,
+    },
+  });
+  if (existingUsername) {
+    return res.status(400).json({ error: "Username already taken" });
   }
 
   // Create user
   const user = await prisma.user.create({
     data: {
       chipId,
-      email,
       displayName,
-      wantsServerCustody,
-      allowsAnalytics,
       encryptionPublicKey,
       signaturePublicKey,
       passwordSalt,
       passwordHash,
-      claveInviteCode,
-      claveInviteLink,
+      authPublicKey,
+      twitter,
+      telegram,
+      bio,
     },
   });
 

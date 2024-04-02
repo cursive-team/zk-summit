@@ -15,12 +15,16 @@ model User {
   id          Int    @id @default(autoincrement())
   chipId      String @unique
   displayName String @unique
+  twitter     String?
+  telegram    String?
+  bio         String?
 
   encryptionPublicKey String
   signaturePublicKey  String
 
   passwordSalt              String?
   passwordHash              String?
+  authPublicKey             String?
   createdAt                 DateTime           @default(now())
   sentMessages              Message[]          @relation("MessageSender")
   receivedMessages          Message[]          @relation("MessageRecipient")

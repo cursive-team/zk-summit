@@ -14,7 +14,6 @@ import { StateMachineProvider } from "little-state-machine";
 import type { AppProps } from "next/app";
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
-import PlausibleProvider from "next-plausible";
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -55,44 +54,42 @@ export default function App({ Component, pageProps }: AppProps) {
   }
 
   return (
-    <PlausibleProvider domain="cursive.iyk.app">
-      <StateMachineProvider>
-        <QueryClientProvider client={queryClient}>
-          <OnlyMobileLayout>
-            <div
-              className="flex flex-col"
-              style={{
-                height: `${pageHeight}px`,
-              }}
-            >
-              <div className="flex flex-col grow">
-                {showHeader && !fullPage && (
-                  <AppHeader
-                    isMenuOpen={isMenuOpen}
-                    setIsMenuOpen={setIsMenuOpen}
-                  />
-                )}
-                <div
-                  className={`flex flex-col grow px-4 xs:px-4 ${
-                    footerVisible ? "mb-20" : ""
-                  }`}
-                >
-                  <Component {...pageProps} />
-                </div>
-                <TransitionWrapper.Fade show={!isMenuOpen}>
-                  <>{footerVisible && <AppFooter />}</>
-                </TransitionWrapper.Fade>
-              </div>
-            </div>
-          </OnlyMobileLayout>
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 5000,
+    <StateMachineProvider>
+      <QueryClientProvider client={queryClient}>
+        <OnlyMobileLayout>
+          <div
+            className="flex flex-col"
+            style={{
+              height: `${pageHeight}px`,
             }}
-          />
-        </QueryClientProvider>
-      </StateMachineProvider>
-    </PlausibleProvider>
+          >
+            <div className="flex flex-col grow">
+              {showHeader && !fullPage && (
+                <AppHeader
+                  isMenuOpen={isMenuOpen}
+                  setIsMenuOpen={setIsMenuOpen}
+                />
+              )}
+              <div
+                className={`flex flex-col grow px-4 xs:px-4 ${
+                  footerVisible ? "mb-20" : ""
+                }`}
+              >
+                <Component {...pageProps} />
+              </div>
+              <TransitionWrapper.Fade show={!isMenuOpen}>
+                <>{footerVisible && <AppFooter />}</>
+              </TransitionWrapper.Fade>
+            </div>
+          </div>
+        </OnlyMobileLayout>
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 5000,
+          }}
+        />
+      </QueryClientProvider>
+    </StateMachineProvider>
   );
 }

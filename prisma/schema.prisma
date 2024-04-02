@@ -14,18 +14,11 @@ datasource db {
 model User {
   id          Int    @id @default(autoincrement())
   chipId      String @unique
-  email       String @unique
-  displayName String
-
-  claveInviteCode String
-  claveInviteLink String
-  claveWallet     String?
+  displayName String @unique
 
   encryptionPublicKey String
   signaturePublicKey  String
 
-  wantsServerCustody        Boolean
-  allowsAnalytics           Boolean
   passwordSalt              String?
   passwordHash              String?
   createdAt                 DateTime           @default(now())
@@ -36,8 +29,6 @@ model User {
   receivedBenchmarkMessages BenchmarkMessage[] @relation("BenchmarkMessageRecipient")
   questProofs               QuestProof[]       @relation("QuestProofUser")
   admin                     Admin?
-  buidlMint                 BuidlMint[]
-  itemRedeemed              ItemRedeemed[]
 }
 
 model Admin {
@@ -116,16 +107,12 @@ model Quest {
   description          String
   sponsor              String?
   imageUrl             String?
-  summonId             String?               @unique
-  buidlReward          Int
-  itemId               Int?                  @unique
-  priority             Int                   @default(0)  
+  priority             Int                   @default(0)
   isHidden             Boolean               @default(false)
   createdAt            DateTime              @default(now())
   userRequirements     UserRequirement[]
   locationRequirements LocationRequirement[]
   proofs               QuestProof[]          @relation("QuestForProof")
-  item                 Item?                 @relation("ItemQuestRequirement")
   userTapReq           Int?
 }
 
@@ -155,27 +142,12 @@ model LocationRequirement {
   sigNullifiers          LocationSigNullifier[]
 }
 
-model Item {
-  id           Int            @id @default(autoincrement())
-  name         String
-  sponsor      String
-  description  String
-  imageUrl     String
-  buidlCost    Int
-  questId      Int?           @unique
-  isSoldOut    Boolean        @default(false)
-  createdAt    DateTime       @default(now())
-  quest        Quest?         @relation("ItemQuestRequirement", fields: [questId], references: [id])
-  itemRedeemed ItemRedeemed[]
-}
-
 model QuestProof {
   id                    String                 @id @default(uuid())
   questId               Int
   userId                Int
   serializedProof       String
   redeemed              Boolean                @default(false)
-  minted                Boolean                @default(false)
   createdAt             DateTime               @default(now())
   quest                 Quest                  @relation(name: "QuestForProof", fields: [questId], references: [id])
   user                  User                   @relation(name: "QuestProofUser", fields: [userId], references: [id])
@@ -230,21 +202,4 @@ model CmacChipRegistration {
   chipId         String
   isLocationChip Boolean
   createdAt      DateTime @default(now())
-}
-
-model BuidlMint {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  amount    Int
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-}
-
-model ItemRedeemed {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  itemId    Int
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  item      Item     @relation(fields: [itemId], references: [id])
 }

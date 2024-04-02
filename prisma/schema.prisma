@@ -23,7 +23,9 @@ model User {
 
   encryptionPublicKey String
   signaturePublicKey  String
+  psiRound1Message    String
 
+  wantsExperimentalFeatures Boolean @default(false)
   wantsServerCustody        Boolean
   allowsAnalytics           Boolean
   passwordSalt              String?
@@ -108,6 +110,14 @@ model Message {
   createdAt     DateTime @default(now())
   sender        User     @relation(name: "MessageSender", fields: [senderId], references: [id])
   recipient     User     @relation(name: "MessageRecipient", fields: [recipientId], references: [id])
+}
+
+model PsiMessage {
+  id              Int      @id @default(autoincrement())
+  senderEncKey    String
+  recipientEncKey String
+  data            String
+  createdAt       DateTime @default(now())
 }
 
 model Quest {

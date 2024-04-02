@@ -3,13 +3,13 @@ import prisma from "@/lib/server/prisma";
 import { object, string, boolean } from "yup";
 import { EmptyResponse, ErrorResponse } from "@/types";
 import { verifyAuthToken } from "@/lib/server/auth";
-import { displayNameRegex } from "@/lib/shared/utils";
 
 const updateProfileSchema = object({
   authToken: string().required(),
   displayName: string().optional(),
   wantsServerCustody: boolean().optional(),
   allowsAnalytics: boolean().optional(),
+  wantsExperimentalFeatures: boolean().optional(),
   passwordSalt: string().optional(),
   passwordHash: string().optional(),
 });
@@ -42,6 +42,7 @@ export default async function handler(
     displayName,
     wantsServerCustody,
     allowsAnalytics,
+    wantsExperimentalFeatures,
     passwordSalt,
     passwordHash,
   } = validatedData;
@@ -77,6 +78,7 @@ export default async function handler(
         displayName: displayName,
         wantsServerCustody: wantsServerCustody,
         allowsAnalytics: allowsAnalytics,
+        wantsExperimentalFeatures: wantsExperimentalFeatures,
         passwordSalt: passwordSalt,
         passwordHash: passwordHash,
       },

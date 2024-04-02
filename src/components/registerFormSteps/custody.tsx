@@ -16,6 +16,7 @@ import { sha256 } from "js-sha256";
 const RegisterCustodySchema = RegisterSchema.pick([
   "wantsServerCustody",
   "allowsAnalytics",
+  "wantsExperimentalFeatures",
 ]);
 type RegisterCustodyProps = InferType<typeof RegisterCustodySchema>;
 
@@ -27,11 +28,14 @@ const RegisterCustody = ({ onBack, onSuccess }: RegisterFormStepProps) => {
     defaultValues: {
       wantsServerCustody: getState()?.register?.wantsServerCustody ?? false,
       allowsAnalytics: getState()?.register?.allowsAnalytics ?? false,
+      wantsExperimentalFeatures:
+        getState()?.register?.wantsExperimentalFeatures ?? false,
     },
   });
 
   const wantsServerCustody = watch("wantsServerCustody", false);
   const allowsAnalytics = watch("allowsAnalytics", false);
+  const wantsExperimentalFeatures = watch("wantsExperimentalFeatures", false);
 
   const handleCustodySubmit = () => {
     onSuccess?.(); // proceed to next step
@@ -44,9 +48,16 @@ const RegisterCustody = ({ onBack, onSuccess }: RegisterFormStepProps) => {
         ...getState()?.register,
         wantsServerCustody,
         allowsAnalytics,
+        wantsExperimentalFeatures,
       },
     });
-  }, [wantsServerCustody, allowsAnalytics, actions, getState]);
+  }, [
+    wantsServerCustody,
+    allowsAnalytics,
+    wantsExperimentalFeatures,
+    actions,
+    getState,
+  ]);
 
   useEffect(() => {
     const email = getState()?.register?.email;
@@ -112,6 +123,23 @@ const RegisterCustody = ({ onBack, onSuccess }: RegisterFormStepProps) => {
                 setValue("wantsServerCustody", true, {
                   shouldValidate: true,
                 });
+              }}
+            />
+            <Checkbox
+              id="wantsExperimentalFeatures"
+              label="Enable experimental cryptographic features"
+              description="Test cutting-edge MPC+FHE to
+              privately compute shared taps with another user. 
+              It incurs a computation overhead when you choose to use it."
+              checked={wantsExperimentalFeatures}
+              onChange={() => {
+                setValue(
+                  "wantsExperimentalFeatures",
+                  !wantsExperimentalFeatures,
+                  {
+                    shouldValidate: true,
+                  }
+                );
               }}
             />
           </fieldset>

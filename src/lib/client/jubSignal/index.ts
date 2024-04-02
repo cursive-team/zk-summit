@@ -6,6 +6,7 @@ export * from "./inboundTap";
 export * from "./locationTap";
 export * from "./questCompleted";
 export * from "./itemRedeemed";
+export * from "./overlapComputed";
 
 export enum JUB_SIGNAL_MESSAGE_TYPE {
   REGISTERED = "R", // A message you send to yourself indicating you are registered
@@ -14,6 +15,7 @@ export enum JUB_SIGNAL_MESSAGE_TYPE {
   LOCATION_TAP = "LT", // A message you send to yourself indicating you tapped a location
   QUEST_COMPLETED = "QC", // A message you send to yourself indicating you completed a quest
   ITEM_REDEEMED = "IR", // A message sent to you indicating you redeemed an item
+  OVERLAP_COMPUTED = "OC", // A message sent to containing decryption shares for PSI
 }
 
 export type MessageContents = {
@@ -48,6 +50,16 @@ export type EncryptedMessage = {
 export const encryptedMessageSchema = object({
   metadata: messageMetadataSchema.required(),
   encryptedContents: string().required(),
+});
+
+export type PsiMessageResponse = {
+  data: string;
+  senderEncKey: string;
+};
+
+export const psiMessageResponseSchema = object({
+  data: string().required(),
+  senderEncKey: string().required(),
 });
 
 export type PlaintextMessage = {

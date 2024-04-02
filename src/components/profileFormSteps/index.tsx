@@ -41,6 +41,7 @@ export const DEFAULT_PROFILE_VALUES: ProfileFormProps = {
   farcasterUsername: "",
   wantsServerCustody: false,
   allowsAnalytics: false,
+  wantsExperimentalFeatures: false,
 };
 
 const ProfileForm = ({
@@ -107,6 +108,9 @@ const ProfileForm = ({
           profile?.wantsServerCustody ?? previousProfile?.wantsServerCustody,
         allowsAnalytics:
           profile?.allowsAnalytics ?? previousProfile?.allowsAnalytics,
+        wantsExperimentalFeatures:
+          profile?.wantsExperimentalFeatures ??
+          previousProfile?.wantsExperimentalFeatures,
         twitterUsername:
           handleNickName(profile?.twitterUsername) ??
           handleNickName(previousProfile?.twitterUsername),

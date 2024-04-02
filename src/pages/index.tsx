@@ -119,6 +119,20 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           icon={<CircleCard icon="proof" />}
         />
       );
+    case JUB_SIGNAL_MESSAGE_TYPE.OVERLAP_COMPUTED:
+      return (
+        <Link href={`/users/${id}`}>
+          <FeedContent
+            title={
+              <>
+                {"Overlap computed with "} <u>{name}</u>
+              </>
+            }
+            icon={<Icons.cursive />}
+            description={date}
+          />
+        </Link>
+      );
     case JUB_SIGNAL_MESSAGE_TYPE.OUTBOUND_TAP:
       return (
         <Link href={`/users/${id}`}>

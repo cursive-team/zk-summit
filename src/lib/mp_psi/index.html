@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title>mp-psi example</title>
+  </head>
+  <body>
+    <script type="module">
+      import init, {
+        gen_keys_js,
+        round1_js,
+        round2_js,
+        round3_js,
+      } from "./mp_psi.js";
+
+      function randomBitVector(hammingWeight, size) {
+        let bitVector = new Array(size).fill(0);
+
+        for (let i = 0; i < hammingWeight; i++) {
+          let sampleIndex;
+          do {
+            sampleIndex = Math.floor(Math.random() * size);
+          } while (bitVector[sampleIndex] === 1);
+
+          bitVector[sampleIndex] = 1;
+        }
+        return bitVector;
+      }
+
+      function plainPsi(bitVector0, bitVector1) {
+        if (bitVector0.length !== bitVector1.length) {
+          throw new Error("Both bit vectors must be of the same length");
+        }
+
+        return bitVector0.map((element, index) => element * bitVector1[index]);
+      }
+
+      init().then(() => {
+        console.log("each time includes both parties");
+
+        console.time("gen_keys time");
+        const gen_keys_output_a = gen_keys_js();
+        const gen_keys_output_b = gen_keys_js();
+        console.timeEnd("gen_keys time");
+
+        console.log(gen_keys_output_a);
+
+        const hammingWeight = 1000;
+        const size = 2048 * 3;
+
+        const bit_vector_a = randomBitVector(hammingWeight, size);
+        const bit_vector_b = randomBitVector(hammingWeight, size);
+
+        console.time("round 1 time");
+        const round1_output_a = round1_js(
+          gen_keys_output_a,
+          gen_keys_output_b.message_round1,
+          bit_vector_a
+        );
+        const round1_output_b = round1_js(
+          gen_keys_output_b,
+          gen_keys_output_a.message_round1,
+          bit_vector_b
+        );
+        console.timeEnd("round 1 time");
+
+        console.time("round 2 time");
+        const round2_output_a = round2_js(
+          gen_keys_output_a,
+          round1_output_a,
+          round1_output_b.message_round2,
+          true
+        );
+        const round2_output_b = round2_js(
+          gen_keys_output_b,
+          round1_output_b,
+          round1_output_a.message_round2,
+          false
+        );
+        console.timeEnd("round 2 time");
+
+        console.time("round 3 time");
+        const psi_output_a = round3_js(
+          round2_output_a,
+          round2_output_b.message_round3
+        );
+        const psi_output_b = round3_js(
+          round2_output_b,
+          round2_output_a.message_round3
+        );
+        console.timeEnd("round 3 time");
+
+        console.log("psi_output_a", psi_output_a);
+        console.log("psi_output_b", psi_output_b);
+        const expected_psi_output = plainPsi(bit_vector_a, bit_vector_b);
+        console.log("expected_psi_output", expected_psi_output);
+      });
+    </script>
+  </body>
+</html>

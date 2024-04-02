@@ -8,12 +8,14 @@ import {
 export const PROFILE_STORAGE_KEY = "profile";
 
 export type Profile = {
+  pkId: string;
   displayName: string;
   email: string;
   encryptionPublicKey: string;
   signaturePublicKey: string;
   wantsServerCustody: boolean;
   allowsAnalytics: boolean;
+  wantsExperimentalFeatures: boolean;
   twitterUsername?: string;
   telegramUsername?: string;
   farcasterUsername?: string;
@@ -21,12 +23,14 @@ export type Profile = {
 };
 
 export const profileSchema = object({
+  pkId: string().required(),
   displayName: string().required(),
   email: string().email().required(),
   encryptionPublicKey: string().required(),
   signaturePublicKey: string().required(),
   wantsServerCustody: boolean().required(),
   allowsAnalytics: boolean().required(),
+  wantsExperimentalFeatures: boolean().required(),
   twitterUsername: string().optional(),
   telegramUsername: string().optional(),
   farcasterUsername: string().optional(),

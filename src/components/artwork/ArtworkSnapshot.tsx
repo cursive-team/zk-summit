@@ -98,9 +98,9 @@ const ArtworkSnapshot = ({
   };
 
   useEffect(() => {
-    const profile = getProfile();
     const combined: PubKeyArrayElement[] = [];
     if (!pubKey) {
+      const profile = getProfile();
       const users = getUsers();
       for (const userKey in users) {
         const user = users[userKey];

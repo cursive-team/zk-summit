@@ -15,6 +15,9 @@ const BenchmarkPage = () => {
           <Link href="/admin/bench/encryption">
             <Button>Encryption</Button>
           </Link>
+          <Link href="/admin/bench/psi">
+            <Button>Gauss MP-PSI</Button>
+          </Link>
           <Button disabled={true}>Local Storage</Button>
           <Button disabled={true}>Requests</Button>
           <Link href="/admin" className="link text-center">

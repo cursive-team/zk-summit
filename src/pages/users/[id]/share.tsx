@@ -5,7 +5,6 @@ import {
   getAuthToken,
   getKeys,
   getProfile,
-  getUsers,
   User,
 } from "@/lib/client/localStorage";
 import {
@@ -15,7 +14,6 @@ import {
 import { sign } from "@/lib/shared/signature";
 import { Button } from "@/components/Button";
 import { FormStepLayout } from "@/layouts/FormStepLayout";
-import { Input } from "@/components/Input";
 import { AppBackHeader } from "@/components/AppHeader";
 import { toast } from "sonner";
 import { loadMessages } from "@/lib/client/jubSignalClient";
@@ -26,9 +24,12 @@ import {
 } from "@/components/input/InputWrapper";
 import { v4 as uuidv4 } from "uuid";
 import { Spinner } from "@/components/Spinner";
-import { MessageRequest } from "@/pages/api/messages";
 import { ArtworkSnapshot } from "@/components/artwork/ArtworkSnapshot";
 import useSettings from "@/hooks/useSettings";
+import { MessageRequest, PsiMessageRequest } from "@/pages/api/messages";
+import { generateSelfBitVector } from "@/lib/client/psi";
+import init, { round1_js } from "@/lib/mp_psi/mp_psi";
+import { saveUserRound1Output } from "@/lib/client/indexedDB/psi";
 
 const SharePage = () => {
   const router = useRouter();
@@ -39,7 +40,7 @@ const SharePage = () => {
   const [shareTelegram, setShareTelegram] = useState(false);
   const [shareFarcaster, setShareFarcaster] = useState(false);
   const [shareBio, setShareBio] = useState(false);
-  const [privateNote, setPrivateNote] = useState<string>();
+  const [shareOverlap, setShareOverlap] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingUser, setLoadingUser] = useState(false);
 
@@ -99,7 +100,12 @@ const SharePage = () => {
       router.push("/login");
       return;
     }
-    const { encryptionPrivateKey, signaturePrivateKey } = keys;
+    const {
+      encryptionPrivateKey,
+      signaturePrivateKey,
+      psiPrivateKeys,
+      psiPublicKeys,
+    } = keys;
 
     const profile = getProfile();
     if (!profile) {
@@ -107,6 +113,39 @@ const SharePage = () => {
       toast.error("You must be logged in to connect");
       router.push("/login");
       return;
+    }
+
+    const response = await fetch(`/api/psiRound1Message/${user.pkId}`);
+    if (!response.ok) {
+      console.error("Error fetching user psi round 1 message: ", response);
+      toast.error("An error has occurred. Please try again.");
+      setLoading(false);
+      return;
+    }
+    const { psiRound1Message: userMessageRound1, wantsExperimentalFeatures } =
+      await response.json();
+
+    let psiMessageRequests: PsiMessageRequest[] = [];
+    if (shareOverlap && wantsExperimentalFeatures && userMessageRound1) {
+      const selfBitVector = generateSelfBitVector();
+
+      await init();
+      const round1Output = round1_js(
+        {
+          psi_keys: JSON.parse(psiPrivateKeys),
+          message_round1: JSON.parse(psiPublicKeys),
+        },
+        JSON.parse(userMessageRound1),
+        selfBitVector
+      );
+
+      await saveUserRound1Output(user.encPk, JSON.stringify(round1Output));
+      psiMessageRequests.push({
+        psiRoundMessage: JSON.stringify({
+          mr2: round1Output.message_round2,
+        }),
+        recipientPublicKey: user.encPk,
+      });
     }
 
     // ----- SEND MESSAGE TO OTHER USER -----
@@ -124,6 +163,7 @@ const SharePage = () => {
       signature,
       senderPrivateKey: encryptionPrivateKey,
       recipientPublicKey,
+      pkId: profile.pkId,
     });
     const otherUserMessageRequest: MessageRequest = {
       encryptedMessage,
@@ -131,12 +171,13 @@ const SharePage = () => {
     };
 
     // ----- SEND MESSAGE TO SELF -----
-    // This message records the outbound interaction and saves the private note
+    // This message records the outbound interaction
     const selfPublicKey = profile.encryptionPublicKey;
     const selfEncryptedMessage = await encryptOutboundTapMessage({
       displayName: user.name,
+      pkId: user.pkId,
       encryptionPublicKey: user.encPk,
-      privateNote,
+      privateNote: undefined,
       senderPrivateKey: encryptionPrivateKey,
       recipientPublicKey: selfPublicKey,
     });
@@ -146,12 +187,17 @@ const SharePage = () => {
     };
 
     // Send both messages and update activity feed
+    const successMessage =
+      shareOverlap && !wantsExperimentalFeatures
+        ? `Shared information with ${user.name}, but unable to compute private overlap. They must have experimental features enabled to do so.`
+        : `Successfully shared information with ${user.name}!`;
     try {
       await loadMessages({
         forceRefresh: false,
         messageRequests: [otherUserMessageRequest, selfMessageRequest],
+        psiMessageRequests,
       });
-      toast.success(`Successfully shared information with ${user.name}!`);
+      toast.success(successMessage);
       setLoading(false);
     } catch (error) {
       console.error("Error sending encrypted tap to server: ", error);
@@ -259,24 +305,38 @@ const SharePage = () => {
             </div>
           </div>
         )}
-        <Input
-          type="longtext"
-          label="Private note"
-          placeholder="e.g Met on Saturday"
-          textSize="sm"
-          description={
-            <>
-              <span className="block">
-                {`Use to help remember your interaction with ${user.name}.`}
-              </span>
-              <span className="block">Only you will see this.</span>
-            </>
-          }
-          value={privateNote}
-          onChange={(event) => {
-            setPrivateNote(event.target.value);
-          }}
-        />
+        {profile.wantsExperimentalFeatures && (
+          <div className="flex flex-col gap-4">
+            <InputWrapper
+              size="sm"
+              label={`Private overlap icebreaker`}
+              description={
+                <span>
+                  {`If both you and ${user.name} opt in, use `}
+                  <a
+                    href="https://github.com/gaussian-dev/MP-PSI"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <u>FHE</u>
+                  </a>
+                  {` to discover a snapshot of shared contacts & locations without revealing
+                anything else!`}
+                </span>
+              }
+              className="grid grid-cols-1"
+              spacing
+            >
+              <Checkbox
+                id="overlap"
+                label="Opt-in"
+                checked={shareOverlap}
+                type="button"
+                onChange={setShareOverlap}
+              />
+            </InputWrapper>
+          </div>
+        )}
         <Button loading={loading} type="submit">
           Submit
         </Button>

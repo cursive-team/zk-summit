@@ -23,7 +23,7 @@ model User {
 
   encryptionPublicKey String
   signaturePublicKey  String
-  psiRound1Message    String
+  psiRound1Message    String?
 
   wantsExperimentalFeatures Boolean @default(false)
   wantsServerCustody        Boolean

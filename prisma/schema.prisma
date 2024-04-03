@@ -12,9 +12,9 @@ datasource db {
 }
 
 model User {
-  id          Int    @id @default(autoincrement())
-  chipId      String @unique
-  displayName String @unique
+  id          Int     @id @default(autoincrement())
+  chipId      String  @unique
+  displayName String  @unique
   twitter     String?
   telegram    String?
   bio         String?
@@ -43,13 +43,13 @@ model Admin {
   user         User     @relation(fields: [userId], references: [id])
 }
 
-model LocationKey {
+model ChipKey {
   id                  Int      @id @default(autoincrement())
-  locationId          Int      @unique
+  chipId              String   @unique
+  signaturePublicKey  String
   signaturePrivateKey String
   numPreviousTaps     Int      @default(0)
   createdAt           DateTime @default(now())
-  location            Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
 }
 
 model Location {
@@ -62,7 +62,6 @@ model Location {
   imageUrl               String
   displayEmailWalletLink Boolean               @default(false)
   createdAt              DateTime              @default(now())
-  signaturePrivateKey    LocationKey?          @relation
   questRequirements      LocationRequirement[] @relation("LocationQuestRequirements")
 }
 
@@ -191,14 +190,6 @@ model BenchmarkMessage {
   createdAt     DateTime @default(now())
   sender        User     @relation(name: "BenchmarkMessageSender", fields: [senderId], references: [id])
   recipient     User     @relation(name: "BenchmarkMessageRecipient", fields: [recipientId], references: [id])
-}
-
-model EmailWalletMint {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  locationId Int
-  sigHash    String
-  createdAt  DateTime @default(now())
 }
 
 model CmacChipRegistration {

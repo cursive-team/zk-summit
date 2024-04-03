@@ -19,6 +19,7 @@ const createAccountSchema = object({
   displayName: string().trim().required(),
   encryptionPublicKey: string().required(),
   signaturePublicKey: string().required(),
+  signingKey: string().required(),
   passwordSalt: string().optional().default(undefined),
   passwordHash: string().optional().default(undefined),
   authPublicKey: string().optional().default(undefined),
@@ -56,6 +57,7 @@ export default async function handler(
     displayName,
     encryptionPublicKey,
     signaturePublicKey,
+    signingKey,
     passwordSalt,
     passwordHash,
     authPublicKey,
@@ -141,6 +143,15 @@ export default async function handler(
       twitter: parsedTwitter,
       telegram: parsedTelegram,
       bio,
+    },
+  });
+
+  // Create chip key
+  await prisma.chipKey.create({
+    data: {
+      chipId,
+      signaturePublicKey,
+      signaturePrivateKey: signingKey,
     },
   });
 

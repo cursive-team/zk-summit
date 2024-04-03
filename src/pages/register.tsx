@@ -241,6 +241,7 @@ export default function Register() {
         displayName,
         encryptionPublicKey: publicKey,
         signaturePublicKey: verifyingKey,
+        signingKey,
         passwordSalt,
         passwordHash,
         authPublicKey,

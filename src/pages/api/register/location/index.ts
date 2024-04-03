@@ -86,9 +86,10 @@ export default async function handler(
         },
       });
 
-      await prisma.locationKey.create({
+      await prisma.chipKey.create({
         data: {
-          locationId: location.id,
+          chipId,
+          signaturePublicKey: verifyingKey,
           signaturePrivateKey: signingKey,
         },
       });
@@ -145,10 +146,11 @@ export default async function handler(
 
         // Generate signing keypair for the location
         const { signingKey, verifyingKey } = generateSignatureKeyPair();
+        const chipId = sigPk;
 
         const location = await prisma.location.create({
           data: {
-            chipId: sigPk,
+            chipId,
             name,
             description,
             sponsor,
@@ -158,9 +160,10 @@ export default async function handler(
           },
         });
 
-        await prisma.locationKey.create({
+        await prisma.chipKey.create({
           data: {
-            locationId: location.id,
+            chipId,
+            signaturePublicKey: verifyingKey,
             signaturePrivateKey: signingKey,
           },
         });

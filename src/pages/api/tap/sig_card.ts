@@ -4,7 +4,7 @@ import { boolean, object, string } from "yup";
 import { ErrorResponse } from "@/types";
 import {
   LocationTapResponse,
-  generateLocationSignature,
+  generateChipSignature,
   locationTapResponseSchema,
 } from "./cmac";
 
@@ -77,16 +77,17 @@ export default async function handler(
     };
     return res.status(200).json({ registered: true, locationInfo });
   } else {
+    const chipId = signaturePublicKey;
     const location = await prisma.location.findFirst({
       where: {
-        chipId: signaturePublicKey,
+        chipId,
       },
     });
     if (!location) {
       return res.status(200).json({ registered: false });
     }
 
-    const { message, signature } = await generateLocationSignature(location.id);
+    const { message, signature } = await generateChipSignature(chipId);
     const locationTapResponse: LocationTapResponse = {
       id: location.id.toString(),
       name: location.name,

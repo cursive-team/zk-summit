@@ -25,6 +25,9 @@ export type PersonTapResponse = {
   twitter?: string;
   telegram?: string;
   bio?: string;
+  signaturePublicKey: string;
+  signatureMessage: string;
+  signature: string;
 };
 
 export const personTapResponseSchema = object({
@@ -33,6 +36,9 @@ export const personTapResponseSchema = object({
   twitter: string().optional().default(undefined),
   telegram: string().optional().default(undefined),
   bio: string().optional().default(undefined),
+  signaturePublicKey: string().required(),
+  signatureMessage: string().required(),
+  signature: string().required(),
 });
 
 export type LocationTapResponse = {
@@ -70,33 +76,33 @@ export const tapResponseSchema = object({
 });
 
 /**
- * Returns a signature for a given location
+ * Returns a signature for a given chip
  * Mirrors Arx card signature generation
  * First 4 bytes of message are an incrementing counter
  * Remaining 28 bytes are random
- * @param locationId The id of the location for which to generate a signature
+ * @param chipId The id of the chip for which to generate a signature
  */
-export const generateLocationSignature = async (
-  locationId: number
+export const generateChipSignature = async (
+  chipId: string
 ): Promise<{ message: string; signature: string }> => {
-  const locationKey = await prisma.locationKey.findUnique({
+  const chipKey = await prisma.chipKey.findFirst({
     where: {
-      locationId,
+      chipId,
     },
   });
-  if (!locationKey) {
-    throw new Error("Location key not found");
+  if (!chipKey) {
+    throw new Error("Chip key not found");
   }
 
-  const { signaturePrivateKey, numPreviousTaps } = locationKey;
+  const { signaturePrivateKey, numPreviousTaps } = chipKey;
   const msgNonce = numPreviousTaps + 1; // Incrementing counter
   const randomBytes = crypto.randomBytes(28); // 28 random bytes
   const message = getCounterMessage(msgNonce, randomBytes.toString("hex"));
   const signature = sign(signaturePrivateKey, message);
 
-  await prisma.locationKey.update({
+  await prisma.chipKey.update({
     where: {
-      locationId,
+      chipId,
     },
     data: {
       numPreviousTaps: numPreviousTaps + 1,
@@ -138,6 +144,9 @@ export default async function handler(
     return res.status(200).json({ code: TapResponseCode.CMAC_INVALID });
   }
 
+  // Get signature from chip
+  const { message, signature } = await generateChipSignature(chipId);
+
   // if user is registered, return user data
   const user = await prisma.user.findUnique({
     where: {
@@ -151,6 +160,9 @@ export default async function handler(
       twitter: user.twitter ? user.twitter : undefined,
       telegram: user.telegram ? user.telegram : undefined,
       bio: user.bio ? user.bio : undefined,
+      signaturePublicKey: user.signaturePublicKey,
+      signatureMessage: message,
+      signature,
     };
     return res
       .status(200)
@@ -164,7 +176,6 @@ export default async function handler(
     },
   });
   if (location) {
-    const { message, signature } = await generateLocationSignature(location.id);
     const locationTapResponse: LocationTapResponse = {
       id: location.id.toString(),
       name: location.name,

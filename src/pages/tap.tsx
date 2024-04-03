@@ -66,9 +66,9 @@ export default function Tap() {
         twitterUsername: person.twitter,
         telegramUsername: person.telegram,
         bio: person.bio,
-        signaturePublicKey: person.signaturePublicKey,
-        signatureMessage: person.signatureMessage,
-        signature: person.signature,
+        signaturePublicKey: "", // TODO
+        signatureMessage: "", // TODO
+        signature: "", // TODO
         senderPrivateKey,
         recipientPublicKey: thisUserPublicKey,
       });

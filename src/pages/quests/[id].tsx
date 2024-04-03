@@ -8,7 +8,6 @@ import {
   LocationRequirement,
   QuestRequirementType,
   QuestWithRequirements,
-  QuestWithRequirementsAndItem,
   UserRequirement,
 } from "@/types";
 import { Button } from "@/components/Button";
@@ -47,14 +46,14 @@ import { cn } from "@/lib/client/utils";
 
 interface QuestDetailProps {
   loading?: boolean;
-  quest: QuestWithRequirementsAndItem | null;
+  quest: QuestWithRequirements | null;
 }
 
 const Label = classed.span("text-xs text-gray-10 font-light");
 
 const QuestDetail = ({ quest, loading = false }: QuestDetailProps) => {
   const pinnedQuests = useRef<Set<number>>(getPinnedQuest());
-  const { name: title, description, buidlReward, item } = quest ?? {};
+  const { name: title, description } = quest ?? {};
   const [isQuestPinned, setIsQuestPinned] = useState(
     pinnedQuests.current.has(quest?.id ?? 0)
   );
@@ -92,22 +91,7 @@ const QuestDetail = ({ quest, loading = false }: QuestDetailProps) => {
       </div>
       <div className="flex flex-col gap-4">
         <span className=" text-gray-11 text-xs font-light">{description}</span>
-        <div className="flex flex-col gap-2">
-          {buidlReward ? (
-            <PointCard
-              label="Reward(s)"
-              className="center"
-              point={buidlReward}
-            />
-          ) : null}
-          {item && (
-            <PartnerItemCard
-              partner={item.sponsor}
-              item={item.name}
-              image={item.imageUrl}
-            />
-          )}
-        </div>
+        <div className="flex flex-col gap-2"></div>
       </div>
     </div>
   );

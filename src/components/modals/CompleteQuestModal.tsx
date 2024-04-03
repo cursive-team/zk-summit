@@ -6,7 +6,7 @@ import { Modal, ModalProps } from "./Modal";
 import { Button } from "../Button";
 import Link from "next/link";
 import { classed } from "@tw-classed/react";
-import { QuestWithRequirementsAndItem } from "@/types";
+import { QuestWithRequirements } from "@/types";
 import {
   QuestProvingStateUpdate,
   generateProofForQuest,
@@ -26,7 +26,7 @@ import { Spinner } from "../Spinner";
 const QRCodeWrapper = classed.div("bg-white max-w-[254px]");
 
 interface CompleteQuestModalProps extends ModalProps {
-  quest: QuestWithRequirementsAndItem;
+  quest: QuestWithRequirements;
   existingProofId?: string;
 }
 
@@ -60,20 +60,13 @@ const CompleteQuestModal = ({
     currentRequirementNumSigsProven: 0,
   });
   const [proofId, setProofId] = useState<string>();
-  const [itemRedeemed, setItemRedeemed] = useState(false);
 
   useEffect(() => {
     if (existingProofId) {
       setProofId(existingProofId);
       setDisplayState(CompleteQuestDisplayState.COMPLETED);
-      if (quest.item) {
-        const itemRedeemed = getItemRedeemed(quest.item.id.toString());
-        if (itemRedeemed) {
-          setItemRedeemed(true);
-        }
-      }
     }
-  }, [existingProofId, quest.item]);
+  }, [existingProofId]);
 
   const handleCompleteQuest = async () => {
     const authToken = getAuthToken();
@@ -191,58 +184,6 @@ const CompleteQuestModal = ({
   };
 
   const getModalContent = (): JSX.Element => {
-    if (proofId && quest.item && !itemRedeemed) {
-      const qrCodeData = `${window.location.origin}/qr/${proofId}`;
-      const { name, sponsor, imageUrl, isSoldOut } = quest.item;
-
-      return (
-        <div className="flex flex-col gap-6 mt-8">
-          <div className="flex flex-col gap-4 items-center">
-            <div className="rounded-[2px] overflow-hidden">
-              <img
-                className="object-cover w-[174px] h-[174px]"
-                alt={`${sponsor} store item`}
-                src={imageUrl}
-                width={174}
-                height={174}
-              />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <div className="flex flex-col text-center">
-                <h2 className="text-sm text-gray-12">
-                  {"Redeemable: " + name}
-                </h2>
-                {isSoldOut ? (
-                  <span className="text-xs font-light text-gray-900 mt-2">
-                    Sold Out
-                  </span>
-                ) : (
-                  <span className="text-xs font-light text-gray-900 mt-2">
-                    Present this QR code at the BUIDL Store!
-                  </span>
-                )}
-              </div>
-            </div>
-            {!isSoldOut && (
-              <QRCodeWrapper>
-                <QRCode
-                  size={156}
-                  className="ml-auto p-4 h-auto w-full max-w-full"
-                  value={qrCodeData}
-                  viewBox={`0 0 156 156`}
-                />
-              </QRCodeWrapper>
-            )}
-            {quest.buidlReward > 0 && (
-              <span className="text-xs text-gray-10 mt-2">
-                {`You've also received ${quest.buidlReward} BUIDL!`}
-              </span>
-            )}
-          </div>
-        </div>
-      );
-    }
-
     switch (displayState) {
       case CompleteQuestDisplayState.INITIAL:
         return (
@@ -287,28 +228,7 @@ const CompleteQuestModal = ({
                   {"Completed"}
                 </span>
                 <span className="text-xl text-gray-12">{quest.name}</span>
-                {quest.buidlReward > 0 && (
-                  <span className="text-sm text-gray-10 mt-4">
-                    {`You'll receive ${quest.buidlReward} BUIDL upon mint!`}
-                  </span>
-                )}
               </div>
-            </div>
-            <div className="self-center w-full">
-              <Link
-                href={`http://twitter.com/share?text=${encodeURIComponent(
-                  `I proved completion of Quest: ${quest.name} with ZK as part of @cursive_team @iyk_app @zksync's ETHDenver app experience! Tap your badge to join!`
-                )}&url=${encodeURIComponent(
-                  `${window.location.origin}/quests/${quest.id}`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button>
-                  <span className="text-sm text-gray-11">Share on</span>
-                  <Icons.twitter />
-                </Button>
-              </Link>
             </div>
             <div
               onClick={handleBackToQuests}

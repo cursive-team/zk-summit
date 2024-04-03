@@ -1,4 +1,4 @@
-import { Item, Location, Quest } from "@prisma/client";
+import { Location, Quest } from "@prisma/client";
 import { MembershipProof } from "babyjubjub-ecdsa";
 
 export type EmptyResponse = {};
@@ -53,16 +53,6 @@ export type LocationRequirement = {
   locations: LocationRequirementPreview[];
 };
 
-export type ItemPreview = {
-  id: number;
-  name: string;
-  imageUrl: string;
-  sponsor: string;
-  description: string;
-  buidlCost: number;
-  isSoldOut: boolean;
-};
-
 export type QuestWithRequirements = Quest & {
   userRequirements: UserRequirement[];
   locationRequirements: LocationRequirement[];
@@ -72,21 +62,9 @@ export type QuestWithCompletion = QuestWithRequirements & {
   isCompleted?: boolean;
 };
 
-export type QuestWithRequirementsAndItem = QuestWithRequirements & {
-  item: ItemPreview | null;
-};
-
 export type QuestProof = {
   userProofs: MembershipProof[][];
   locationProofs: MembershipProof[][];
-};
-
-export type ItemWithRequirements = Item & {
-  quest: QuestWithRequirements | null;
-};
-
-export type ItemWithCompletion = ItemWithRequirements & {
-  isCompleted?: boolean;
 };
 
 export type LocationWithQuests = Location & {

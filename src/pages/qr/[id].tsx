@@ -80,7 +80,7 @@ const QRPage = () => {
     const keys = getKeys();
 
     if (!authToken || authToken.expiresAt < new Date() || !keys) {
-      toast.error("You must be logged in to complete a quest");
+      toast.error("You must be logged in to nullify this proof");
       router.push("/login");
       return;
     }
@@ -94,18 +94,18 @@ const QRPage = () => {
     });
     if (!response.ok) {
       const { error } = await response.json();
-      toast.error("Error redeeming QR code");
-      console.error("Error redeeming QR code: ", error);
+      toast.error("Error nullifying proof");
+      console.error("Error nullifying proof: ", error);
       setLoading(false);
       return;
     }
 
     const { success } = await response.json();
     if (success) {
-      toast.success("Successfully redeemed item for user!");
+      toast.success("Successfully nullified proof for user!");
       setDisplayState(QRPageDisplayState.SUCCESS);
     } else {
-      toast.error("This QR code has already been redeemed.");
+      toast.error("This proof has already been used.");
       setDisplayState(QRPageDisplayState.FAILURE);
     }
     setLoading(false);

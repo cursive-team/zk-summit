@@ -7,13 +7,13 @@ export default function Document() {
       <Head>
         <meta
           name="description"
-          content="Connect with ZK Summit 11 attendees by tapping NFC chips."
+          content="Tap NFC cards at ZK Summit 11 to verifiably digitize your in-person experience."
           key="desc"
         />
         <meta property="og:title" content="ZK Summit 11" />
         <meta
           property="og:description"
-          content="Connect with ZK Summit 11 attendees by tapping NFC chips."
+          content="Tap NFC cards at ZK Summit 11 to verifiably digitize your in-person experience."
         />
         <meta property="og:image" content="/cursive.jpg" />
         <link

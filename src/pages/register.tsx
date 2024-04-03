@@ -97,7 +97,7 @@ export default function Register() {
       displayName.length > 20
     ) {
       toast.error(
-        "Display name cannot have leading or trailing whitespace and must be less than or equal to 20 characters"
+        "Display name cannot have leading or trailing whitespace and must be 20 characters or less"
       );
       return;
     }
@@ -149,12 +149,12 @@ export default function Register() {
       return;
     }
 
-    if (twitter && !twitterUsernameRegex.test(twitter)) {
+    if (twitter !== "@" && !twitterUsernameRegex.test(twitter)) {
       toast.error("Please enter a valid Twitter username.");
       return;
     }
 
-    if (telegram && !telegramUsernameRegex.test(telegram)) {
+    if (telegram !== "@" && !telegramUsernameRegex.test(telegram)) {
       toast.error("Please enter a valid Telegram username.");
       return;
     }

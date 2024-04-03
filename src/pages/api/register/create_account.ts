@@ -67,7 +67,7 @@ export default async function handler(
   if (/^\s|\s$/.test(displayName) || displayName.length > 20) {
     return res.status(400).json({
       error:
-        "Display name cannot have leading or trailing whitespace and must be less than or equal to 20 characters",
+        "Display name cannot have leading or trailing whitespace and must be 20 characters or less",
     });
   }
 
@@ -114,6 +114,20 @@ export default async function handler(
     return res.status(400).json({ error: "Username already taken" });
   }
 
+  let parsedTwitter: string | undefined;
+  if (twitter === undefined || twitter === "" || twitter === "@") {
+    parsedTwitter = undefined;
+  } else {
+    parsedTwitter = twitter.startsWith("@") ? twitter.slice(1) : twitter;
+  }
+
+  let parsedTelegram: string | undefined;
+  if (telegram === undefined || telegram === "" || telegram === "@") {
+    parsedTelegram = undefined;
+  } else {
+    parsedTelegram = telegram.startsWith("@") ? telegram.slice(1) : telegram;
+  }
+
   // Create user
   const user = await prisma.user.create({
     data: {
@@ -124,8 +138,8 @@ export default async function handler(
       passwordSalt,
       passwordHash,
       authPublicKey,
-      twitter,
-      telegram,
+      twitter: parsedTwitter,
+      telegram: parsedTelegram,
       bio,
     },
   });

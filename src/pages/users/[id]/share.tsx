@@ -37,7 +37,6 @@ const SharePage = () => {
   const [profile, setProfile] = useState(getProfile());
   const [shareTwitter, setShareTwitter] = useState(false);
   const [shareTelegram, setShareTelegram] = useState(false);
-  const [shareFarcaster, setShareFarcaster] = useState(false);
   const [shareBio, setShareBio] = useState(false);
   const [privateNote, setPrivateNote] = useState<string>();
   const [loading, setLoading] = useState(false);
@@ -117,7 +116,6 @@ const SharePage = () => {
     const encryptedMessage = await encryptInboundTapMessage({
       twitterUsername: shareTwitter ? profile.twitterUsername : undefined,
       telegramUsername: shareTelegram ? profile.telegramUsername : undefined,
-      farcasterUsername: shareFarcaster ? profile.farcasterUsername : undefined,
       bio: shareBio ? profile.bio : undefined,
       signaturePublicKey: profile.signaturePublicKey,
       signatureMessage: dataToSign,
@@ -173,11 +171,7 @@ const SharePage = () => {
     return <div>User not found</div>;
   }
 
-  const hasSocialLinks =
-    profile.twitterUsername ||
-    profile.telegramUsername ||
-    profile.farcasterUsername;
-
+  const hasSocialLinks = profile.twitterUsername || profile.telegramUsername;
   const artworkSize = (pageWidth - 32) / 2;
 
   return (
@@ -235,15 +229,6 @@ const SharePage = () => {
                     checked={shareTelegram}
                     type="button"
                     onChange={setShareTelegram}
-                  />
-                )}
-                {profile.farcasterUsername && (
-                  <Checkbox
-                    id="farcaster"
-                    label="Farcaster"
-                    checked={shareFarcaster}
-                    type="button"
-                    onChange={setShareFarcaster}
                   />
                 )}
                 {profile.bio && (

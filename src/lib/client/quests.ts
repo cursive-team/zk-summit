@@ -28,33 +28,6 @@ export const computeNumRequirementsSatisfied = (args: {
       userRequirement: userRequirements[0],
     });
   }
-
-  // const numUserRequirementsSatisfied = userRequirements.filter(
-  //   (requirement) =>
-  //     computeNumRequirementSignatures({
-  //       publicKeyList: userPublicKeys,
-  //       userRequirement: requirement,
-  //     }) >= requirement.numSigsRequired
-  // ).length;
-
-  // const numLocationRequirementsSatisfied = locationRequirements.filter(
-  //   (requirement) =>
-  //     computeNumRequirementSignatures({
-  //       publicKeyList: locationPublicKeys,
-  //       locationRequirement: requirement,
-  //     }) >= requirement.numSigsRequired
-  // ).length;
-
-  // let userTapReqSatisfied = 0;
-  // if (questUserTapReq && userOutboundTaps >= questUserTapReq) {
-  //   userTapReqSatisfied = 1;
-  // }
-
-  // return (
-  //   numUserRequirementsSatisfied +
-  //   numLocationRequirementsSatisfied +
-  //   userTapReqSatisfied
-  // );
 };
 
 // Given a list of public keys corresponding to signatures and a user or location requirement,

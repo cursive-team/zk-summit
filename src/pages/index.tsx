@@ -96,8 +96,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
       if (
         profile?.bio ||
         profile?.telegramUsername ||
-        profile?.twitterUsername ||
-        profile?.farcasterUsername
+        profile?.twitterUsername
       ) {
         return (
           <FeedContent

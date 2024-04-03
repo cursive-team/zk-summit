@@ -77,14 +77,40 @@ export default async function handler(
     return res.status(400).json({ error: "User not found" });
   }
 
+  let parsedTwitter: string | undefined;
+  if (
+    twitterUsername === undefined ||
+    twitterUsername === "" ||
+    twitterUsername === "@"
+  ) {
+    parsedTwitter = undefined;
+  } else {
+    parsedTwitter = twitterUsername.startsWith("@")
+      ? twitterUsername.slice(1)
+      : twitterUsername;
+  }
+
+  let parsedTelegram: string | undefined;
+  if (
+    telegramUsername === undefined ||
+    telegramUsername === "" ||
+    telegramUsername === "@"
+  ) {
+    parsedTelegram = undefined;
+  } else {
+    parsedTelegram = telegramUsername.startsWith("@")
+      ? telegramUsername.slice(1)
+      : telegramUsername;
+  }
+
   try {
     await prisma.user.update({
       where: {
         id: userId,
       },
       data: {
-        twitter: twitterUsername,
-        telegram: telegramUsername,
+        twitter: parsedTwitter,
+        telegram: parsedTelegram,
         bio,
       },
     });

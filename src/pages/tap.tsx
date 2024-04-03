@@ -63,6 +63,8 @@ export default function Tap() {
       const thisUserPublicKey = profile.encryptionPublicKey;
       const otherUserPublicKey = person.encryptionPublicKey;
       const encryptedInboundMessage = await encryptInboundTapMessage({
+        displayName: person.displayName,
+        encryptionPublicKey: otherUserPublicKey,
         twitterUsername: person.twitter,
         telegramUsername: person.telegram,
         bio: person.bio,

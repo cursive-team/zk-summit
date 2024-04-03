@@ -2,9 +2,10 @@ import { object, string } from "yup";
 import { JUB_SIGNAL_MESSAGE_TYPE, encryptMessage } from ".";
 
 export type InboundTapMessage = {
+  name: string; // Display name
+  encPk: string; // Encryption public key
   x?: string; // Twitter handle
   tg?: string; // Telegram handle
-  fc?: string; // Farcaster handle
   bio?: string; // Bio
   pk: string; // Signature public key
   msg: string; // Signature message
@@ -12,9 +13,10 @@ export type InboundTapMessage = {
 };
 
 export const inboundTapMessageSchema = object({
+  name: string().required(),
+  encPk: string().required(),
   x: string().optional(),
   tg: string().optional(),
-  fc: string().optional(),
   bio: string().optional(),
   pk: string().required(),
   msg: string().required(),
@@ -22,9 +24,10 @@ export const inboundTapMessageSchema = object({
 });
 
 export type EncryptInboundTapMessageArgs = {
+  displayName: string;
+  encryptionPublicKey: string;
   twitterUsername?: string;
   telegramUsername?: string;
-  farcasterUsername?: string;
   bio?: string;
   signaturePublicKey: string;
   signatureMessage: string;
@@ -34,9 +37,10 @@ export type EncryptInboundTapMessageArgs = {
 };
 
 export async function encryptInboundTapMessage({
+  displayName,
+  encryptionPublicKey,
   twitterUsername,
   telegramUsername,
-  farcasterUsername,
   bio,
   signaturePublicKey,
   signatureMessage,
@@ -45,9 +49,10 @@ export async function encryptInboundTapMessage({
   recipientPublicKey,
 }: EncryptInboundTapMessageArgs): Promise<string> {
   const messageData: InboundTapMessage = {
+    name: displayName,
+    encPk: encryptionPublicKey,
     x: twitterUsername,
     tg: telegramUsername,
-    fc: farcasterUsername,
     bio,
     pk: signaturePublicKey,
     msg: signatureMessage,

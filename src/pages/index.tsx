@@ -115,17 +115,15 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
       );
     case JUB_SIGNAL_MESSAGE_TYPE.OUTBOUND_TAP:
       return (
-        <Link href={`/users/${id}`}>
-          <FeedContent
-            title={
-              <>
-                {"Tapped by "} <u>{name}</u>
-              </>
-            }
-            icon={<CircleCard icon="person" />}
-            description={date}
-          />
-        </Link>
+        <FeedContent
+          title={
+            <>
+              {"Tapped by "} <u>{name}</u>
+            </>
+          }
+          icon={<CircleCard icon="person" />}
+          description={date}
+        />
       );
     case JUB_SIGNAL_MESSAGE_TYPE.INBOUND_TAP:
       return (

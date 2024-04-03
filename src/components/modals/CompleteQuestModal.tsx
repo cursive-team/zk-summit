@@ -74,7 +74,7 @@ const CompleteQuestModal = ({
     const keys = getKeys();
 
     if (!authToken || authToken.expiresAt < new Date() || !profile || !keys) {
-      toast.error("You must be logged in to complete a quest");
+      toast.error("You must be logged in to generate a proof");
       router.push("/login");
       return;
     }
@@ -121,7 +121,7 @@ const CompleteQuestModal = ({
     });
 
     if (!response.ok) {
-      toast.error("Failed to complete quest!");
+      toast.error("Failed to submit proof!");
       setDisplayState(CompleteQuestDisplayState.INITIAL);
       return;
     }
@@ -168,7 +168,7 @@ const CompleteQuestModal = ({
         error
       );
       toast.error(
-        "An error occured while completing the quest. Please try again."
+        "An error occured while generating the proof. Please try again."
       );
       setDisplayState(CompleteQuestDisplayState.INITIAL);
       return;
@@ -195,9 +195,7 @@ const CompleteQuestModal = ({
               </div>
             </div>
             <div className="self-center w-full">
-              <Button onClick={handleCompleteQuest}>
-                Generate completion ZK Proof
-              </Button>
+              <Button onClick={handleCompleteQuest}>Generate ZK Proof</Button>
             </div>
           </div>
         );
@@ -209,7 +207,7 @@ const CompleteQuestModal = ({
               <div className="flex flex-col">
                 <span className="text-xl text-gray-12 mb-2">{quest.name}</span>
                 <Spinner
-                  label={`Generating ZK proof (${provingState.numRequirementsProven}/${provingState.numRequirementsTotal} reqs)`}
+                  label={`Generating ZK proof (${provingState.currentRequirementNumSigsProven}/${provingState.currentRequirementNumSigsTotal} reqs)`}
                 />
               </div>
             </div>
@@ -219,22 +217,31 @@ const CompleteQuestModal = ({
           </div>
         );
       case CompleteQuestDisplayState.COMPLETED:
+        const qrCodeData = `${window.location.origin}/qr/${proofId}`;
         return (
           <div className="flex flex-col w-full justify-center text-center gap-5">
             <div className="h-10 w-10 bg-slate-200 rounded-full self-center"></div>
             <div className="flex flex-col gap-1 self-center">
               <div className="flex flex-col">
                 <span className="text-xl text-gray-12 font-bold">
-                  {"Completed"}
+                  {"Proved:"}
                 </span>
                 <span className="text-xl text-gray-12">{quest.name}</span>
               </div>
+              <QRCodeWrapper>
+                <QRCode
+                  size={156}
+                  className="ml-auto p-4 h-auto w-full max-w-full"
+                  value={qrCodeData}
+                  viewBox={`0 0 156 156`}
+                />
+              </QRCodeWrapper>
             </div>
             <div
               onClick={handleBackToQuests}
               className="flex items-center gap-1 self-center"
             >
-              <span className="text-sm text-gray-11">Back to quests</span>
+              <span className="text-sm text-gray-11">Back to proofs</span>
             </div>
           </div>
         );

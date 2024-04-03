@@ -190,7 +190,7 @@ const LocationList = ({
   );
 };
 
-const LocationDetail = ({
+export const LocationDetail = ({
   title,
   completed,
   locations,
@@ -220,7 +220,7 @@ type UserDetailProps = HeaderProps & {
   numSigsRequired: number;
 };
 
-const UserDetail = ({
+export const UserDetail = ({
   title,
   completed,
   users,

@@ -75,7 +75,9 @@ const QuestCard = ({
   reward,
 }: QuestCardProps) => {
   const numRequirements =
-    userRequirements?.length + locationRequirements?.length + userTapReqCount;
+    locationRequirements.length === 0
+      ? userRequirements[0].numSigsRequired
+      : locationRequirements[0].numSigsRequired;
 
   const percentageComplete = completedReqs
     ? (completedReqs / numRequirements) * 100
@@ -86,30 +88,26 @@ const QuestCard = ({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <Card.Title>{title}</Card.Title>
-          {isPinned ? (
+          {/* {isPinned ? (
             <div className="flex items-center gap-1">
               <span className="text-xs text-gray-11">Pinned</span>
               <Icons.pin />
             </div>
           ) : (
             (isCompleted && <Icons.checkedCircle />) || null
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Card.Description>{description}</Card.Description>
-          {reward !== undefined && <PointCard label="Reward" point={reward} />}
+          )} */}
         </div>
       </div>
       <div className="flex gap-4 items-center justify-between">
-        <QuestRequirementIcons
+        {/* <QuestRequirementIcons
           userRequirements={userRequirements}
           locationRequirements={locationRequirements}
           userTapReqCount={userTapReqCount}
-        />
+        /> */}
         {isCompleted ? (
-          <Card.Description>{"Quest Complete"}</Card.Description>
+          <Card.Description>{"Proof Completed"}</Card.Description>
         ) : completedReqs === numRequirements ? (
-          <Card.Description>{`Prove completion to unlock rewards!`}</Card.Description>
+          <Card.Description>{`Generate proof of completion`}</Card.Description>
         ) : (
           <Card.Description>{`${
             completedReqs || 0

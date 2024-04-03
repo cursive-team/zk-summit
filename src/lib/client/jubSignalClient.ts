@@ -76,24 +76,20 @@ export const loadMessages = async ({
     messageRequests = [];
   }
 
-  // Process PSI messages if the user has opted in for experimental features
-  if (profile.wantsExperimentalFeatures) {
-    // Check if there has been a mutual opt-in for the PSI
-    // If so, send a decryption shares message
-    const round2MessageRequests = await handleRound2MessageRequests(
-      keys,
-      profile.pkId
-    );
-    psiMessageRequests = psiMessageRequests.concat(round2MessageRequests);
-    // console.log("psiMessageRequests", psiMessageRequests);
+  // Check if there has been a mutual opt-in for the PSI
+  // If so, send a decryption shares message
+  const round2MessageRequests = await handleRound2MessageRequests(
+    keys,
+    profile.pkId
+  );
+  psiMessageRequests = psiMessageRequests.concat(round2MessageRequests);
 
-    // Check if overlap can be computed and backed up
-    const overlapMessageRequests = await handleOverlapMessageRequests(
-      keys,
-      profile.encryptionPublicKey
-    );
-    messageRequests = messageRequests.concat(overlapMessageRequests);
-  }
+  // Check if overlap can be computed and backed up
+  const overlapMessageRequests = await handleOverlapMessageRequests(
+    keys,
+    profile.encryptionPublicKey
+  );
+  messageRequests = messageRequests.concat(overlapMessageRequests);
 
   // Fetch jubSignal messages from server
   // Send a new message if requested

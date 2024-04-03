@@ -8,6 +8,17 @@ import {
   userPsiStateKeys,
 } from "./indexedDB/psi";
 import { encryptOverlapComputedMessage } from "./jubSignal";
+import { type PutBlobResult } from "@vercel/blob";
+import { upload } from "@vercel/blob/client";
+
+export const psiBlobUploadClient = async (name: string, data: Blob) => {
+  const newBlob: PutBlobResult = await upload(name, data, {
+    access: "public",
+    handleUploadUrl: "/api/psiBlobUpload",
+  });
+
+  return newBlob.url;
+};
 
 export const generatePSIKeys = async () => {
   await init();
@@ -50,8 +61,6 @@ export const generateSelfBitVector = (): Uint32Array => {
   return bitVector;
 };
 
-// Only put out 3 mr3 messages at a time (~0.6mb) to avoid
-// running into 4.5 Vercel serverless function memory limit
 export const handleRound2MessageRequests = async (
   keys: Keys,
   selfPkId: string
@@ -61,10 +70,6 @@ export const handleRound2MessageRequests = async (
   const userPsiStateValidKeys = await userPsiStateKeys();
 
   for (const userId in users) {
-    if (psiMessageRequests.length === 3) {
-      break;
-    }
-
     // don't waste time reading IndexedDB if keys are not present
     if (!userPsiStateValidKeys.includes(userId)) {
       continue;

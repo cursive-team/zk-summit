@@ -23,9 +23,7 @@ model User {
 
   encryptionPublicKey String
   signaturePublicKey  String
-  psiRound1Message    String?
 
-  wantsExperimentalFeatures Boolean @default(false)
   wantsServerCustody        Boolean
   allowsAnalytics           Boolean
   passwordSalt              String?
@@ -129,7 +127,7 @@ model Quest {
   summonId             String?               @unique
   buidlReward          Int
   itemId               Int?                  @unique
-  priority             Int                   @default(0)  
+  priority             Int                   @default(0)
   isHidden             Boolean               @default(false)
   createdAt            DateTime              @default(now())
   userRequirements     UserRequirement[]

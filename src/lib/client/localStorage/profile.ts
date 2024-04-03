@@ -15,7 +15,6 @@ export type Profile = {
   signaturePublicKey: string;
   wantsServerCustody: boolean;
   allowsAnalytics: boolean;
-  wantsExperimentalFeatures: boolean;
   twitterUsername?: string;
   telegramUsername?: string;
   farcasterUsername?: string;
@@ -30,7 +29,6 @@ export const profileSchema = object({
   signaturePublicKey: string().required(),
   wantsServerCustody: boolean().required(),
   allowsAnalytics: boolean().required(),
-  wantsExperimentalFeatures: boolean().required(),
   twitterUsername: string().optional(),
   telegramUsername: string().optional(),
   farcasterUsername: string().optional(),

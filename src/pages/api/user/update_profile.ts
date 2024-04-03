@@ -9,7 +9,6 @@ const updateProfileSchema = object({
   displayName: string().optional(),
   wantsServerCustody: boolean().optional(),
   allowsAnalytics: boolean().optional(),
-  wantsExperimentalFeatures: boolean().optional(),
   passwordSalt: string().optional(),
   passwordHash: string().optional(),
 });
@@ -42,7 +41,6 @@ export default async function handler(
     displayName,
     wantsServerCustody,
     allowsAnalytics,
-    wantsExperimentalFeatures,
     passwordSalt,
     passwordHash,
   } = validatedData;
@@ -78,7 +76,6 @@ export default async function handler(
         displayName: displayName,
         wantsServerCustody: wantsServerCustody,
         allowsAnalytics: allowsAnalytics,
-        wantsExperimentalFeatures: wantsExperimentalFeatures,
         passwordSalt: passwordSalt,
         passwordHash: passwordHash,
       },

@@ -56,7 +56,6 @@ const Profile = ({ handleSignout }: ProfileProps) => {
       wantsServerCustody,
       displayName,
       allowsAnalytics,
-      wantsExperimentalFeatures,
       twitterUsername = "",
       telegramUsername = "",
       farcasterUsername = "",
@@ -98,7 +97,6 @@ const Profile = ({ handleSignout }: ProfileProps) => {
         displayName,
         wantsServerCustody,
         allowsAnalytics,
-        wantsExperimentalFeatures,
         passwordSalt,
         passwordHash,
       }),
@@ -121,7 +119,6 @@ const Profile = ({ handleSignout }: ProfileProps) => {
       signaturePublicKey: previousProfile.signaturePublicKey,
       wantsServerCustody,
       allowsAnalytics,
-      wantsExperimentalFeatures,
       twitterUsername:
         twitterUsername === "@" ? undefined : twitterUsername.slice(1),
       telegramUsername:

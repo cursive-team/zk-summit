@@ -117,11 +117,10 @@ export default async function handler(
     }));
 
     let psiMessageResponse: PsiMessageResponse | undefined;
-    if (user.wantsExperimentalFeatures) {
-      psiMessageResponse = await findAndDeleteMostRecentPsiMessage(
-        user.encryptionPublicKey
-      );
-    }
+
+    psiMessageResponse = await findAndDeleteMostRecentPsiMessage(
+      user.encryptionPublicKey
+    );
 
     res
       .status(200)
@@ -255,11 +254,10 @@ export default async function handler(
     }));
 
     let psiMessageResponse: PsiMessageResponse | undefined;
-    if (sender.wantsExperimentalFeatures) {
-      psiMessageResponse = await findAndDeleteMostRecentPsiMessage(
-        sender.encryptionPublicKey
-      );
-    }
+
+    psiMessageResponse = await findAndDeleteMostRecentPsiMessage(
+      sender.encryptionPublicKey
+    );
 
     res
       .status(200)

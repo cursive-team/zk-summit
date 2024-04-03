@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { encryptRegisteredMessage } from "@/lib/client/jubSignal/registered";
 import { generatePSIKeys } from "@/lib/client/psi";
-import { AppBackHeader } from "@/components/AppHeader";
 import { RegisterStepForm } from "@/components/registerFormSteps";
 import { RegisterStepCode } from "@/components/registerFormSteps/code";
 import { RegisterSocial } from "@/components/registerFormSteps/social";
@@ -48,8 +47,6 @@ export default function Register() {
 
   const wantsServerCustody = getState()?.register?.wantsServerCustody ?? false;
   const allowsAnalytics = getState()?.register?.allowsAnalytics ?? false;
-  const wantsExperimentalFeatures =
-    getState()?.register?.wantsExperimentalFeatures ?? false;
 
   const [displayState, setDisplayState] = useState<DisplayState>(
     DisplayState.QUICK_START
@@ -110,7 +107,6 @@ export default function Register() {
         displayName,
         wantsServerCustody,
         allowsAnalytics,
-        wantsExperimentalFeatures,
         passwordSalt,
         passwordHash,
         encryptionPublicKey: publicKey,
@@ -156,7 +152,6 @@ export default function Register() {
       signaturePublicKey: verifyingKey,
       wantsServerCustody,
       allowsAnalytics,
-      wantsExperimentalFeatures,
       displayName,
       email,
       twitterUsername,

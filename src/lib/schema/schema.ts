@@ -52,7 +52,6 @@ export const ProfileSchema = object({
     .required("This field is required."),
   wantsServerCustody: boolean().required(),
   allowsAnalytics: boolean().required(),
-  wantsExperimentalFeatures: boolean().required(),
   twitterUsername: string()
     .matches(twitterUsernameRegex, {
       message: "Invalid Twitter username.",

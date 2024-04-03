@@ -285,7 +285,7 @@ const UserProfilePage = () => {
             </Button>
           </div>
         </div>
-        {myProfile && !myProfile.wantsExperimentalFeatures && !user.inTs && (
+        {myProfile && !user.inTs && (
           <div className="p-3 bg-zinc-900 rounded flex-col justify-center items-start gap-1 inline-flex">
             <InputWrapper
               className="flex flex-col gap-2"
@@ -298,7 +298,7 @@ const UserProfilePage = () => {
             </InputWrapper>
           </div>
         )}
-        {myProfile && myProfile.wantsExperimentalFeatures && !user.inTs && (
+        {myProfile && !user.inTs && (
           <div className="p-3 bg-zinc-900 rounded flex-col justify-center items-start gap-1 inline-flex">
             <InputWrapper
               className="flex flex-col gap-2"
@@ -354,67 +354,63 @@ const UserProfilePage = () => {
             </span>
           </InputWrapper>
         )}
-        {myProfile &&
-          myProfile.wantsExperimentalFeatures &&
-          psiState === PSIDisplayState.WAITING && (
-            <div className="p-3 bg-zinc-900 rounded flex-col justify-center items-start gap-1 inline-flex">
-              <InputWrapper
-                className="flex flex-col gap-2"
-                label="Private overlap pending"
-              >
-                <span className="text-gray-11 text-[14px] left-5 mt-1">
-                  Both of you have opted into overlap computation! Waiting on
-                  data from {user.name}.
-                </span>
-              </InputWrapper>
-            </div>
-          )}
-        {myProfile &&
-          myProfile.wantsExperimentalFeatures &&
-          psiState === PSIDisplayState.OVERLAP && (
-            <>
-              <InputWrapper
-                label="Private overlap"
-                description="Your common taps, snapshotted at when you met!"
-              >
-                <div className="flex flex-col mt-2 gap-1">
-                  {userOverlap.map(({ userId, name }, index) => {
-                    return (
-                      <div
-                        onClick={() => {
-                          window.location.href = `/users/${userId}`;
-                        }}
-                        key={index}
-                      >
-                        <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
-                          <div className="flex items-center gap-2">
-                            <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
-                              <Icons.person size={12} />
-                            </div>
-                            <Card.Title>{name}</Card.Title>
+        {myProfile && psiState === PSIDisplayState.WAITING && (
+          <div className="p-3 bg-zinc-900 rounded flex-col justify-center items-start gap-1 inline-flex">
+            <InputWrapper
+              className="flex flex-col gap-2"
+              label="Private overlap pending"
+            >
+              <span className="text-gray-11 text-[14px] left-5 mt-1">
+                Both of you have opted into overlap computation! Waiting on data
+                from {user.name}.
+              </span>
+            </InputWrapper>
+          </div>
+        )}
+        {myProfile && psiState === PSIDisplayState.OVERLAP && (
+          <>
+            <InputWrapper
+              label="Private overlap"
+              description="Your common taps, snapshotted at when you met!"
+            >
+              <div className="flex flex-col mt-2 gap-1">
+                {userOverlap.map(({ userId, name }, index) => {
+                  return (
+                    <div
+                      onClick={() => {
+                        window.location.href = `/users/${userId}`;
+                      }}
+                      key={index}
+                    >
+                      <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
+                        <div className="flex items-center gap-2">
+                          <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
+                            <Icons.person size={12} />
                           </div>
+                          <Card.Title>{name}</Card.Title>
                         </div>
                       </div>
-                    );
-                  })}
-                  {locationOverlap.map(({ locationId, name }, index) => {
-                    return (
-                      <Link href={`/locations/${locationId}`} key={index}>
-                        <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
-                          <div className="flex items-center gap-2">
-                            <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
-                              <Icons.location className="h-3" />
-                            </div>
-                            <Card.Title>{name}</Card.Title>
+                    </div>
+                  );
+                })}
+                {locationOverlap.map(({ locationId, name }, index) => {
+                  return (
+                    <Link href={`/locations/${locationId}`} key={index}>
+                      <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
+                        <div className="flex items-center gap-2">
+                          <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
+                            <Icons.location className="h-3" />
                           </div>
+                          <Card.Title>{name}</Card.Title>
                         </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </InputWrapper>
-            </>
-          )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </InputWrapper>
+          </>
+        )}
       </div>
     </div>
   );

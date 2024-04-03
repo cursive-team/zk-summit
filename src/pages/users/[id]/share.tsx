@@ -122,11 +122,10 @@ const SharePage = () => {
       setLoading(false);
       return;
     }
-    const { psiRound1Message: userMessageRound1, wantsExperimentalFeatures } =
-      await response.json();
+    const { psiRound1Message: userMessageRound1 } = await response.json();
 
     let psiMessageRequests: PsiMessageRequest[] = [];
-    if (shareOverlap && wantsExperimentalFeatures && userMessageRound1) {
+    if (shareOverlap && userMessageRound1) {
       const selfBitVector = generateSelfBitVector();
 
       await init();
@@ -187,17 +186,13 @@ const SharePage = () => {
     };
 
     // Send both messages and update activity feed
-    const successMessage =
-      shareOverlap && !wantsExperimentalFeatures
-        ? `Shared information with ${user.name}, but unable to compute private overlap. They must have experimental features enabled to do so.`
-        : `Successfully shared information with ${user.name}!`;
     try {
       await loadMessages({
         forceRefresh: false,
         messageRequests: [otherUserMessageRequest, selfMessageRequest],
         psiMessageRequests,
       });
-      toast.success(successMessage);
+      toast.success(`Successfully shared information with ${user.name}!`);
       setLoading(false);
     } catch (error) {
       console.error("Error sending encrypted tap to server: ", error);
@@ -305,7 +300,7 @@ const SharePage = () => {
             </div>
           </div>
         )}
-        {profile.wantsExperimentalFeatures && (
+        {
           <div className="flex flex-col gap-4">
             <InputWrapper
               size="sm"
@@ -336,7 +331,7 @@ const SharePage = () => {
               />
             </InputWrapper>
           </div>
-        )}
+        }
         <Button loading={loading} type="submit">
           Submit
         </Button>

@@ -303,7 +303,7 @@ const processEncryptedMessages = async (args: {
         try {
           const { name, encPk, x, tg, bio, pk, msg, sig } =
             await inboundTapMessageSchema.validate(data);
-          const userId = await hashPublicKeyToUUID(metadata.fromPublicKey);
+          const userId = await hashPublicKeyToUUID(encPk);
           const user = users[userId];
           if (user) {
             user.name = name;
@@ -333,7 +333,7 @@ const processEncryptedMessages = async (args: {
 
           const activity = {
             type: JUB_SIGNAL_MESSAGE_TYPE.INBOUND_TAP,
-            name: metadata.fromDisplayName,
+            name,
             id: userId,
             ts: metadata.timestamp.toISOString(),
           };

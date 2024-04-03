@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { ErrorResponse, QuestWithRequirementsAndItem } from "@/types";
+import { ErrorResponse, QuestWithRequirements } from "@/types";
 import { getQuestById } from "@/lib/server/database";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<QuestWithRequirementsAndItem | ErrorResponse>
+  res: NextApiResponse<QuestWithRequirements | ErrorResponse>
 ) {
   if (req.method === "GET") {
     const { id } = req.query;

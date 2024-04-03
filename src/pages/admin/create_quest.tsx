@@ -26,7 +26,6 @@ export default function CreateQuest() {
   );
   const [questName, setQuestName] = useState<string>("");
   const [questDescription, setQuestDescription] = useState<string>("");
-  const [buidlReward, setBuidlReward] = useState<number>(0);
   const [questReqs, setQuestReqs] = useState<QuestRequirement[]>([]);
   const [tempQuestReq, setTempQuestReq] = useState<QuestRequirement>();
   const [loading, setLoading] = useState<boolean>(false);
@@ -58,7 +57,6 @@ export default function CreateQuest() {
         token: authToken.value,
         name: questName,
         description: questDescription,
-        buidlReward,
         requirements: questReqs,
       }),
     })
@@ -185,15 +183,6 @@ export default function CreateQuest() {
             name="questDescription"
             value={questDescription}
             onChange={(event) => setQuestDescription(event.target.value)}
-            required
-          />
-          <Input
-            label="Buidl Reward"
-            placeholder="Reward for quest"
-            type="number"
-            name="buidlReward"
-            value={buidlReward}
-            onChange={(event) => setBuidlReward(parseInt(event.target.value))}
             required
           />
           <Button onClick={handleAddRequirement} size="md" align="left">

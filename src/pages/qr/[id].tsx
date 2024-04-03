@@ -5,10 +5,7 @@ import { toast } from "sonner";
 import { QRCodeResponseType } from "../api/qr";
 import { useEffect, useState } from "react";
 import { getAuthToken, getKeys } from "@/lib/client/localStorage";
-import { encryptItemRedeemedMessage } from "@/lib/client/jubSignal";
-import { MessageRequest } from "../api/messages";
 import { Spinner } from "@/components/Spinner";
-import { getClaveBuidlBalance } from "@/lib/shared/clave";
 import useRequireAdmin from "@/hooks/useRequireAdmin";
 
 enum QRPageDisplayState {
@@ -18,24 +15,15 @@ enum QRPageDisplayState {
 }
 
 const QRPageDisplayStateText: Record<QRPageDisplayState, string> = {
-  [QRPageDisplayState.DISPLAY]: "Redeem item & nullify QR",
-  [QRPageDisplayState.SUCCESS]: "Redemption succeeded!",
-  [QRPageDisplayState.FAILURE]: "Redemption failed.",
+  [QRPageDisplayState.DISPLAY]: "Nullify proof",
+  [QRPageDisplayState.SUCCESS]: "Proof nullification succeeded!",
+  [QRPageDisplayState.FAILURE]: "Proof nullification failed.",
 };
 
 export type QRCodeData = {
   id: string;
-  itemId: number;
-  itemName: string;
-  sponsor: string;
-  description: string;
-  buidlCost: number;
-  imageUrl: string;
-  userEncryptionPublicKey: string;
-  claveWalletAddress?: string;
-  localBuidlBalance: number;
-  claveBuidlBalance: number;
-  totalBuidlBalance: number;
+  questName: string;
+  userDisplayName: string;
 };
 
 const QRPage = () => {
@@ -71,42 +59,11 @@ const QRPage = () => {
       }
 
       const qrData: QRCodeResponseType = await response.json();
-      const { questProof, buidlBalance } = qrData;
-      const item = questProof.quest.item;
-      if (item === null) {
-        toast.error("Invalid QR code");
-        router.push("/");
-        return;
-      }
-
-      let claveBuidlBalance = 0;
-      if (questProof.user.claveWallet) {
-        try {
-          claveBuidlBalance = await getClaveBuidlBalance(
-            questProof.user.claveWallet
-          );
-        } catch (error) {
-          toast.error("Failed to get user's Clave buidl balance");
-          console.error("Failed to get Clave buidl balance: ", error);
-        }
-      }
-      const totalBuidlBalance = buidlBalance + claveBuidlBalance;
 
       setQRCodeData({
-        id: questProof.id,
-        itemId: item.id,
-        itemName: item.name,
-        sponsor: item.sponsor,
-        description: item.description,
-        buidlCost: item.buidlCost,
-        imageUrl: item.imageUrl,
-        userEncryptionPublicKey: questProof.user.encryptionPublicKey,
-        claveWalletAddress: questProof.user.claveWallet
-          ? questProof.user.claveWallet
-          : undefined,
-        localBuidlBalance: buidlBalance,
-        claveBuidlBalance,
-        totalBuidlBalance,
+        id: qrData.id,
+        questName: qrData.quest.name,
+        userDisplayName: qrData.user.displayName,
       });
     };
     fetchQR();
@@ -145,42 +102,6 @@ const QRPage = () => {
 
     const { success } = await response.json();
     if (success) {
-      // Send jubSignal message to user that they have redeemed an item
-      try {
-        const senderPrivateKey = keys.encryptionPrivateKey;
-        const recipientPublicKey = qrCodeData.userEncryptionPublicKey;
-        const encryptedMessage = await encryptItemRedeemedMessage({
-          itemId: qrCodeData.itemId.toString(),
-          itemName: qrCodeData.itemName,
-          qrCodeId: qrCodeData.id,
-          senderPrivateKey,
-          recipientPublicKey,
-        });
-        const messageRequests: MessageRequest[] = [
-          {
-            encryptedMessage,
-            recipientPublicKey,
-          },
-        ];
-
-        const response = await fetch("/api/messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            token: authToken.value,
-            messageRequests,
-            shouldFetchMessages: false,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Received bad status code from server");
-        }
-      } catch (error) {
-        console.error("Failed to send item redeemed message: ", error);
-      }
       toast.success("Successfully redeemed item for user!");
       setDisplayState(QRPageDisplayState.SUCCESS);
     } else {
@@ -190,50 +111,10 @@ const QRPage = () => {
     setLoading(false);
   };
 
-  const handleMint = async () => {
-    setLoading(true);
-    if (!qrCodeData) {
-      toast.error("Must have a valid QR Code to redeem!");
-      return;
-    }
-
-    const authToken = getAuthToken();
-    const keys = getKeys();
-
-    if (!authToken || authToken.expiresAt < new Date() || !keys) {
-      toast.error("You must be logged in to complete a quest");
-      router.push("/login");
-      return;
-    }
-
-    const response = await fetch(`/api/qr/mint`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ token: authToken.value, id: qrCodeData.id }),
-    });
-    if (!response.ok) {
-      const { error } = await response.json();
-      toast.error("Error minting BUIDL");
-      console.error("Error minting BUIDL: ", error);
-      setLoading(false);
-      return;
-    }
-
-    const { success, amount } = await response.json();
-    if (success) {
-      toast.success(`Successfully minted ${(amount || 0).toString()} BUIDL!`);
-    } else {
-      toast.error("Failed to mint BUIDL");
-    }
-    setLoading(false);
-  };
-
   if (!qrCodeData) {
     return (
       <div className="my-auto mx-auto">
-        <Spinner label="Item redemption data is loading." />
+        <Spinner label="QR code data is loading." />
       </div>
     );
   }
@@ -243,35 +124,25 @@ const QRPage = () => {
       <AppBackHeader redirectTo="/" />
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-4 items-center">
-          <img
-            className="flex bg-slate-200 rounded bg-center bg-cover"
-            alt={`${qrCodeData.sponsor} store item`}
-            src={qrCodeData.imageUrl}
-            width={174}
-            height={174}
-          />
           <div className="flex flex-col gap-0.5">
             <div className="flex flex-col text-center">
               <span className="text-xs font-light text-gray-900">
-                {qrCodeData.sponsor}
+                {qrCodeData.userDisplayName}
               </span>
-              <h2 className="text-sm text-gray-12">{qrCodeData.itemName}</h2>
-              <span className="text-xs font-light text-gray-900">
-                {`BUIDL cost: ${qrCodeData.buidlCost}`}
-              </span>
+              <h2 className="text-sm text-gray-12">{qrCodeData.questName}</h2>
             </div>
           </div>
           {displayState === QRPageDisplayState.SUCCESS && (
             <div className="flex flex-col gap-4 items-center">
               <span className="text-lg font-light text-gray-900">
-                {"Successfully redeemed item for user."}
+                {"Successfully nullified proof."}
               </span>
             </div>
           )}
           {displayState === QRPageDisplayState.FAILURE && (
             <div className="flex flex-col gap-4 items-center">
               <span className="text-lg font-light text-gray-900">
-                {"Failed to redeem item for user."}
+                {"Failed to nullify proof."}
               </span>
             </div>
           )}
@@ -281,23 +152,6 @@ const QRPage = () => {
             onClick={handleRedeem}
           >
             {QRPageDisplayStateText[displayState]}
-          </Button>
-          <div className="flex flex-col gap-0.5">
-            <div className="flex flex-col text-center">
-              <h2 className="text-sm text-gray-12">{"User Info"}</h2>
-              <span className="text-xs font-light text-gray-900">
-                {`Unminted BUIDL balance: ${qrCodeData.localBuidlBalance}`}
-              </span>
-              <span className="text-xs font-light text-gray-900">
-                {`Clave BUIDL balance: ${qrCodeData.claveBuidlBalance}`}
-              </span>
-              <span className="text-xs font-light text-gray-900">
-                {`Total BUIDL balance: ${qrCodeData.totalBuidlBalance}`}
-              </span>
-            </div>
-          </div>
-          <Button loading={loading} disabled={loading} onClick={handleMint}>
-            Mint BUIDL
           </Button>
         </div>
       </div>

@@ -27,9 +27,6 @@ const AdminPage = () => {
           <Link href="/admin/create_quest">
             <Button>Create quest</Button>
           </Link>
-          <Link href="/admin/create_item">
-            <Button>Create item</Button>
-          </Link>
           <Link href="/admin/new_admin">
             <Button>Create new admin</Button>
           </Link>

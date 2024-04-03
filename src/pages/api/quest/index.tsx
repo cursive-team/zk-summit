@@ -38,7 +38,6 @@ const questCreateRequestSchema = object().shape({
   token: string().required("Token is required"),
   name: string().required("Quest name is required"),
   description: string().required("Quest description is required"),
-  buidlReward: number().required("Buidl reward is required"),
   requirements: array()
     .of(questRequirementRequestSchema)
     .required("Requirements are required"),
@@ -106,7 +105,7 @@ export default async function handler(
     res.status(200).json(quests);
   } else if (req.method === "POST") {
     try {
-      const { token, name, description, buidlReward, requirements } =
+      const { token, name, description, requirements } =
         await questCreateRequestSchema.validate(req.body);
 
       const isAdmin = await isUserAdmin(token);
@@ -146,7 +145,6 @@ export default async function handler(
         data: {
           name,
           description,
-          buidlReward,
           userRequirements: {
             create: userRequirements.map((req) => ({
               name: req.name,

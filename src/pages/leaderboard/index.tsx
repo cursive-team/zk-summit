@@ -1,29 +1,11 @@
 import { AppBackHeader } from "@/components/AppHeader";
-import { PartnerItemCard } from "@/components/cards/PartnerItemCard";
 import { Placeholder } from "@/components/placeholders/Placeholder";
 import { LoadingWrapper } from "@/components/wrappers/LoadingWrapper";
 import { useGetLeaderboard } from "@/hooks/useLeaderboard";
-import { useFetchStore } from "@/hooks/useStore";
 import { MAX_LEADERBOARD_LENGTH } from "@/hooks/useSettings";
 import { getAuthToken } from "@/lib/client/localStorage";
 import { classed } from "@tw-classed/react";
 import React, { useEffect, useMemo, useState } from "react";
-
-// mapping of leaderboard position and store item to show
-const LeaderboardPositionItem: Record<number, number> = {
-  1: 11,
-  2: 12,
-  3: 13,
-  4: 24,
-  5: 24,
-  6: 14,
-  7: 14,
-  8: 14,
-  9: 14,
-  10: 16,
-  11: 17,
-  12: 17,
-};
 
 const TableWrapper = classed.div(
   "grid grid-cols-[25px_1fr_100px] items-center gap-4"
@@ -50,7 +32,6 @@ const PositionCard = classed.div(
 
 export default function LeaderBoard() {
   const authToken = useMemo(getAuthToken, []);
-  const { isLoading: isLoadingStoreItems, data: storeItems } = useFetchStore();
   const {
     isLoading,
     data: leaderboard = [],
@@ -100,10 +81,6 @@ export default function LeaderBoard() {
           skip++;
         }
 
-        const storeItem = storeItems?.find(
-          (item) => item.id === LeaderboardPositionItem[rank]
-        );
-
         return (
           <TableWrapper className="!grid-cols-[25px_1fr_35px]" key={index}>
             <PositionCard active={isCurrentUser}>{rank}</PositionCard>
@@ -113,12 +90,6 @@ export default function LeaderBoard() {
                   {name}{" "}
                   {isCurrentUser && <span className="text-gray-10">(you)</span>}
                 </span>
-                {storeItem && (
-                  <PartnerItemCard
-                    item={storeItem.name}
-                    image={storeItem?.imageUrl}
-                  />
-                )}
               </div>
             </DisplayName>
 
@@ -134,7 +105,7 @@ export default function LeaderBoard() {
     currentUserRank && userLeaderboardItem
       ? currentUserRank <= MAX_LEADERBOARD_LENGTH
       : false;
-  const loading = isLoadingStoreItems || isLoading;
+  const loading = isLoading;
 
   return (
     <div>
@@ -153,9 +124,7 @@ export default function LeaderBoard() {
         <div className="flex flex-col gap-4">
           <span className="text-gray-900 text-xs font-light">
             {"The leaderboard is based on the number of taps you've "}{" "}
-            <i>given.</i>{" "}
-            {"When someone is a quest requirement however, you must "}{" "}
-            <i>receive</i> {" a tap from them."}
+            <i>made.</i>{" "}
           </span>
           <TableWrapper>
             <TableHeaderLabel className="text-center">#</TableHeaderLabel>

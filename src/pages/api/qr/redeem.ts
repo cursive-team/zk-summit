@@ -33,15 +33,6 @@ export default async function handler(
         id: true,
         userId: true,
         redeemed: true,
-        quest: {
-          select: {
-            item: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -58,15 +49,6 @@ export default async function handler(
       where: { id },
       data: { redeemed: true },
     });
-
-    if (questProof.quest.item) {
-      await prisma.itemRedeemed.create({
-        data: {
-          userId: questProof.userId,
-          itemId: questProof.quest.item.id,
-        },
-      });
-    }
 
     res.status(200).json({ success: true });
   } else {

@@ -48,32 +48,32 @@ export default async function submitProofHandler(
     }
 
     // if there's a tap requiement, make sure it's done
-    if (quest.userTapReq !== null) {
-      const outbound = await prisma.user.findUnique({
-        where: {
-          id: userId,
-        },
-        select: {
-          sentMessages: {
-            select: {
-              senderId: true,
-              recipientId: true,
-            },
-            distinct: ["recipientId"],
-          },
-        },
-      });
-      if (outbound) {
-        const outboundTotal = outbound.sentMessages.filter(
-          (message) => message.senderId !== message.recipientId
-        ).length;
-        if (outboundTotal < quest.userTapReq) {
-          return res.status(400).json({ error: "Have tapped enough people" });
-        }
-      } else {
-        return res.status(400).json({ error: "No outbound taps" });
-      }
-    }
+    // if (quest.userTapReq !== null) {
+    //   const outbound = await prisma.user.findUnique({
+    //     where: {
+    //       id: userId,
+    //     },
+    //     select: {
+    //       sentMessages: {
+    //         select: {
+    //           senderId: true,
+    //           recipientId: true,
+    //         },
+    //         distinct: ["recipientId"],
+    //       },
+    //     },
+    //   });
+    //   if (outbound) {
+    //     const outboundTotal = outbound.sentMessages.filter(
+    //       (message) => message.senderId !== message.recipientId
+    //     ).length;
+    //     if (outboundTotal < quest.userTapReq) {
+    //       return res.status(400).json({ error: "Have tapped enough people" });
+    //     }
+    //   } else {
+    //     return res.status(400).json({ error: "No outbound taps" });
+    //   }
+    // }
 
     const { verified, consumedSigNullifiers } = await verifyProofForQuest(
       quest,

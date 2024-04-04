@@ -16,10 +16,11 @@ import { InputWrapper } from "@/components/input/InputWrapper";
 import { ArtworkSnapshot } from "@/components/artwork/ArtworkSnapshot";
 import { Button } from "@/components/Button";
 import { supabase } from "@/lib/client/realtime";
-import { RealtimeChannel } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { generateSelfBitVector, psiBlobUploadClient } from "@/lib/client/psi";
-import init, { round1_js } from "@/lib/mp_psi/mp_psi";
+import init, { round1_js, round2_js, round3_js } from "@/lib/mp_psi/mp_psi";
+import { encryptOverlapComputedMessage } from "@/lib/client/jubSignal/overlapComputed";
+import { loadMessages } from "@/lib/client/jubSignalClient";
 
 const Label = classed.span("text-sm text-gray-12");
 
@@ -49,7 +50,9 @@ enum PSIState {
   ROUND1,
   ROUND2,
   ROUND3,
+  JUBSIGNAL,
   COMPLETE,
+  DISPLAY,
 }
 
 const UserProfilePage = () => {
@@ -68,6 +71,7 @@ const UserProfilePage = () => {
   const [otherRound2MessageLink, setOtherRound2MessageLink] =
     useState<string>();
   const [selfRound2Output, setSelfRound2Output] = useState<any>();
+  const [round2Order, setRound2Order] = useState<boolean>();
   const [otherRound3MessageLink, setOtherRound3MessageLink] =
     useState<string>();
   const [selfRound3Output, setSelfRound3Output] = useState<any>();
@@ -119,19 +123,24 @@ const UserProfilePage = () => {
   useEffect(() => {
     if (!broadcastEvent) return;
 
+    console.log(broadcastEvent);
+
     const { payload } = broadcastEvent;
-    if (payload.state === PSIState.ROUND2) {
+    if (payload.state === PSIState.ROUND2 && payload.to === selfEncPk) {
       setOtherRound2MessageLink(payload.data);
-    } else if (payload.state === PSIState.ROUND3) {
+      console.log(parseInt(payload.otherPkId), parseInt(user?.pkId!));
+      setRound2Order(parseInt(payload.otherPkId) > parseInt(user?.pkId!));
+    } else if (payload.state === PSIState.ROUND3 && payload.to === selfEncPk) {
       setOtherRound3MessageLink(payload.data);
     }
-  }, [broadcastEvent]);
+  }, [broadcastEvent, user?.pkId!]);
 
   // process state changes
   useEffect(() => {
     if (
       selfRound1Output &&
       otherRound2MessageLink &&
+      round2Order !== undefined &&
       psiState === PSIState.ROUND1
     ) {
       setPsiState(PSIState.ROUND2);
@@ -142,7 +151,7 @@ const UserProfilePage = () => {
     ) {
       setPsiState(PSIState.ROUND3);
     } else if (selfRound3Output && psiState === PSIState.ROUND3) {
-      setPsiState(PSIState.COMPLETE);
+      setPsiState(PSIState.JUBSIGNAL);
     }
   }, [
     psiState,
@@ -151,17 +160,18 @@ const UserProfilePage = () => {
     selfRound2Output,
     otherRound3MessageLink,
     selfRound3Output,
+    round2Order,
   ]);
 
   useEffect(() => {
     async function handleOverlapRounds() {
       if (!selfEncPk || !otherEncPk || !channelName) return;
 
-      if (psiState === PSIState.ROUND1) {
-        const keys = getKeys();
-        if (!keys) return;
+      const keys = getKeys();
+      if (!keys) return;
+      const { psiPrivateKeys, psiPublicKeysLink } = keys;
 
-        const { psiPrivateKeys, psiPublicKeysLink } = keys;
+      if (psiState === PSIState.ROUND1) {
         const selfBitVector = generateSelfBitVector();
         const otherPsiPublicKeysLink = user?.psiPkLink;
 
@@ -191,11 +201,92 @@ const UserProfilePage = () => {
           payload: {
             state: PSIState.ROUND2,
             data: round2MessageLink,
+            to: otherEncPk,
+            otherPkId: user?.pkId, // hacky way of getting our own pkId
           },
         });
-      }
+      } else if (psiState === PSIState.ROUND2) {
+        await init();
+        const round2Output = round2_js(
+          {
+            psi_keys: psiPrivateKeys,
+            message_round1: JSON.parse(
+              await fetch(psiPublicKeysLink).then((res) => res.text())
+            ),
+          },
+          selfRound1Output,
+          JSON.parse(
+            await fetch(otherRound2MessageLink!).then((res) => res.text())
+          ),
+          round2Order!
+        );
+        setSelfRound2Output(round2Output);
 
-      if (psiState === PSIState.ROUND2) {
+        const round3MessageLink = await psiBlobUploadClient(
+          "round3Message",
+          JSON.stringify(round2Output.message_round3)
+        );
+
+        supabase.channel(channelName).send({
+          type: "broadcast",
+          event: "message",
+          payload: {
+            state: PSIState.ROUND3,
+            data: round3MessageLink,
+            to: otherEncPk,
+          },
+        });
+      } else if (psiState === PSIState.ROUND3) {
+        await init();
+        const psiOutput = round3_js(
+          selfRound2Output!,
+          JSON.parse(
+            await fetch(otherRound3MessageLink!).then((res) => res.text())
+          )
+        );
+        console.log(psiOutput);
+        let overlapIndices = [];
+        for (let i = 0; i < psiOutput.length; i++) {
+          if (psiOutput[i] === 1) {
+            overlapIndices.push(i);
+          }
+        }
+
+        setSelfRound3Output(overlapIndices);
+      } else if (psiState === PSIState.JUBSIGNAL) {
+        await supabase.removeChannel(supabase.channel(channelName!));
+
+        const encryptedMessage = await encryptOverlapComputedMessage(
+          selfRound3Output,
+          id?.toString()!,
+          keys.encryptionPrivateKey,
+          selfEncPk
+        );
+
+        try {
+          await loadMessages({
+            forceRefresh: false,
+            messageRequests: [
+              {
+                encryptedMessage,
+                recipientPublicKey: selfEncPk,
+              },
+            ],
+          });
+        } catch (error) {
+          console.error(
+            "Error sending encrypted location tap to server: ",
+            error
+          );
+          toast.error(
+            "An error occured while processing the tap. Please try again."
+          );
+          router.push("/");
+          return;
+        }
+
+        setPsiState(PSIState.COMPLETE);
+        window.location.reload();
       }
     }
 
@@ -216,11 +307,15 @@ const UserProfilePage = () => {
       setUser(fetchedUser);
 
       if (fetchedUser) {
-        setOtherEncPk(fetchedUser.encPk);
-        setSelfEncPk(profile.encryptionPublicKey);
-        setChannelName(
-          [fetchedUser.encPk, profile.encryptionPublicKey].sort().join("")
-        );
+        if (fetchedUser.oI) {
+          setPsiState(PSIState.DISPLAY);
+        } else {
+          setOtherEncPk(fetchedUser.encPk);
+          setSelfEncPk(profile.encryptionPublicKey);
+          setChannelName(
+            [fetchedUser.encPk, profile.encryptionPublicKey].sort().join("")
+          );
+        }
       }
     }
   }, [id, router]);
@@ -327,7 +422,8 @@ const UserProfilePage = () => {
             </span>
           </InputWrapper>
         )}
-        {user?.psiPkLink && (
+        {psiState === PSIState.DISPLAY && <></>}
+        {user?.psiPkLink && psiState !== PSIState.DISPLAY && (
           <div className="flex flex-col gap-4">
             <InputWrapper
               size="sm"

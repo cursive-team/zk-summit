@@ -33,6 +33,7 @@ import {
 } from "./localStorage";
 import { hashPublicKeyToUUID } from "./utils";
 import { registeredMessageSchema } from "./jubSignal/registered";
+import { overlapComputedMessageSchema } from "./jubSignal/overlapComputed";
 
 export type LoadMessagesRequest = {
   forceRefresh: boolean;
@@ -194,6 +195,30 @@ const processEncryptedMessages = async (args: {
     const { metadata, type, data } = decryptedMessage;
 
     switch (type) {
+      case JUB_SIGNAL_MESSAGE_TYPE.OVERLAP_COMPUTED:
+        try {
+          const { overlapIndices, userId } =
+            await overlapComputedMessageSchema.validate(data);
+
+          const user = users[userId];
+          if (user) {
+            user.oI = overlapIndices;
+            const activity = {
+              type: JUB_SIGNAL_MESSAGE_TYPE.OVERLAP_COMPUTED,
+              name: user.name,
+              id: userId,
+              ts: metadata.timestamp.toISOString(),
+            };
+            activities.push(activity);
+          }
+        } catch (error) {
+          console.error(
+            "Invalid overlap computed message received from server: ",
+            message
+          );
+        } finally {
+          break;
+        }
       case JUB_SIGNAL_MESSAGE_TYPE.REGISTERED:
         try {
           if (metadata.fromPublicKey !== recipientPublicKey) {

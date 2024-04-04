@@ -144,9 +144,6 @@ export default async function handler(
     return res.status(200).json({ code: TapResponseCode.CMAC_INVALID });
   }
 
-  // Get signature from chip
-  const { message, signature } = await generateChipSignature(chipId);
-
   // if user is registered, return user data
   const user = await prisma.user.findUnique({
     where: {
@@ -154,6 +151,9 @@ export default async function handler(
     },
   });
   if (user) {
+    // Get signature from chip
+    const { message, signature } = await generateChipSignature(chipId);
+
     const personTapResponse: PersonTapResponse = {
       displayName: user.displayName,
       encryptionPublicKey: user.encryptionPublicKey,
@@ -176,6 +176,9 @@ export default async function handler(
     },
   });
   if (location) {
+    // Get signature from chip
+    const { message, signature } = await generateChipSignature(chipId);
+
     const locationTapResponse: LocationTapResponse = {
       id: location.id.toString(),
       name: location.name,

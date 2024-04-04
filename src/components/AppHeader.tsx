@@ -8,6 +8,7 @@ import Profile from "./Profile";
 import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
 import { ProfileDisplayState } from "@/types";
+import { supabase } from "@/lib/client/realtime";
 
 const Title = classed.h3("block text-base text-gray-12 font-light leading-5");
 const Subtitle = classed.h4("text-sm text-gray-12 leading-5");
@@ -341,6 +342,7 @@ const AppHeader = ({ isMenuOpen, setIsMenuOpen }: AppHeaderProps) => {
   const { actions, getState } = useStateMachine({ updateStateFromAction });
   const handleSignout = () => {
     deleteAccountFromLocalStorage();
+    supabase.auth.signOut();
     window.location.href = "/";
   };
 

@@ -33,6 +33,7 @@ import {
   telegramUsernameRegex,
   twitterUsernameRegex,
 } from "@/lib/shared/utils";
+import { supabase } from "@/lib/client/realtime";
 
 enum DisplayState {
   PASSKEY,
@@ -225,6 +226,16 @@ export default function Register() {
 
     const { privateKey, publicKey } = await generateEncryptionKeyPair();
     const { signingKey, verifyingKey } = generateSignatureKeyPair();
+
+    // set up realtime account
+    const { data: authData, error: authError } =
+      await supabase.auth.signInAnonymously();
+    if (!authData) {
+      console.error("Error with realtime auth.", authError);
+      toast.error("Error with PSI account setup.");
+      setLoading(false);
+      return;
+    }
 
     let passwordSalt, passwordHash;
     passwordSalt = generateSalt();

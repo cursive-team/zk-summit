@@ -25,6 +25,7 @@ import {
   startRegistration,
 } from "@simplewebauthn/browser";
 import { sha256 } from "js-sha256";
+import { supabase } from "@/lib/client/realtime";
 
 enum DisplayState {
   PASSKEY,
@@ -157,6 +158,15 @@ export default function Login() {
         telegramUsername,
         bio,
       });
+    }
+
+    const { data: authData, error: authError } =
+      await supabase.auth.signInAnonymously();
+    if (!authData) {
+      console.error("Error with realtime auth.", authError);
+      toast.error("Error with PSI account setup.");
+      setLoading(false);
+      return;
     }
 
     try {

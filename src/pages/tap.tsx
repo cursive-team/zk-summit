@@ -64,6 +64,7 @@ export default function Tap() {
         displayName: person.displayName,
         encryptionPublicKey: otherUserPublicKey,
         pkId: person.pkId,
+        psiPublicKeysLink: person.psiPublicKeysLink,
         twitterUsername: person.twitter,
         telegramUsername: person.telegram,
         bio: person.bio,

@@ -21,6 +21,7 @@ model User {
 
   encryptionPublicKey String
   signaturePublicKey  String
+  psiPublicKeysLink   String
 
   passwordSalt              String?
   passwordHash              String?

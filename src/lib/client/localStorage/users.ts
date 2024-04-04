@@ -12,6 +12,7 @@ export type User = {
   name: string; // User's display name
   encPk: string; // User's encryption public key
   pkId: string; // User's public key index for PSI
+  psiPkLink?: string; // Link to user's PSI public keys
   x?: string; // User's Twitter username
   tg?: string; // User's Telegram username
   fc?: string; // User's Farcaster username

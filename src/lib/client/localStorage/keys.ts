@@ -10,20 +10,31 @@ export const KEYS_STORAGE_KEY = "keys";
 export type Keys = {
   encryptionPrivateKey: string;
   signaturePrivateKey: string;
+  psiPrivateKeys: string;
+  psiPublicKeysLink: string;
 };
 
 export const keysSchema = object({
   encryptionPrivateKey: string().required(),
   signaturePrivateKey: string().required(),
+  psiPrivateKeys: string().required(),
+  psiPublicKeysLink: string().required(),
 });
 
 export const saveKeys = (keys: Keys): void => {
-  const { encryptionPrivateKey, signaturePrivateKey } = keys;
+  const {
+    encryptionPrivateKey,
+    signaturePrivateKey,
+    psiPrivateKeys,
+    psiPublicKeysLink,
+  } = keys;
   const currentKeys = getFromLocalStorage(KEYS_STORAGE_KEY);
   if (currentKeys) {
     const parsedKeys = JSON.parse(currentKeys);
     parsedKeys.encryptionPrivateKey = encryptionPrivateKey;
     parsedKeys.signaturePrivateKey = signaturePrivateKey;
+    parsedKeys.psiPrivateKeys = psiPrivateKeys;
+    parsedKeys.psiPublicKeysLink = psiPublicKeysLink;
     saveToLocalStorage(KEYS_STORAGE_KEY, JSON.stringify(parsedKeys));
     return;
   } else {

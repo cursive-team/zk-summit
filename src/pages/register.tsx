@@ -19,21 +19,17 @@ import { toast } from "sonner";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { encryptRegisteredMessage } from "@/lib/client/jubSignal/registered";
 import {
-  generateAuthenticationOptions,
   generateRegistrationOptions,
   GenerateRegistrationOptionsOpts as RegistrationOptions,
   GenerateAuthenticationOptionsOpts as AuthenticationOptions,
 } from "@simplewebauthn/server";
-import {
-  startAuthentication,
-  startRegistration,
-} from "@simplewebauthn/browser";
-import { sha256 } from "js-sha256";
+import { startRegistration } from "@simplewebauthn/browser";
 import {
   telegramUsernameRegex,
   twitterUsernameRegex,
 } from "@/lib/shared/utils";
 import { supabase } from "@/lib/client/realtime";
+import { generatePSIKeys, psiBlobUploadClient } from "@/lib/client/psi";
 
 enum DisplayState {
   PASSKEY,
@@ -226,6 +222,13 @@ export default function Register() {
 
     const { privateKey, publicKey } = await generateEncryptionKeyPair();
     const { signingKey, verifyingKey } = generateSignatureKeyPair();
+    const { psiPrivateKeys, psiPublicKeys } = await generatePSIKeys();
+
+    // upload psi keys to blob
+    const psiPublicKeysLink = await psiBlobUploadClient(
+      "psiPublicKeys",
+      JSON.stringify(psiPublicKeys)
+    );
 
     // set up realtime account
     const { data: authData, error: authError } =
@@ -252,6 +255,7 @@ export default function Register() {
         displayName,
         encryptionPublicKey: publicKey,
         signaturePublicKey: verifyingKey,
+        psiPublicKeysLink,
         signingKey,
         passwordSalt,
         passwordHash,
@@ -282,6 +286,8 @@ export default function Register() {
     saveKeys({
       encryptionPrivateKey: privateKey,
       signaturePrivateKey: signingKey,
+      psiPrivateKeys,
+      psiPublicKeysLink,
     });
     saveProfile({
       displayName,

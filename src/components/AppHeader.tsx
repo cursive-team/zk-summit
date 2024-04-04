@@ -9,6 +9,7 @@ import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
 import { ProfileDisplayState } from "@/types";
 import { supabase } from "@/lib/client/realtime";
+import { deleteIndexedDBData } from "@/lib/client/indexedDB";
 
 const Title = classed.h3("block text-base text-gray-12 font-light leading-5");
 const Subtitle = classed.h4("text-sm text-gray-12 leading-5");
@@ -340,7 +341,8 @@ interface AppHeaderProps {
 }
 const AppHeader = ({ isMenuOpen, setIsMenuOpen }: AppHeaderProps) => {
   const { actions, getState } = useStateMachine({ updateStateFromAction });
-  const handleSignout = () => {
+  const handleSignout = async () => {
+    await deleteIndexedDBData();
     deleteAccountFromLocalStorage();
     supabase.auth.signOut();
     window.location.href = "/";

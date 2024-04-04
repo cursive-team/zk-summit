@@ -219,6 +219,7 @@ const processEncryptedMessages = async (args: {
               name: metadata.fromDisplayName,
               encPk: metadata.fromPublicKey,
               sigPk: pk,
+              pkId: "0",
               msg,
               sig,
               inTs: metadata.timestamp.toISOString(),
@@ -256,6 +257,7 @@ const processEncryptedMessages = async (args: {
             } else {
               users[userId] = {
                 name,
+                pkId: "0",
                 encPk: pk,
                 note,
                 outTs: metadata.timestamp.toISOString(),
@@ -278,6 +280,7 @@ const processEncryptedMessages = async (args: {
               users[userId] = {
                 name,
                 encPk: pk,
+                pkId: "0",
                 note,
                 outTs: metadata.timestamp.toISOString(),
               };
@@ -301,7 +304,7 @@ const processEncryptedMessages = async (args: {
         }
       case JUB_SIGNAL_MESSAGE_TYPE.INBOUND_TAP:
         try {
-          const { name, encPk, x, tg, bio, pk, msg, sig, pkId } =
+          const { name, encPk, x, tg, bio, pk, msg, sig, pkId, psiPkLink } =
             await inboundTapMessageSchema.validate(data);
           const userId = await hashPublicKeyToUUID(encPk);
           const user = users[userId];
@@ -309,6 +312,7 @@ const processEncryptedMessages = async (args: {
             user.pkId = pkId;
             user.name = name;
             user.encPk = encPk;
+            user.psiPkLink = psiPkLink;
             user.x = x;
             user.tg = tg;
             user.bio = bio;
@@ -323,6 +327,7 @@ const processEncryptedMessages = async (args: {
               pkId,
               name,
               encPk,
+              psiPkLink,
               x,
               tg,
               bio,

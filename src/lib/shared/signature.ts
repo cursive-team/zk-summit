@@ -1,5 +1,5 @@
 import {
-  generateSignatureKeyPair as gebBBJJKeyPair,
+  generateSignatureKeyPair as getBBJJKeyPair,
   sign as signBBJJ,
   verify as verifyBBJJ,
 } from "babyjubjub-ecdsa";
@@ -8,7 +8,7 @@ export const generateSignatureKeyPair = (): {
   signingKey: string;
   verifyingKey: string;
 } => {
-  return gebBBJJKeyPair();
+  return getBBJJKeyPair();
 };
 
 export const sign = (signingKey: string, data: string): string => {

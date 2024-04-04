@@ -301,11 +301,12 @@ const processEncryptedMessages = async (args: {
         }
       case JUB_SIGNAL_MESSAGE_TYPE.INBOUND_TAP:
         try {
-          const { name, encPk, x, tg, bio, pk, msg, sig } =
+          const { name, encPk, x, tg, bio, pk, msg, sig, pkId } =
             await inboundTapMessageSchema.validate(data);
           const userId = await hashPublicKeyToUUID(encPk);
           const user = users[userId];
           if (user) {
+            user.pkId = pkId;
             user.name = name;
             user.encPk = encPk;
             user.x = x;
@@ -319,6 +320,7 @@ const processEncryptedMessages = async (args: {
             users[userId] = user;
           } else {
             users[userId] = {
+              pkId,
               name,
               encPk,
               x,

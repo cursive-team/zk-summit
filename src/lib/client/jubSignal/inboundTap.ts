@@ -4,6 +4,7 @@ import { JUB_SIGNAL_MESSAGE_TYPE, encryptMessage } from ".";
 export type InboundTapMessage = {
   name: string; // Display name
   encPk: string; // Encryption public key
+  pkId: string; // Public key index for PSI
   x?: string; // Twitter handle
   tg?: string; // Telegram handle
   bio?: string; // Bio
@@ -19,6 +20,7 @@ export const inboundTapMessageSchema = object({
   tg: string().optional(),
   bio: string().optional(),
   pk: string().required(),
+  pkId: string().required(),
   msg: string().required(),
   sig: string().required(),
 });
@@ -26,6 +28,7 @@ export const inboundTapMessageSchema = object({
 export type EncryptInboundTapMessageArgs = {
   displayName: string;
   encryptionPublicKey: string;
+  pkId: string;
   twitterUsername?: string;
   telegramUsername?: string;
   bio?: string;
@@ -39,6 +42,7 @@ export type EncryptInboundTapMessageArgs = {
 export async function encryptInboundTapMessage({
   displayName,
   encryptionPublicKey,
+  pkId,
   twitterUsername,
   telegramUsername,
   bio,
@@ -53,6 +57,7 @@ export async function encryptInboundTapMessage({
     encPk: encryptionPublicKey,
     x: twitterUsername,
     tg: telegramUsername,
+    pkId,
     bio,
     pk: signaturePublicKey,
     msg: signatureMessage,

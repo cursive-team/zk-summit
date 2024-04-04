@@ -11,9 +11,7 @@ import {
   getAuthToken,
   getKeys,
   getProfile,
-  updateUserFromTap,
   getLocationSignature,
-  getUsers,
   fetchUserByUUID,
 } from "@/lib/client/localStorage";
 import {
@@ -65,6 +63,7 @@ export default function Tap() {
       const encryptedInboundMessage = await encryptInboundTapMessage({
         displayName: person.displayName,
         encryptionPublicKey: otherUserPublicKey,
+        pkId: person.pkId,
         twitterUsername: person.twitter,
         telegramUsername: person.telegram,
         bio: person.bio,

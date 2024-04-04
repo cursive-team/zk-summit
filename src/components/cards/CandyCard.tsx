@@ -4,7 +4,7 @@ import { Icons } from "../Icons";
 
 const CandyCard = () => {
   return (
-    <Card.Base className="flex items-center gap-2 p-2" variant="candy">
+    <Card.Base className="flex items-center gap-2 p-2">
       <Icons.candy />
       <div className="flex flex-col">
         <span className="text-sm font-normal text-gray-12">

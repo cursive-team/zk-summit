@@ -1,11 +1,5 @@
 import init, { gen_keys_js, round2_js, round3_js } from "@/lib/mp_psi";
 import { Keys, getLocationSignatures, getUsers } from "./localStorage";
-import {
-  getUserPsiState,
-  saveUserPsiState,
-  saveUserRound2Output,
-  userPsiStateKeys,
-} from "./indexedDB/psi";
 import { type PutBlobResult } from "@vercel/blob";
 import { upload } from "@vercel/blob/client";
 

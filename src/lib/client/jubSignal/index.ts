@@ -14,6 +14,7 @@ export enum JUB_SIGNAL_MESSAGE_TYPE {
   LOCATION_TAP = "LT", // A message you send to yourself indicating you tapped a location
   QUEST_COMPLETED = "QC", // A message you send to yourself indicating you completed a quest
   ITEM_REDEEMED = "IR", // A message sent to you indicating you redeemed an item
+  OVERLAP_COMPUTED = "OC", // A message you send to yourself indicating PSI completion
 }
 
 export type MessageContents = {

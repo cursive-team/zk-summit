@@ -55,7 +55,7 @@ const QuestRequirementIcons = ({
           })}
       </div>
       {overcomeRequirementLimit && (
-        <span className="text-[11px] text-gray-11 font-light tracking-[0.8px]">
+        <span className="text-[11px] text-gray-11 font-normal tracking-[0.8px]">
           {`+${remainingRequirements}`}
         </span>
       )}
@@ -91,7 +91,7 @@ const QuestCard = ({
           {/* {isPinned ? (
             <div className="flex items-center gap-1">
               <span className="text-xs text-gray-11">Pinned</span>
-              <Icons.pin />
+              <Icons.Pin />
             </div>
           ) : (
             (isCompleted && <Icons.checkedCircle />) || null

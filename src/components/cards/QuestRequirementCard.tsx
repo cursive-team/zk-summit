@@ -84,7 +84,7 @@ const QuestRequirementCard = ({
         {completed && (
           <Icons.checkedCircle className="absolute right-[6px] top-[6px]" />
         )}
-        <Icons.arrowRight className={cn("absolute right-[6px] bottom-[6px]")} />
+        <Icons.ArrowRight className={cn("absolute right-[6px] bottom-[6px]")} />
         {showProgress && <Card.Progress />}
       </Card.Base>
     </>

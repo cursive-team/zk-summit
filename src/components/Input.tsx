@@ -4,18 +4,17 @@ import { ForwardedRef, InputHTMLAttributes, forwardRef } from "react";
 import { InputWrapper, InputWrapperProps } from "./input/InputWrapper";
 
 const InputComponent = classed.input(
-  "min-h-5 py-[5px] placeholder:font-light placeholder-[#818181] leading-[20px] rounded-none w-full text-white !outline-none text-light shadow-none focus:border-b focus:ring-0 focus:outline-none focus:shadow-none focus:outline-offset-0 focus:ring-offset-0 disabled:opacity-50",
+  "min-h-5 py-[5px] placeholder-black/40 leading-[20px] rounded-none w-full text-black !outline-none shadow-none focus:border-b focus:ring-0 focus:outline-none focus:shadow-none focus:outline-offset-0 focus:ring-offset-0 disabled:opacity-50",
   {
     variants: {
       variant: {
-        primary:
-          "bg-transparent border-b border-b-gray-600 focus:border-b-gray-600",
+        primary: "bg-transparent border-b border-black focus:border-iron-800",
       },
       hasIcon: {
         true: "pl-[20px]",
       },
       hasError: {
-        true: "!border-b-[#D40018]",
+        true: "!border-b-error",
       },
     },
     defaultVariants: {

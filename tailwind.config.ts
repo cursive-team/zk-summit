@@ -19,11 +19,21 @@ const config: Config = {
         4: "16px",
         8: "24px",
       },
+      fontFamily: {
+        sans: "var(--font-dm-sans)",
+      },
       colors: {
         skeleton: "#1b1b1b",
-        candy: {
-          DEFAULT: "#8C00A3",
-          200: "#580067",
+        main: "var(--bg-primary)",
+        primary: "var(--color-primary)",
+        secondary: "var(--color-secondary)",
+        tertiary: "var(--color-tertiary)",
+        error: "var(--color-error)",
+        iron: {
+          50: "#F6F7F8",
+          600: "#7E8792",
+          800: "#5F656E",
+          950: "#323539",
         },
         black: {
           DEFAULT: "#111",

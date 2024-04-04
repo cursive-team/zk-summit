@@ -1,6 +1,7 @@
 import { classed } from "@tw-classed/react";
 import React, { useEffect } from "react";
 import { Transition } from "@headlessui/react";
+import { cn } from "@/lib/client/utils";
 
 interface LoadingWrapper {
   isLoading: boolean;
@@ -11,7 +12,7 @@ interface LoadingWrapper {
   noResultsLabel?: string;
 }
 
-const NoItemLabel = classed.span("text-sm text-gray-12 py-4");
+const NoItemLabel = classed.span("text-sm text-iron-600 font-bold py-4");
 
 const MIN_LOADING_TIME = 200;
 const LoadingWrapper = ({

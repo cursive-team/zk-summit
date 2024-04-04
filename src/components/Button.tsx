@@ -4,22 +4,22 @@ import type * as Classed from "@tw-classed/react";
 import { classed } from "@tw-classed/react";
 
 const ButtonComponent = classed.button(
-  "flex items-center disabled:opacity-50 font-light w-full flex focus:ring-0 focus:outline-none active:scale-95",
+  "font-sans flex items-center disabled:opacity-70 w-full flex focus:ring-0 focus:outline-none active:scale-95",
   {
     variants: {
       size: {
-        tiny: "text-sm py-1 px-3 gap-1",
-        sm: "text-[13px] leading-none gap-1 py-[6px] px-[7px]",
-        md: "text-[14px] py-[10px] xs:py-[14px] leading-none gap-2 px-4",
-        lg: "text-[16px] py-3 leading-none gap-2 px-4",
+        small: "px-4 py-1 text-sm font-normal leading-5",
+        medium: "py-[12px] px-[16px] text-[14px] leading-[19px] font-bold",
       },
       variant: {
-        primary: "bg-gray-200 text-white border border-gray-400",
-        secondary: "bg-white/5 text-gray-11 border border-transparent",
+        primary: "bg-primary text-white border border-primary",
+        secondary: "bg-secondary text-iron-950 border border-transparent",
+        tertiary: "bg-tertiary text-iron-950 border border-black",
+        transparent:
+          "bg-transparent text-primary border border-transparent underline",
       },
       rounded: {
-        true: "rounded-full",
-        false: "rounded-[4px]",
+        true: "rounded-[4px]",
       },
       align: {
         center: "justify-center",
@@ -28,11 +28,18 @@ const ButtonComponent = classed.button(
       },
     },
     defaultVariants: {
-      size: "md",
+      size: "medium",
       variant: "primary",
-      rounded: false,
+      rounded: true,
       align: "center",
     },
+    compoundVariants: [
+      {
+        size: "medium",
+        variant: "transparent",
+        className: "!py-0",
+      },
+    ],
   }
 );
 
@@ -47,13 +54,11 @@ export interface ButtonProps
 }
 
 const IconVariants: Record<NonNullable<ButtonVariants["size"]>, string> = {
-  tiny: "w-2 h-2",
-  sm: "w-3 h-3",
-  md: "w-3 h-3",
-  lg: "w-4 h-4",
+  small: "w-3 h-3",
+  medium: "w-3 h-3",
 };
 const LoadingSpinner = ({ size }: Pick<ButtonProps, "size">) => {
-  const iconSize = IconVariants[size ?? "md"];
+  const iconSize = IconVariants[size ?? "medium"];
 
   return (
     <div role="status">

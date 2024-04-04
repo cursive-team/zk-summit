@@ -30,7 +30,7 @@ const CheckboxComponent = classed.label(
   }
 );
 
-const CheckboxLabelBase = classed.span("font-normal font-light", {
+const CheckboxLabelBase = classed.span("font-normal font-normal", {
   variants: {
     disabled: {
       true: "opacity-50 pointer-events-none",

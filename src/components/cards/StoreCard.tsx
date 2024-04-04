@@ -44,13 +44,13 @@ const StoreCard = ({
       </div>
       <div className="flex flex-col gap-0.5">
         <div className="flex flex-col">
-          <span className="text-xs font-light text-gray-900">
+          <span className="text-xs font-normal text-gray-900">
             {partnerName}
           </span>
           <h2 className="text-sm text-gray-12">{itemName}</h2>
         </div>
         {isSoldOut ? (
-          <span className="text-xs font-light text-gray-900">Sold Out</span>
+          <span className="text-xs font-normal text-gray-900">Sold Out</span>
         ) : pointsRequired > 0 ? (
           <PointCard className="self-start" point={pointsRequired} />
         ) : null}

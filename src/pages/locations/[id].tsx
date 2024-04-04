@@ -16,8 +16,8 @@ import { getNonceFromCounterMessage } from "@/lib/client/libhalo";
 import { LocationTapModal } from "@/components/modals/LocationTapModal";
 import Linkify from "react-linkify";
 
-const Label = classed.span("text-xs text-gray-10 font-light");
-const Description = classed.span("text-gray-12 text-sm font-light");
+const Label = classed.span("text-xs text-gray-10 font-normal");
+const Description = classed.span("text-gray-12 text-sm font-normal");
 
 const LocationDetails = () => {
   const { pageWidth } = useSettings();

@@ -182,10 +182,10 @@ const ProfileForm = ({
       </div>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col">
-          <span className="text-gray-12 text-sm font-light">
+          <span className="text-black text-sm font-normal">
             Shareable socials
           </span>
-          <span className="text-gray-11 text-xs font-light">
+          <span className="text-iron-950 text-xs font-normal">
             {`These socials will be shared with anyone who taps your NFC card.`}
           </span>
         </div>

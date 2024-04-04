@@ -13,6 +13,7 @@
   "dependencies": {
     "@headlessui/react": "^1.7.18",
     "@hookform/resolvers": "^3.3.4",
+    "@next/font": "^14.1.4",
     "@prisma/client": "^5.8.1",
     "@simplewebauthn/browser": "^9.0.1",
     "@simplewebauthn/server": "^9.0.3",

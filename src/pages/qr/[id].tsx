@@ -126,7 +126,7 @@ const QRPage = () => {
         <div className="flex flex-col gap-4 items-center">
           <div className="flex flex-col gap-0.5">
             <div className="flex flex-col text-center">
-              <span className="text-xs font-light text-gray-900">
+              <span className="text-xs font-normal text-gray-900">
                 {qrCodeData.userDisplayName}
               </span>
               <h2 className="text-sm text-gray-12">{qrCodeData.questName}</h2>
@@ -134,14 +134,14 @@ const QRPage = () => {
           </div>
           {displayState === QRPageDisplayState.SUCCESS && (
             <div className="flex flex-col gap-4 items-center">
-              <span className="text-lg font-light text-gray-900">
+              <span className="text-lg font-normal text-gray-900">
                 {"Successfully nullified proof."}
               </span>
             </div>
           )}
           {displayState === QRPageDisplayState.FAILURE && (
             <div className="flex flex-col gap-4 items-center">
-              <span className="text-lg font-light text-gray-900">
+              <span className="text-lg font-normal text-gray-900">
                 {"Failed to nullify proof."}
               </span>
             </div>

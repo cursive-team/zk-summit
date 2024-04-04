@@ -15,7 +15,7 @@ interface RouterItem {
 const TabItem = ({ label, href, icon, isActive, iconSize }: RouterItem) => {
   const Icon: any = icon;
 
-  const textColor = isActive ? "text-white" : "text-gray-10";
+  const textColor = isActive ? "text-iron-950" : "text-iron-600";
 
   return (
     <Link href={href}>
@@ -23,7 +23,7 @@ const TabItem = ({ label, href, icon, isActive, iconSize }: RouterItem) => {
         <Icon size={iconSize || 24} className={cn("duration-200", textColor)} />
         <span
           className={cn(
-            "duration-200 delay-100 text-sm font-light mt-auto leading-5",
+            "duration-200 delay-100 text-sm font-bold mt-auto leading-5",
             textColor
           )}
         >
@@ -41,22 +41,23 @@ const AppFooter = () => {
     {
       label: "Home",
       href: "/",
-      icon: Icons.home,
+      icon: Icons.Home,
+      iconSize: 14,
     },
     {
       label: "Proofs",
       href: "/proofs",
-      icon: Icons.quest,
-      iconSize: 16,
+      icon: Icons.Proof,
+      iconSize: 14,
     },
   ];
 
   return (
     <footer
       id="footer"
-      className="fixed border-t border-t-shark-700 w-full bottom-0 mt-4 z-[50]"
+      className="fixed border-t border-iron-50 w-full bottom-0 mt-4 z-[50]"
     >
-      <div className="bg-gray-200 md:container grid grid-cols-2 bottom-0 py-3 xs:pt-[17px] xs:pb-[13px]">
+      <div className="bg-tertiary md:container grid grid-cols-2 bottom-0 py-3 xs:pt-[17px] xs:pb-[13px]">
         {routerItems?.map((route, index) => {
           const pathParts = route.href.split("/").filter(Boolean);
           const isHome = pathname === "/" && route.href === "/";

@@ -15,9 +15,9 @@ import {
 } from "@/lib/client/localStorage";
 import { ListWrapper } from "../wrappers/ListWrapper";
 
-const Label = classed.span("text-xs text-gray-10 font-light");
-const Description = classed.span("text-gray-12 text-sm font-light");
-const Title = classed.span("text-gray-12 text-lg font-light");
+const Label = classed.span("text-xs text-gray-10 font-normal");
+const Description = classed.span("text-gray-12 text-sm font-normal");
+const Title = classed.span("text-gray-12 text-lg font-normal");
 
 type HeaderProps = {
   label?: string;

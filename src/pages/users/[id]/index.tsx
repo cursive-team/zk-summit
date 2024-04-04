@@ -26,7 +26,7 @@ const LinkCard = ({ label, value, href }: LinkCardProps) => {
           <Card.Title>{label}</Card.Title>
           <Card.Description>{value ?? "N/A"}</Card.Description>
         </div>
-        <Icons.externalLink size={18} />
+        <Icons.ExternalLink size={18} />
       </Card.Base>
     </Link>
   );
@@ -72,10 +72,10 @@ const UserProfilePage = () => {
             <ArtworkSnapshot width={128} height={128} pubKey={""} />
           )}
           <div className="flex flex-col gap-1">
-            <h2 className=" text-xl font-gray-12 font-light">{user.name}</h2>
+            <h2 className=" text-xl font-gray-12 font-normal">{user.name}</h2>
             <div className="flex items-center gap-1">
               <Icons.checkedCircle />
-              <span className="text-sm font-light text-white">
+              <span className="text-sm font-normal text-white">
                 {user.outTs ? (
                   <Label>{`Shared on ${new Date(user.outTs).toLocaleString(
                     undefined,

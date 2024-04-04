@@ -21,10 +21,8 @@ export default async function handler(
     return res.status(400).json({ error: "Chip keys already exist" });
   }
 
-  console.log(initialKeygenData);
   try {
     for (const [chipId, chipData] of Object.entries(initialKeygenData)) {
-      console.log("Keygen chipId:", chipId, "chipData:", chipData);
       // Generate and save signing keypair
       const { signingKey, verifyingKey } = generateSignatureKeyPair();
       await prisma.chipKey.create({

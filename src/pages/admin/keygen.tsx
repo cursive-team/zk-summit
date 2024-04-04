@@ -26,7 +26,6 @@ export default function AdminKeygen() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      console.log("Keys generated successfully.");
       toast.success("Keys generated successfully!");
       setLoading(false);
       setPassword("");

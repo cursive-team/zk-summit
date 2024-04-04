@@ -12,12 +12,13 @@ datasource db {
 }
 
 model User {
-  id          Int     @id @default(autoincrement())
-  chipId      String  @unique
-  displayName String  @unique
-  twitter     String?
-  telegram    String?
-  bio         String?
+  id           Int     @id @default(autoincrement())
+  chipId       String  @unique
+  isRegistered Boolean @default(false)
+  displayName  String  @unique
+  twitter      String?
+  telegram     String?
+  bio          String?
 
   encryptionPublicKey String
   signaturePublicKey  String

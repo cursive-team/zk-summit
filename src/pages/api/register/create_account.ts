@@ -18,9 +18,7 @@ const createAccountSchema = object({
   mockRef: string().optional().default(undefined),
   displayName: string().trim().required(),
   encryptionPublicKey: string().required(),
-  signaturePublicKey: string().required(),
   psiPublicKeysLink: string().required(),
-  signingKey: string().required(),
   passwordSalt: string().optional().default(undefined),
   passwordHash: string().optional().default(undefined),
   authPublicKey: string().optional().default(undefined),
@@ -29,9 +27,17 @@ const createAccountSchema = object({
   bio: string().optional().default(undefined),
 });
 
+export type CreateAccountResponse =
+  | {
+      authToken: AuthTokenResponse;
+      signingKey: string;
+      verifyingKey: string;
+    }
+  | ErrorResponse;
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<AuthTokenResponse | ErrorResponse>
+  res: NextApiResponse<CreateAccountResponse>
 ) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
@@ -57,9 +63,7 @@ export default async function handler(
     mockRef,
     displayName,
     encryptionPublicKey,
-    signaturePublicKey,
     psiPublicKeysLink,
-    signingKey,
     passwordSalt,
     passwordHash,
     authPublicKey,
@@ -100,15 +104,28 @@ export default async function handler(
   if (chipType !== ChipType.PERSON) {
     return res.status(400).json({ error: "Invalid iykRef" });
   }
+
+  // Check that the chip key exists
+  const chipKey = await prisma.chipKey.findUnique({
+    where: {
+      chipId,
+    },
+  });
+  if (!chipKey) {
+    return res.status(400).json({ error: "Chip key not found" });
+  }
+
+  // Check that the user is not already registered
   const existingChipUser = await prisma.user.findUnique({
     where: {
       chipId,
     },
   });
-  if (existingChipUser) {
+  if (existingChipUser && existingChipUser.isRegistered) {
     return res.status(400).json({ error: "Card already registered" });
   }
 
+  // Check username has not been taken
   const existingUsername = await prisma.user.findUnique({
     where: {
       displayName,
@@ -136,10 +153,11 @@ export default async function handler(
   const user = await prisma.user.create({
     data: {
       chipId,
+      isRegistered: true,
       displayName,
       encryptionPublicKey,
-      signaturePublicKey,
       psiPublicKeysLink,
+      signaturePublicKey: chipKey.signaturePublicKey,
       passwordSalt,
       passwordHash,
       authPublicKey,
@@ -149,16 +167,11 @@ export default async function handler(
     },
   });
 
-  // Create chip key
-  await prisma.chipKey.create({
-    data: {
-      chipId,
-      signaturePublicKey,
-      signaturePrivateKey: signingKey,
-    },
-  });
-
   const authTokenResponse = await generateAuthToken(user.id);
 
-  return res.status(200).json(authTokenResponse);
+  return res.status(200).json({
+    authToken: authTokenResponse,
+    signingKey: chipKey.signaturePrivateKey,
+    verifyingKey: chipKey.signaturePublicKey,
+  });
 }

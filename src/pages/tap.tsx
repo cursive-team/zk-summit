@@ -263,13 +263,15 @@ export default function Tap() {
               }
               await handleLocationTap(tapResponse.location);
               break;
+            case TapResponseCode.CHIP_KEY_NOT_FOUND:
+              throw new Error("Chip key not found!");
             default:
               throw new Error("Invalid tap response code!");
           }
         })
         .catch((error) => {
           console.error(error);
-          toast.error("Error! Please refresh and try again.");
+          toast.error("Error! Please contact a member of the Cursive team.");
         });
     } else {
       // ----- HANDLE CARD GENERATED SIGNATURE TAP -----

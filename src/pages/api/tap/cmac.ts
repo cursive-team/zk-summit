@@ -17,6 +17,7 @@ export enum TapResponseCode {
   LOCATION_NOT_REGISTERED = "LOCATION_NOT_REGISTERED",
   VALID_PERSON = "VALID_PERSON",
   VALID_LOCATION = "VALID_LOCATION",
+  CHIP_KEY_NOT_FOUND = "CHIP_KEY_NOT_FOUND",
 }
 
 export type PersonTapResponse = {
@@ -146,6 +147,19 @@ export default async function handler(
   // ref must not have been used before
   if (!isValid) {
     return res.status(200).json({ code: TapResponseCode.CMAC_INVALID });
+  }
+
+  // chip key must exist
+  const chipKey = await prisma.chipKey.findFirst({
+    where: {
+      chipId,
+    },
+  });
+  if (!chipKey) {
+    return res.status(400).json({
+      code: TapResponseCode.CHIP_KEY_NOT_FOUND,
+      error: "Chip key not found",
+    });
   }
 
   // if user is registered, return user data

@@ -2,7 +2,7 @@ import React, { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 import { generateEncryptionKeyPair } from "@/lib/client/encryption";
-import { generateSignatureKeyPair, sign } from "@/lib/shared/signature";
+import { sign } from "@/lib/shared/signature";
 import { generateSalt, hashPassword } from "@/lib/client/utils";
 import {
   createBackup,
@@ -221,7 +221,6 @@ export default function Register() {
     setLoading(true);
 
     const { privateKey, publicKey } = await generateEncryptionKeyPair();
-    const { signingKey, verifyingKey } = generateSignatureKeyPair();
     const { psiPrivateKeys, psiPublicKeys } = await generatePSIKeys();
 
     // upload psi keys to blob
@@ -254,9 +253,7 @@ export default function Register() {
         mockRef,
         displayName,
         encryptionPublicKey: publicKey,
-        signaturePublicKey: verifyingKey,
         psiPublicKeysLink,
-        signingKey,
         passwordSalt,
         passwordHash,
         authPublicKey,
@@ -274,9 +271,19 @@ export default function Register() {
     }
 
     const data = await response.json();
-    if (!data.value || !data.expiresAt) {
+    const { authToken, signingKey, verifyingKey } = data;
+    if (!authToken || !authToken.value || !authToken.expiresAt) {
       console.error("Account created, but no auth token returned.");
       toast.error("Account created, but error logging in! Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    if (!signingKey || !verifyingKey) {
+      console.error("Account created, but no keys returned.");
+      toast.error(
+        "Error generating keys. Please talk to a member of the Cursive team."
+      );
       setLoading(false);
       return;
     }

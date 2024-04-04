@@ -1,4 +1,5 @@
 import prisma from "@/lib/server/prisma";
+import { initialKeygenData } from "@/shared/keygen";
 import { boolean, object, string } from "yup";
 
 export const iykRefResponseSchema = object({
@@ -76,11 +77,19 @@ export const getMockChipIdFromIykRef = (
 /**
  * Given a chipId, returns whether the chip is a person or location card
  * Returns undefined if the chipId is invalid
+ * FIRST LOOKUP CHIP TYPE FROM KEYGEN FILE
  * FOR MOCK CHIPS, PERSON CARDS HAVE CHIP IDS < 10000, LOCATION CARDS HAVE CHIP IDS >= 10000
  */
 export const getMockChipTypeFromChipId = (
   chipId: string
 ): ChipType | undefined => {
+  // If chipId is in initialKeygenData, use that to determine chip type
+  const keygenData = initialKeygenData[chipId];
+  if (keygenData) {
+    const chipType = keygenData.type;
+    return chipType === "person" ? ChipType.PERSON : ChipType.LOCATION;
+  }
+
   const parsedChipId = parseInt(chipId);
   if (isNaN(parsedChipId)) {
     return undefined;

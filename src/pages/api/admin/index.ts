@@ -11,7 +11,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<UserAdminInfo | EmptyResponse | ErrorResponse>
 ) {
-  return res.status(200).json({ isAdmin: true, isSuperAdmin: true });
   if (req.method === "GET") {
     const { token } = req.query;
 

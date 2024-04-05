@@ -76,7 +76,12 @@ const MPPSIBenchmarkPage = () => {
     const gen_keys_output_b = gen_keys_js();
     console.log(
       `Size of gen_keys_output_a (stringified): ${
-        new Blob([JSON.stringify(gen_keys_output_a.message_round1)]).size /
+        new Blob([JSON.stringify(gen_keys_output_a)]).size / (1024 * 1024)
+      } MB`
+    );
+    console.log(
+      `Size of gen_keys_output_a.psi_keys (stringified): ${
+        new Blob([JSON.stringify(gen_keys_output_a.psi_keys)]).size /
         (1024 * 1024)
       } MB`
     );

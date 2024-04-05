@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import {
   fetchUserByUUID,
   getKeys,
+  getLocationSignatures,
   getProfile,
+  getUsers,
   User,
 } from "@/lib/client/localStorage";
 import { AppBackHeader } from "@/components/AppHeader";
@@ -52,7 +54,6 @@ enum PSIState {
   ROUND3,
   JUBSIGNAL,
   COMPLETE,
-  DISPLAY,
 }
 
 const UserProfilePage = () => {
@@ -75,6 +76,13 @@ const UserProfilePage = () => {
   const [otherRound3MessageLink, setOtherRound3MessageLink] =
     useState<string>();
   const [selfRound3Output, setSelfRound3Output] = useState<any>();
+
+  const [userOverlap, setUserOverlap] = useState<
+    { userId: string; name: string }[]
+  >([]);
+  const [locationOverlap, setLocationOverlap] = useState<
+    { locationId: string; name: string }[]
+  >([]);
 
   // set up channel for PSI
   const setupChannel = () => {
@@ -100,11 +108,11 @@ const UserProfilePage = () => {
           });
         }
       })
-      .on("presence", { event: "leave" }, ({ key }) => {
+      .on("presence", { event: "leave" }, async ({ key }) => {
         if (key === otherEncPk) {
           toast.error(`${user?.name} left before computation finished.`);
           setPsiState(PSIState.NOT_STARTED);
-          supabase.removeChannel(supabase.channel(channelName));
+          await closeChannel();
         }
       })
       .on("broadcast", { event: "message" }, (event) => {
@@ -119,6 +127,42 @@ const UserProfilePage = () => {
       });
   };
 
+  const closeChannel = async () => {
+    if (!channelName) return;
+    await supabase.removeChannel(supabase.channel(channelName));
+  };
+
+  const processOverlap = (overlap: number[]) => {
+    const users = getUsers();
+    const locations = getLocationSignatures();
+    let locationOverlapIds = [];
+    let userOverlapIds = [];
+
+    for (let i = 0; i < overlap.length; i++) {
+      if (overlap[i] >= 1000) {
+        continue;
+      } else if (overlap[i] > 500) {
+        const locationId = (overlap[i] - 500).toString();
+        locationOverlapIds.push({
+          locationId,
+          name: locations[locationId].name,
+        });
+      } else {
+        for (const userId in users) {
+          if (parseInt(users[userId].pkId) === overlap[i]) {
+            userOverlapIds.push({
+              userId,
+              name: users[userId].name,
+            });
+          }
+        }
+      }
+    }
+    // console.log(userOverlapIds);
+    setUserOverlap(userOverlapIds);
+    setLocationOverlap(locationOverlapIds);
+  };
+
   // process broadcast events
   useEffect(() => {
     if (!broadcastEvent) return;
@@ -128,7 +172,6 @@ const UserProfilePage = () => {
     const { payload } = broadcastEvent;
     if (payload.state === PSIState.ROUND2 && payload.to === selfEncPk) {
       setOtherRound2MessageLink(payload.data);
-      console.log(parseInt(payload.otherPkId), parseInt(user?.pkId!));
       setRound2Order(parseInt(payload.otherPkId) > parseInt(user?.pkId!));
     } else if (payload.state === PSIState.ROUND3 && payload.to === selfEncPk) {
       setOtherRound3MessageLink(payload.data);
@@ -157,10 +200,10 @@ const UserProfilePage = () => {
     psiState,
     selfRound1Output,
     otherRound2MessageLink,
+    round2Order,
     selfRound2Output,
     otherRound3MessageLink,
     selfRound3Output,
-    round2Order,
   ]);
 
   useEffect(() => {
@@ -244,7 +287,6 @@ const UserProfilePage = () => {
             await fetch(otherRound3MessageLink!).then((res) => res.text())
           )
         );
-        console.log(psiOutput);
         let overlapIndices = [];
         for (let i = 0; i < psiOutput.length; i++) {
           if (psiOutput[i] === 1) {
@@ -254,7 +296,7 @@ const UserProfilePage = () => {
 
         setSelfRound3Output(overlapIndices);
       } else if (psiState === PSIState.JUBSIGNAL) {
-        await supabase.removeChannel(supabase.channel(channelName!));
+        await closeChannel();
 
         const encryptedMessage = await encryptOverlapComputedMessage(
           selfRound3Output,
@@ -285,13 +327,13 @@ const UserProfilePage = () => {
           return;
         }
 
+        processOverlap(selfRound3Output || []);
         setPsiState(PSIState.COMPLETE);
-        window.location.reload();
       }
     }
 
     handleOverlapRounds();
-  }, [psiState, selfEncPk, otherEncPk, channelName, user?.psiPkLink]);
+  }, [psiState, selfEncPk, otherEncPk, channelName]);
 
   useEffect(() => {
     if (typeof id === "string") {
@@ -308,7 +350,8 @@ const UserProfilePage = () => {
 
       if (fetchedUser) {
         if (fetchedUser.oI) {
-          setPsiState(PSIState.DISPLAY);
+          processOverlap(JSON.parse(fetchedUser.oI));
+          setPsiState(PSIState.COMPLETE);
         } else {
           setOtherEncPk(fetchedUser.encPk);
           setSelfEncPk(profile.encryptionPublicKey);
@@ -422,8 +465,49 @@ const UserProfilePage = () => {
             </span>
           </InputWrapper>
         )}
-        {psiState === PSIState.DISPLAY && <></>}
-        {user?.psiPkLink && psiState !== PSIState.DISPLAY && (
+        {psiState === PSIState.COMPLETE && (
+          <InputWrapper
+            label="Private overlap"
+            description="Your common taps, snapshotted at when you met!"
+          >
+            <div className="flex flex-col mt-2 gap-1">
+              {userOverlap.map(({ userId, name }, index) => {
+                return (
+                  <div
+                    onClick={() => {
+                      window.location.href = `/users/${userId}`;
+                    }}
+                    key={index}
+                  >
+                    <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
+                      <div className="flex items-center gap-2">
+                        <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
+                          <Icons.person size={12} />
+                        </div>
+                        <Card.Title>{name}</Card.Title>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {locationOverlap.map(({ locationId, name }, index) => {
+                return (
+                  <Link href={`/locations/${locationId}`} key={index}>
+                    <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
+                      <div className="flex items-center gap-2">
+                        <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
+                          <Icons.location className="h-3" />
+                        </div>
+                        <Card.Title>{name}</Card.Title>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </InputWrapper>
+        )}
+        {user?.psiPkLink && psiState !== PSIState.COMPLETE && (
           <div className="flex flex-col gap-4">
             <InputWrapper
               size="sm"
@@ -437,15 +521,11 @@ const UserProfilePage = () => {
                 conversation starter.
               </span>
               <Button
-                loading={
-                  psiState !== PSIState.NOT_STARTED &&
-                  psiState !== PSIState.COMPLETE
-                }
+                loading={psiState !== PSIState.NOT_STARTED}
                 type="button"
                 onClick={setupChannel}
               >
-                {psiState !== PSIState.NOT_STARTED &&
-                psiState !== PSIState.COMPLETE
+                {psiState !== PSIState.NOT_STARTED
                   ? "Computing..."
                   : "Discover mutuals"}
               </Button>

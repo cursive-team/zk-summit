@@ -10,14 +10,14 @@ export const KEYS_STORAGE_KEY = "keys";
 export type Keys = {
   encryptionPrivateKey: string;
   signaturePrivateKey: string;
-  psiPrivateKeys: string;
+  psiPrivateKeys: any;
   psiPublicKeysLink: string;
 };
 
 export const keysSchema = object({
   encryptionPrivateKey: string().required(),
   signaturePrivateKey: string().required(),
-  psiPrivateKeys: string().required(),
+  psiPrivateKeys: object().required(),
   psiPublicKeysLink: string().required(),
 });
 

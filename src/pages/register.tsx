@@ -168,7 +168,7 @@ export default function Register() {
       rpName: "zk-summit",
       rpID: window.location.hostname,
       userID: displayName,
-      userName: "ZK Summit 11",
+      userName: displayName,
       attestationType: "none",
     });
 

@@ -29,7 +29,7 @@ const ListLayout = ({
 }: ListLayoutProps) => {
   return (
     <ListLayoutWrapper spacing={spacing} className={className}>
-      <span className="text-gray-10 font-light text-xs">{label}</span>
+      <span className="text-iron-600 font-bold text-xs leading-4">{label}</span>
       <div>{children}</div>
     </ListLayoutWrapper>
   );

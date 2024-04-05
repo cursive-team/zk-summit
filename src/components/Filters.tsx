@@ -4,7 +4,7 @@ import { classed } from "@tw-classed/react";
 import React, { useState } from "react";
 
 const RadioOptionItem = classed.div(
-  "whitespace-nowrap border border-gray-400 text-xs font-light rounded px-3 py-2 duration-200 ease-in-out cursor-pointer leading-none",
+  "whitespace-nowrap border border-gray-400 text-xs font-normal rounded px-3 py-2 duration-200 ease-in-out cursor-pointer leading-none",
   {
     variants: {
       checked: {
@@ -40,7 +40,7 @@ const Filters = ({
   return (
     <div className="flex items-center gap-2">
       {label && (
-        <span className="text-xs text-gray-900 font-light">{label}</span>
+        <span className="text-xs text-gray-900 font-normal">{label}</span>
       )}
       <RadioGroup
         className={cn("flex gap-2 overflow-scroll", {

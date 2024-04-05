@@ -9,8 +9,10 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { Card } from "../cards/Card";
 import { cn } from "@/lib/client/utils";
 
-const Label = classed.span("text-gray-10 text-xs font-light");
-const Description = classed.span("text-center text-gray-12 text-sm font-light");
+const Label = classed.span("text-gray-10 text-xs font-normal");
+const Description = classed.span(
+  "text-center text-gray-12 text-sm font-normal"
+);
 
 export interface ArtworkSnapshotProps
   extends React.HTMLAttributes<HTMLCanvasElement> {
@@ -37,7 +39,7 @@ interface ProfileCardArtworkProps {
 const ProfileCardArtwork = ({ size, image }: ProfileCardArtworkProps) => {
   return (
     <Card.Artwork
-      className={cn({ "bg-skeleton": !image })}
+      className={cn("p-2 bg-[#ecf8ff]")}
       style={{
         backgroundImage: `url(${image})`,
         height: `${size}px`,
@@ -53,7 +55,7 @@ const ArtworkWrapper = ({ children, title }: ArtworkWrapperProps) => {
     <div className="flex flex-col gap-2">
       {children}
       {title && (
-        <span className="text-xs text-gray-900 font-light mx-auto">
+        <span className="text-xs text-gray-900 font-normal mx-auto">
           {title}
         </span>
       )}
@@ -208,7 +210,7 @@ const ArtworkSnapshot = ({
       {isVisible && (
         <ArtworkWrapper title={title}>
           <canvas
-            className="artwork-webgl flex p-0 m-0 border border-white rounded-[8px]"
+            className="artwork-webgl flex p-0 m-0 rounded-[8px]"
             id="artwork-webgl"
             {...props}
           ></canvas>
@@ -228,7 +230,7 @@ const ArtworkSnapshot = ({
                 max={signatures.length}
                 value={rangeValue} // Bind the value to state
                 onChange={onRangeChange}
-                className="w-full h-0.5 bg-gray-700 accent-gray-12 appearance-none"
+                className="w-full h-0.5 bg-main accent-gray-12 appearance-none"
               />
             </label>
           )}

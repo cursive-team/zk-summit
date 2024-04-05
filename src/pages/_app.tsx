@@ -4,6 +4,7 @@ import { FullPageBanner } from "@/components/FullPageBanner";
 import { TransitionWrapper } from "@/components/Transition";
 import useSettings from "@/hooks/useSettings";
 import OnlyMobileLayout from "@/layouts/OnlyMobileLayout";
+import { DM_Sans } from "next/font/google";
 import "@/styles/globals.css";
 import {
   QueryCache,
@@ -19,6 +20,11 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => toast.error(`Something went wrong: ${error.message}`),
   }),
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
 });
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -57,8 +63,8 @@ export default function App({ Component, pageProps }: AppProps) {
     <StateMachineProvider>
       <QueryClientProvider client={queryClient}>
         <OnlyMobileLayout>
-          <div
-            className="flex flex-col"
+          <main
+            className={`flex flex-col ${dmSans.variable} font-sans`}
             style={{
               height: `${pageHeight}px`,
             }}
@@ -81,12 +87,13 @@ export default function App({ Component, pageProps }: AppProps) {
                 <>{footerVisible && <AppFooter />}</>
               </TransitionWrapper.Fade>
             </div>
-          </div>
+          </main>
         </OnlyMobileLayout>
         <Toaster
           position="top-center"
           toastOptions={{
             duration: 5000,
+            className: "font-sans text-iron-950",
           }}
         />
       </QueryClientProvider>

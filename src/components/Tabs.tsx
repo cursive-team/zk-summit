@@ -11,11 +11,11 @@ export interface TabsProps {
   items: TabProps[];
 }
 
-const TabButton = classed.div("pb-4", {
+const TabButton = classed.div("font-bold pb-[14px]", {
   variants: {
     selected: {
-      true: "text-gray-12",
-      false: "text-gray-11",
+      true: "text-iron-950",
+      false: "text-iron-600",
     },
   },
   defaultVariants: {
@@ -43,14 +43,14 @@ const Tabs = ({ items }: TabsProps) => {
                     </span>
                   </TabButton>
                   {selected && (
-                    <div className="absolute bg-gray-12 bottom-0 h-[1px] w-full z-[1]"></div>
+                    <div className="absolute bg-iron-950 bottom-0 h-[1px] w-full z-[1]"></div>
                   )}
                 </div>
               )}
             </Tab>
           );
         })}
-        <div className="absolute bg-gray-400 bottom-0 h-[1px] w-full z-0"></div>
+        <div className="absolute bg-iron-50 bottom-0 h-[1px] w-full z-0"></div>
       </Tab.List>
       <Tab.Panels className="pt-2 xs:pt-4">
         {items.map(({ children }, index) => {

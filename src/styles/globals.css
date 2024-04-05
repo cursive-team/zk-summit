@@ -2,17 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: "RegolaPro";
-  src: url("/fonts/Regola-Pro-Regular.otf") format("opentype");
-  font-weight: 100;
-  font-style: normal;
-}
-
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  /* Colors */
+  --bg-primary: #DFF1FF;
+  --color-primary: #4015EC;
+  --color-secondary: #8C73F4;
+  --color-tertiary: #E9F3FF;
+  --color-error: #D40018;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,9 +27,8 @@ body {
   padding: 0;
   padding: 0;
   height: 100%;
-  color: #fff;
-  background: #111 !important;
-  font-family: "RegolaPro", sans-serif;
+  @apply text-iron-950;
+  background: var(--bg-primary) !important;
   text-rendering: geometricPrecision;
   font-feature-settings: "calt" off;
   -webkit-overflow-scrolling: touch;
@@ -42,7 +40,7 @@ body {
   }
 
   .link {
-    @apply text-gray-11 underline leading-5 text-sm font-light;
+    @apply text-gray-11 underline leading-5 text-sm font-normal;
   }
 }
 

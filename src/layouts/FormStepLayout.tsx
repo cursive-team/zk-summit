@@ -33,16 +33,16 @@ const FormStepLayout = ({
     >
       <div className="flex flex-col gap-3 xs:gap-8">
         <div className="flex flex-col gap-1 xs:mb-4">
-          {description && (
-            <span className="text-light text-xs text-gray-11 font-normal leading-4">
-              {description}
-            </span>
-          )}
           <div className="flex flex-col gap-3">
+            {description && (
+              <span className="font-normal text-[13px] leading-[18px] text-black">
+                {description}
+              </span>
+            )}
             {title && (
               <>
                 {typeof title === "string" ? (
-                  <h3 className="font-normal leading-8 text-gray-12 text-light text-[20px]">
+                  <h3 className="font-medium text-primary text-[21px] leading-[21px]">
                     {title}
                   </h3>
                 ) : (
@@ -51,7 +51,7 @@ const FormStepLayout = ({
               </>
             )}
             {subtitle && (
-              <span className="font-normal text-md text-gray-12 text-light">
+              <span className="font-normal text-[13px] leading-[18px] text-black">
                 {subtitle}
               </span>
             )}
@@ -60,12 +60,12 @@ const FormStepLayout = ({
         {header}
       </div>
       {children && (
-        <div className="flex flex-col gap-7 w-full mt-auto mb-4">
+        <div className="flex flex-col gap-6 w-full mt-auto mb-4">
           {children}
         </div>
       )}
       {actions && (
-        <div className="sticky bottom-0 right-0 left-0 bg-black mt-4">
+        <div className="sticky bottom-0 right-0 left-0 mt-4">
           <div className="pb-6 pt-2">{actions}</div>
         </div>
       )}

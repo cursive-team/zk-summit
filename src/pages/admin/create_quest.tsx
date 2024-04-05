@@ -185,10 +185,10 @@ export default function CreateQuest() {
             onChange={(event) => setQuestDescription(event.target.value)}
             required
           />
-          <Button onClick={handleAddRequirement} size="md" align="left">
+          <Button onClick={handleAddRequirement} size="small" align="left">
             <span>Add a requirement</span>
             <div className="ml-auto">
-              <Icons.arrowRight />
+              <Icons.ArrowRight />
             </div>
           </Button>
           {questReqs.length > 0 && (
@@ -255,7 +255,7 @@ export default function CreateQuest() {
           <div>
             <label
               htmlFor="typeSelect"
-              className="label-text font-light text-white text-[12px]"
+              className="label-text font-normal text-white text-[12px]"
             >
               Requirement Type
             </label>

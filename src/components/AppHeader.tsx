@@ -10,9 +10,9 @@ import updateStateFromAction from "@/lib/shared/updateAction";
 import { ProfileDisplayState } from "@/types";
 import { supabase } from "@/lib/client/realtime";
 
-const Title = classed.h3("block text-base text-gray-12 font-light leading-5");
-const Subtitle = classed.h4("text-sm text-gray-12 leading-5");
-const Description = classed.span("text-sm text-gray-11 leading-5");
+const Title = classed.h3("block text-base text-iron-950 font-medium leading-5");
+const Subtitle = classed.h4("text-sm text-iron-950 leading-5");
+const Description = classed.span("text-sm text-iron-950 leading-5");
 
 const ContentWrapper = classed.div("flex flex-col gap-3 mt-3 xs:gap-4 xs:mt-6");
 
@@ -41,7 +41,7 @@ export const AppBackHeader = ({
     <div className="flex justify-between items-center h-[50px] xs:h-[60px]">
       <button
         type="button"
-        className="flex items-center gap-1"
+        className="flex items-center gap-1 text-iron-950"
         onClick={() => {
           if (typeof onBackClick === "function") {
             onBackClick?.();
@@ -54,8 +54,10 @@ export const AppBackHeader = ({
           }
         }}
       >
-        <Icons.arrowLeft />
-        <span className="text-gray-11 text-sm">{label || "Back"}</span>
+        <Icons.ArrowLeft />
+        <span className="text-sm font-normal text-iron-950">
+          {label || "Back"}
+        </span>
       </button>
       {actions}
     </div>
@@ -191,42 +193,6 @@ const AppHeaderContent = ({
                 for technical support and questions!
               </Description>
             </div>
-            <div className="flex flex-col gap-2">
-              <Subtitle>{"Who is behind the generative art?"}</Subtitle>
-              <Description>
-                The generative art experience is a collaboration between{" "}
-                <u>
-                  <a
-                    href="https://iyk.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    IYK
-                  </a>
-                </u>{" "}
-                and{" "}
-                <u>
-                  <a
-                    href="https://www.artblocks.io/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Art Blocks
-                  </a>
-                </u>
-                , with art from{" "}
-                <u>
-                  <a
-                    href="https://stefanocontiero.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Stefano Conteiro
-                  </a>
-                </u>
-                !
-              </Description>
-            </div>
           </ContentWrapper>
           <ContentWrapper className="pb-20">
             <Title>Project Links</Title>
@@ -275,16 +241,16 @@ const AppHeaderContent = ({
   const showBackButton = activeMenuIndex !== null;
 
   return (
-    <div className="fixed inset-0 w-full overflow-auto px-3 xs:px-4 z-10 h-full bg-black">
+    <div className="fixed inset-0 w-full overflow-auto px-3 xs:px-4 z-10 h-full bg-main">
       <div className="flex h-[40px] xs:h-[60px]">
         {showBackButton && (
           <button
             onClick={onBack}
             type="button"
-            className="flex gap-2 items-center"
+            className="flex gap-2 items-center text-iron-950"
           >
-            <Icons.arrowLeft />
-            <span className="text-gray-11">Back</span>
+            <Icons.ArrowLeft />
+            <span>Back</span>
           </button>
         )}
         <button
@@ -299,10 +265,10 @@ const AppHeaderContent = ({
             // reset active menu
             setActiveMenuIndex(null);
           }}
-          className="flex gap-3 items-center ml-auto"
+          className="flex gap-3 items-center ml-auto text-iron-950"
         >
-          <span className="text-gray-11">Close</span>
-          {isMenuOpen ? <Icons.close /> : <Icons.burgher />}
+          <span>Close</span>
+          {isMenuOpen ? <Icons.Close /> : <Icons.Burgher />}
         </button>
       </div>
       <div className="mt-2">
@@ -357,21 +323,23 @@ const AppHeader = ({ isMenuOpen, setIsMenuOpen }: AppHeaderProps) => {
   };
 
   return (
-    <div className="flex w-full items-center p-3 py-3 xs:p-4 bg-black z-50">
+    <div className="flex w-full items-center p-3 py-3 xs:p-4 bg-main z-50">
       {!isMenuOpen && (
         <Link href="/">
           <button type="button" className="flex gap-2 items-center">
-            <Icons.iyk />
-            <Icons.x />
-            <Icons.cursiveFull />
+            <Icons.Cursive />
           </button>
         </Link>
       )}
 
       <div className="flex gap-4 items-center ml-auto">
-        <span className="text-gray-11">{isMenuOpen && "Close"}</span>
-        <button onClick={toggleMenu}>
-          {isMenuOpen ? <Icons.close /> : <Icons.burgher />}
+        <span className="text-primary">{isMenuOpen && "Close"}</span>
+        <button className="text-iron-950" onClick={toggleMenu}>
+          {isMenuOpen ? (
+            <Icons.Close className="text-primary" />
+          ) : (
+            <Icons.Burgher className="text-primary" />
+          )}
         </button>
       </div>
 

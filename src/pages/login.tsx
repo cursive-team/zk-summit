@@ -14,18 +14,9 @@ import { Input } from "@/components/Input";
 import { FormStepLayout } from "@/layouts/FormStepLayout";
 import { toast } from "sonner";
 import { loadMessages } from "@/lib/client/jubSignalClient";
-import {
-  generateAuthenticationOptions,
-  generateRegistrationOptions,
-  GenerateRegistrationOptionsOpts as RegistrationOptions,
-  GenerateAuthenticationOptionsOpts as AuthenticationOptions,
-} from "@simplewebauthn/server";
-import {
-  startAuthentication,
-  startRegistration,
-} from "@simplewebauthn/browser";
-import { sha256 } from "js-sha256";
 import { supabase } from "@/lib/client/realtime";
+import { generateAuthenticationOptions } from "@simplewebauthn/server";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 enum DisplayState {
   PASSKEY,
@@ -186,7 +177,7 @@ export default function Login() {
     return (
       <FormStepLayout
         title="zkSummit 11 x Cursive"
-        description="Login to view your social graph and event activity, or tap your card if you haven’t registered."
+        subtitle="Login to view your social graph and event activity, or tap your card if you haven’t registered."
         className="pt-4"
         onSubmit={handleSubmitWithPasskey}
       >
@@ -201,9 +192,15 @@ export default function Login() {
         <Button type="submit">
           {loading ? "Logging in..." : "Login with passkey"}
         </Button>
-        <span className="text-center text-sm" onClick={handlePasswordLogin}>
-          <u>Login with password instead</u>
-        </span>
+        <Button
+          variant="transparent"
+          onClick={(e) => {
+            e.preventDefault();
+            handlePasswordLogin();
+          }}
+        >
+          Login with password instead
+        </Button>
       </FormStepLayout>
     );
   } else if (displayState === DisplayState.PASSWORD) {
@@ -231,9 +228,9 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <Button type="submit">{loading ? "Logging in..." : "Login"}</Button>
-        <span className="text-center text-sm" onClick={handlePasskeyLogin}>
-          <u>Login with passkey instead</u>
-        </span>
+        <Button variant="transparent" onClick={handlePasskeyLogin}>
+          Login with passkey instead
+        </Button>
       </FormStepLayout>
     );
   }

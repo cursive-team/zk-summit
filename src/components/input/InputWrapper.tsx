@@ -2,7 +2,7 @@ import { classed } from "@tw-classed/react";
 import type * as Classed from "@tw-classed/react";
 import { ReactNode } from "react";
 
-const InputLabel = classed.div("text-gray-12 font-light", {
+const InputLabel = classed.div("text-iron-800", {
   variants: {
     size: {
       xs: "text-xs leading-4",
@@ -14,12 +14,10 @@ const InputLabel = classed.div("text-gray-12 font-light", {
   },
 });
 
-const InputDescription = classed.div(
-  "text-gray-11 font-light text-xs leading-4"
-);
+const InputDescription = classed.div("text-black text-xs leading-4");
 
 const InputError = classed.div(
-  "absolute text-[#D40018] font-light text-xs leading-4 -bottom-5"
+  "absolute text-error text-xs leading-4 -bottom-5"
 );
 
 const InputSpacing = classed.div("relative flex flex-col", {

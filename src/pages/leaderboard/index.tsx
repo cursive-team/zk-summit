@@ -11,17 +11,17 @@ const TableWrapper = classed.div(
   "grid grid-cols-[25px_1fr_100px] items-center gap-4"
 );
 const TableHeaderLabel = classed.div(
-  "text-gray-900 text-xs font-light uppercase"
+  "text-iron-600 text-xs leading-4 font-bold uppercase"
 );
-const DisplayName = classed.span("text-gray-12 text-sm leading-5 font-light");
+const DisplayName = classed.span("text-iron-600 text-sm leading-5 font-bold");
 const Point = classed.span("text-gray-900 text-sm");
 const PositionCard = classed.div(
-  "duration-200 w-6 h-6 text-white text-xs flex items-center justify-center rounded-full",
+  "duration-200 text-iron-950 font-bold w-6 h-6 text-xs flex items-center justify-center rounded-full",
   {
     variants: {
       active: {
-        false: "bg-gray-300",
-        true: "bg-[#677363]",
+        false: "bg-white/20",
+        true: "bg-white/50",
       },
     },
     defaultVariants: {
@@ -85,10 +85,12 @@ export default function LeaderBoard() {
           <TableWrapper className="!grid-cols-[25px_1fr_35px]" key={index}>
             <PositionCard active={isCurrentUser}>{rank}</PositionCard>
             <DisplayName>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center font-bold gap-2">
                 <span>
-                  {name}{" "}
-                  {isCurrentUser && <span className="text-gray-10">(you)</span>}
+                  {name}
+                  {isCurrentUser && (
+                    <span className="text-iron-950">(you)</span>
+                  )}
                 </span>
               </div>
             </DisplayName>
@@ -114,15 +116,15 @@ export default function LeaderBoard() {
           !loading &&
           currentUserRank && (
             <div className="flex gap-0.5 text-sm">
-              <span className="text-gray-900">Your rank:</span>
-              <span className="text-gray-12">{profileRank}</span>
+              <span className="text-iron-950">Your rank:</span>
+              <span className="text-iron-950 font-bold">{profileRank}</span>
             </div>
           )
         }
       />
       <div className="flex flex-col gap-6 pb-6">
         <div className="flex flex-col gap-4">
-          <span className="text-gray-900 text-xs font-light">
+          <span className="text-gray-900 text-xs font-normal">
             {"The leaderboard is based on the number of taps you've "}{" "}
             <i>made.</i>{" "}
           </span>
@@ -145,7 +147,7 @@ export default function LeaderBoard() {
                   <PositionCard active>{currentUserRank}</PositionCard>
                   <DisplayName>
                     {userLeaderboardItem?.name}{" "}
-                    <span className="text-gray-10">(you)</span>
+                    <span className="text-iron-950">(you)</span>
                   </DisplayName>
                   <Point className="text-right">
                     {userLeaderboardItem?.connections ?? 0}

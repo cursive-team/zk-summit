@@ -43,7 +43,7 @@ interface QuestDetailProps {
   quest: QuestWithRequirements | null;
 }
 
-const Label = classed.span("text-xs text-gray-10 font-light");
+const Label = classed.span("text-xs text-gray-10 font-normal");
 
 type UserDetailProps = {
   label?: string;
@@ -170,7 +170,7 @@ const QuestDetail = ({ quest, loading = false }: QuestDetailProps) => {
       <div className="flex items-center justify-between">
         <div className="grid grid-cols-[40px_1fr] gap-2 xs:gap-3 items-center">
           <div className="size-10 bg-slate-200 rounded-full"></div>
-          <span className="text-lg xs:text-xl font-light leading-6">
+          <span className="text-lg xs:text-xl font-normal leading-6">
             {title}
           </span>
         </div>
@@ -180,14 +180,14 @@ const QuestDetail = ({ quest, loading = false }: QuestDetailProps) => {
           disabled={loading}
           onClick={onQuestPin}
         >
-          <span className="text-gray-11 text-xs font-light">
+          <span className="text-gray-11 text-xs font-normal">
             {isQuestPinned ? "Unpin" : "Pin"}
           </span>
-          {isQuestPinned ? <Icons.unpin /> : <Icons.pin />}
+          {isQuestPinned ? <Icons.Unpin /> : <IconsP />}
         </button> */}
       </div>
       <div className="flex flex-col gap-4">
-        <span className=" text-gray-11 text-xs font-light">{description}</span>
+        <span className=" text-gray-11 text-xs font-normal">{description}</span>
         <div className="flex flex-col gap-2"></div>
       </div>
     </div>

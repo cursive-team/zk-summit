@@ -9,14 +9,14 @@ interface PlaceholderPlaceholderProps {
   items?: number;
 }
 
-const PlaceholderBase = classed.div("bg-skeleton animate-pulse");
+const PlaceholderBase = classed.div("bg-slate-100 animate-pulse");
 const PlaceholderCard = classed.div(
   PlaceholderBase,
   Card.Base,
-  "min-h-[120px] bg-skeleton"
+  "min-h-[120px] bg-slate-100"
 );
 
-const PlaceholderLine = classed.div(PlaceholderBase, "!bg-slate-200", {
+const PlaceholderLine = classed.div(PlaceholderBase, "!bg-tertiary", {
   variants: {
     size: {
       tiny: "h-0.5",

@@ -18,11 +18,7 @@ import { FormStepLayout } from "@/layouts/FormStepLayout";
 import { toast } from "sonner";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { encryptRegisteredMessage } from "@/lib/client/jubSignal/registered";
-import {
-  generateRegistrationOptions,
-  GenerateRegistrationOptionsOpts as RegistrationOptions,
-  GenerateAuthenticationOptionsOpts as AuthenticationOptions,
-} from "@simplewebauthn/server";
+import { generateRegistrationOptions } from "@simplewebauthn/server";
 import { startRegistration } from "@simplewebauthn/browser";
 import {
   telegramUsernameRegex,
@@ -35,7 +31,6 @@ enum DisplayState {
   PASSKEY,
   PASSWORD,
 }
-
 export default function Register() {
   const router = useRouter();
   const [displayState, setDisplayState] = useState<DisplayState>(

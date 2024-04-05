@@ -54,7 +54,7 @@ const PendingContactCard = ({ name, userId, date }: ContactCardProps) => {
       </div>
       <div>
         <Link href={`/users/${userId}/share`}>
-          <Button variant="secondary" size="sm">
+          <Button variant="tertiary" size="small">
             Share back
           </Button>
         </Link>
@@ -85,6 +85,14 @@ const FeedContent = ({ title, description, icon }: FeedContentProps) => {
         <Card.Title>{title}</Card.Title>
       </div>
       <Card.Description>{description}</Card.Description>
+    </div>
+  );
+};
+
+const NoResultContent = ({ children }: any) => {
+  return (
+    <div className="flex justify-center items-center h-[30vh]">
+      <span className="text-iron-600 font-bold">{children || "No result"}</span>
     </div>
   );
 };
@@ -279,9 +287,7 @@ export default function Social() {
         children: (
           <div className="flex flex-col gap-4">
             {activities.length === 0 && (
-              <div className="flex justify-center items-center h-40">
-                <span className="text-gray-10">No activities yet</span>
-              </div>
+              <NoResultContent>No activities yet</NoResultContent>
             )}
             {activities.length !== 0 &&
               groupedActivities.map((activities, index) => {
@@ -312,11 +318,7 @@ export default function Social() {
         children: (
           <div className="flex flex-col gap-5">
             {contactUsersList.length === 0 && (
-              <div className="flex justify-center items-center h-40">
-                <span className="text-gray-10">
-                  {"No people you've tapped"}
-                </span>
-              </div>
+              <NoResultContent>{"No people you've tapped"}</NoResultContent>
             )}
             {contactUsersList.length !== 0 &&
               groupedContactUsers.map((users, index) => {
@@ -351,11 +353,9 @@ export default function Social() {
         children: (
           <div className="flex flex-col gap-5">
             {sortedPendingUserList.length === 0 && (
-              <div className="flex justify-center items-center h-40">
-                <span className="text-gray-10">
-                  {"No people you haven't tapped back"}
-                </span>
-              </div>
+              <NoResultContent>
+                {"No people you haven't tapped back"}
+              </NoResultContent>
             )}
             {sortedPendingUserList.length !== 0 && (
               <div className="flex flex-col gap-1">
@@ -460,25 +460,27 @@ export default function Social() {
               pubKey={profile.signaturePublicKey}
             />
             <button type="button" className="absolute right-1 top-1 z-1">
-              <Icons.zoom />
+              <Icons.Zoom />
             </button>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-1 mt-2">
-              <div className="flex gap-[6px] items-center">
-                <h2 className="text-xl font-gray-12 font-light">
+          <div className="flex flex-col justify-between py-2">
+            <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2">
+                <h2 className="text-xl leading-6 tracking-[-0.2px] text-iron-950 font-bold">
                   {profile?.displayName}
                 </h2>
+                <span className="text-sm font-normal text-iron-950">
+                  {numConnections === 1
+                    ? `1 tap given`
+                    : `${numConnections} taps given`}
+                </span>
               </div>
-              <span className="text-sm font-light text-gray-10">
-                {numConnections === 1
-                  ? `1 tap given`
-                  : `${numConnections} taps given`}
-              </span>
             </div>
             <Link href="/leaderboard">
-              <Button size="sm">View leaderboard</Button>
+              <Button size="small" variant="tertiary">
+                View leaderboard
+              </Button>
             </Link>
           </div>
         </div>

@@ -8,10 +8,10 @@ const Spinner = ({ label }: SpinnerProps) => {
   return (
     <div className="flex flex-col gap-6 text-center">
       <div className="mx-auto">
-        <Icons.loading size={28} className="animate-spin" />
+        <Icons.Loading size={28} className="animate-spin" />
       </div>
       {label && (
-        <span className="text-sm text-gray-11 leading-5 font-light">
+        <span className="text-sm text-gray-11 leading-5 font-normal">
           {label}
         </span>
       )}

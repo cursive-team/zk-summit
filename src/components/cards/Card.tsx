@@ -4,19 +4,18 @@ import { CSSProperties, HTMLAttributes, useEffect, useState } from "react";
 const CardBase = classed.div("relative rounded overflow-hidden ", {
   variants: {
     variant: {
-      primary: "bg-gray-200 border border-gray-400",
-      candy: "bg-candy/20 border border-candy-200",
+      primary: "bg-tertiary border border-iron-950/10",
     },
   },
   defaultVariants: {
     variant: "primary",
   },
 });
-const CardTitle = classed.h1("text-sm leading-5 text-gray-12");
+const CardTitle = classed.h1("text-sm leading-5 text-iron-600 font-bold");
 const CardDescription = classed.span(
-  "text-xs leading-4 text-gray-11 text-light"
+  "text-xs leading-4 text-iron-600 font-bold"
 );
-const Artwork = classed.div("border border-white rounded-[8px] p-0 m-0");
+const Artwork = classed.div("rounded-[8px] p-0 m-0");
 
 const CardProgressLine = classed.div("absolute bottom-0 left-0 right-0 h-1", {
   variants: {

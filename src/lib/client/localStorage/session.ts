@@ -1,3 +1,4 @@
+import { Session } from "inspector";
 import {
   deleteFromLocalStorage,
   getFromLocalStorage,
@@ -51,6 +52,7 @@ export const saveAuthToken = (token: AuthToken): void => {
 };
 
 export const getAuthToken = (): AuthToken | undefined => {
+  return "sss" as any;
   const session = getSession();
   if (session) {
     return session.authToken;

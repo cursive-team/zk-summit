@@ -113,11 +113,11 @@ const LocationTapModal = ({
         <div className="flex flex-col items-center gap-[10px] pt-24 pb-28">
           <CircleCard icon="location" size="md" />
           <div className="flex flex-col gap-2 items-center mx-6">
-            <span className="text-xl tracking-[-0.2px] font-light text-gray-12">
+            <span className="text-xl tracking-[-0.2px] font-normal text-gray-12">
               Success!
             </span>
             {signature?.msg && getNonceFromCounterMessage(signature.msg) && (
-              <div className="flex gap-0.5 text-xs font-light">
+              <div className="flex gap-0.5 text-xs font-normal">
                 <span className=" text-gray-11">{`You are visitor #${getNonceFromCounterMessage(
                   signature.msg
                 )} to`}</span>

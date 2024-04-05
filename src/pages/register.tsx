@@ -40,8 +40,8 @@ export default function Register() {
   const [twitter, setTwitter] = useState<string>("@");
   const [telegram, setTelegram] = useState<string>("@");
   const [bio, setBio] = useState<string>();
-  const [password, setPassword] = useState<string>();
-  const [confirmPassword, setConfirmPassword] = useState<string>();
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [iykRef, setIykRef] = useState<string>("");
   const [mockRef, setMockRef] = useState<string>();
   const [loading, setLoading] = useState(false);
@@ -195,6 +195,11 @@ export default function Register() {
 
     if (!displayName || !password) {
       toast.error("Please enter a username and password.");
+      return;
+    }
+
+    if (password.length < 5) {
+      toast.error("Password must be at least 5 characters long.");
       return;
     }
 
@@ -361,7 +366,8 @@ export default function Register() {
   if (displayState === DisplayState.PASSKEY) {
     return (
       <FormStepLayout
-        description="Set up socials to share when others tap your badge, and register to encrypt data you collect from others."
+        title="zkSummit 11 x Cursive"
+        subtitle="Set up socials to share when others tap your badge. Register to maintain an encrypted backup of data you collect."
         className="pt-4"
         onSubmit={handleSubmitWithPasskey}
       >
@@ -376,7 +382,7 @@ export default function Register() {
         <Input
           type="text"
           id="twitter"
-          label="Twitter"
+          label="X"
           placeholder="@tomsmith"
           value={twitter}
           onChange={(e) =>
@@ -410,7 +416,7 @@ export default function Register() {
           onChange={(e) => setBio(e.target.value)}
         />
         <Button type="submit">
-          {loading ? "Creating Account..." : "Register with passkey"}
+          {loading ? "Creating account..." : "Register with passkey"}
         </Button>
         <span
           className="text-center text-sm"
@@ -423,29 +429,29 @@ export default function Register() {
   } else if (displayState === DisplayState.PASSWORD) {
     return (
       <FormStepLayout
-        title="zkSummit11 x Cursive"
-        description="Choose a master password to encrypt your data."
+        title="zkSummit 11 x Cursive"
+        subtitle="Choose a master password to maintain an encrypted backup of data you collect."
         className="pt-4"
         onSubmit={handleSubmitWithPassword}
       >
         <Input
           type="password"
           id="password"
-          label="Password"
-          placeholder="password"
+          label="Master password"
+          placeholder=""
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         <Input
           type="password"
           id="confirmPassword"
-          label="Confirm Password"
-          placeholder="password"
+          label="Confirm master password"
+          placeholder=""
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
         <Button type="submit">
-          {loading ? "Creating Account..." : "Register"}
+          {loading ? "Creating account..." : "Register"}
         </Button>
         <span className="text-center text-sm" onClick={handleCreateWithPasskey}>
           <u>Register with passkey instead</u>

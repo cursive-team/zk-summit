@@ -383,7 +383,7 @@ export default function Register() {
           type="text"
           id="twitter"
           label="X"
-          placeholder="@tomsmith"
+          placeholder="@username"
           value={twitter}
           onChange={(e) =>
             setTwitter(
@@ -397,7 +397,7 @@ export default function Register() {
           type="text"
           id="telegram"
           label="Telegram"
-          placeholder="@tomsmith"
+          placeholder="@username"
           value={telegram}
           onChange={(e) =>
             setTelegram(

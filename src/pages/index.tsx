@@ -142,7 +142,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
                 {"Overlap computed with "} <u>{name}</u>
               </>
             }
-            icon={<Icons.cursive />}
+            icon={<Icons.Cursive />}
             description={date}
           />
         </Link>
@@ -198,7 +198,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
             </>
           }
           description={date}
-          icon={<Icons.store />}
+          icon={<Icons.Store />}
         />
       );
     default:

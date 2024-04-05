@@ -88,7 +88,7 @@ const Modal = ({
                           <span className="text-gray-11 text-sm">Back</span>
                         </div>
                       ) : (
-                        <Icons.close />
+                        <Icons.Close />
                       )}
                     </button>
                   </div>

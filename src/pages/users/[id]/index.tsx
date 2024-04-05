@@ -23,6 +23,7 @@ import { generateSelfBitVector, psiBlobUploadClient } from "@/lib/client/psi";
 import init, { round1_js, round2_js, round3_js } from "@/lib/mp_psi/mp_psi";
 import { encryptOverlapComputedMessage } from "@/lib/client/jubSignal/overlapComputed";
 import { loadMessages } from "@/lib/client/jubSignalClient";
+import { CircleCard } from "@/components/cards/CircleCard";
 
 const Label = classed.span("text-sm text-gray-12");
 
@@ -391,19 +392,11 @@ const UserProfilePage = () => {
           <div className="flex flex-col gap-1">
             <h2 className=" text-xl font-gray-12 font-normal">{user.name}</h2>
             <div className="flex items-center gap-1">
-              <Icons.checkedCircle />
-              <span className="text-sm font-normal text-white">
-                {user.outTs ? (
-                  <Label>{`Shared on ${new Date(user.outTs).toLocaleString(
-                    undefined,
-                    {
-                      dateStyle: "medium",
-                    }
-                  )}`}</Label>
-                ) : (
-                  <Label>{`Not yet connected.`}</Label>
-                )}
-              </span>
+              {user.bio && (
+                <span className="font-gray-12 text-[14px] mt-1 left-5">
+                  {user.bio}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -448,13 +441,6 @@ const UserProfilePage = () => {
             )}
           </div>
         )}
-        {user.bio && (
-          <InputWrapper className="flex flex-col gap-2" label={`Bio`}>
-            <span className="text-gray-11 text-[14px] mt-1 left-5">
-              {user.bio}
-            </span>
-          </InputWrapper>
-        )}
         {user?.note && (
           <InputWrapper
             className="flex flex-col gap-2"
@@ -482,7 +468,7 @@ const UserProfilePage = () => {
                     <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
                       <div className="flex items-center gap-2">
                         <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
-                          <Icons.person size={12} />
+                          <CircleCard icon="person" />
                         </div>
                         <Card.Title>{name}</Card.Title>
                       </div>
@@ -496,7 +482,7 @@ const UserProfilePage = () => {
                     <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
                       <div className="flex items-center gap-2">
                         <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
-                          <Icons.location className="h-3" />
+                          <CircleCard icon="location" />
                         </div>
                         <Card.Title>{name}</Card.Title>
                       </div>

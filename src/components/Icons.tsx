@@ -160,22 +160,22 @@ export const Icons: Record<string, any> = {
         height="23.1467"
         rx="3.30667"
         fill="#1B1B1B"
-        fill-opacity="0.1"
+        fillOpacity="0.1"
       />
-      <g clip-path="url(#clip0_3126_2547)">
+      <g clipPath="url(#clip0_3126_2547)">
         <path
           d="M15.0134 8.98682H9.22672V14.7735H15.0134V8.98682Z"
           stroke="#323539"
-          stroke-width="0.826667"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="0.826667"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           d="M5.84235 9.8389V6.94557C5.84235 6.6167 5.97299 6.3013 6.20553 6.06875C6.43808 5.83621 6.75348 5.70557 7.08235 5.70557H9.56235"
           stroke="#323539"
-          stroke-width="0.826667"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="0.826667"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <path
           d="M14.109 5.70557H17.0024C17.3312 5.70557 17.6466 5.83621 17.8792 6.06875C18.1117 6.3013 18.2424 6.6167 18.2424 6.94557V9.8389"
@@ -221,8 +221,8 @@ export const Icons: Record<string, any> = {
       {...props}
     >
       <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
+        fillRule="evenodd"
+        clipRule="evenodd"
         d="M6.68967 4.92148L6.18967 4.92148V5.92148L6.68967 5.92148L9.71411 5.92148L4.65903 10.6342L4.29331 10.9752L4.97521 11.7066L5.34093 11.3656L10.4323 6.61908V9.66412V10.1641H11.4323V9.66412V5.42148L11.4323 4.92148L10.9323 4.92148L6.68967 4.92148Z"
         fill="#818181"
       />

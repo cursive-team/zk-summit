@@ -35,7 +35,8 @@ export default async function handler(
 
       // Logic for person chips
       if (chipData.type === "person") {
-        if (chipData.precreateUser) {
+        // If user is a speaker, precreate user object
+        if (chipData.speaker) {
           await prisma.user.create({
             data: {
               chipId,

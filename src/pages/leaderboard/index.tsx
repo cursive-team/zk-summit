@@ -87,9 +87,10 @@ export default function LeaderBoard() {
             <DisplayName>
               <div className="flex items-center font-bold gap-2">
                 <span>
-                  {name}
-                  {isCurrentUser && (
-                    <span className="text-iron-950">(you)</span>
+                  {isCurrentUser ? (
+                    <span className="text-iron-950">{`${name} (you)`}</span>
+                  ) : (
+                    name
                   )}
                 </span>
               </div>

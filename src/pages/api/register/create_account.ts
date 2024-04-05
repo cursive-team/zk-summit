@@ -115,16 +115,6 @@ export default async function handler(
     return res.status(400).json({ error: "Chip key not found" });
   }
 
-  // Check that the user is not already registered
-  const existingChipUser = await prisma.user.findUnique({
-    where: {
-      chipId,
-    },
-  });
-  if (existingChipUser && existingChipUser.isRegistered) {
-    return res.status(400).json({ error: "Card already registered" });
-  }
-
   // Check username has not been taken
   const existingUsername = await prisma.user.findUnique({
     where: {
@@ -149,15 +139,54 @@ export default async function handler(
     parsedTelegram = telegram.startsWith("@") ? telegram.slice(1) : telegram;
   }
 
-  // Create user
+  // Check if user is already created
+  const existingChipUser = await prisma.user.findUnique({
+    where: {
+      chipId,
+    },
+  });
+  // If user is created and registered, return error
+  if (existingChipUser && existingChipUser.isRegistered) {
+    return res.status(400).json({ error: "Card already registered" });
+  } else if (existingChipUser) {
+    // If user is created but not registered, update user
+    const updatedUser = await prisma.user.update({
+      where: {
+        chipId,
+      },
+      data: {
+        isRegistered: true,
+        displayName,
+        encryptionPublicKey,
+        signaturePublicKey: chipKey.signaturePublicKey,
+        psiPublicKeysLink,
+        passwordSalt,
+        passwordHash,
+        authPublicKey,
+        twitter: parsedTwitter,
+        telegram: parsedTelegram,
+        bio,
+      },
+    });
+
+    const authTokenResponse = await generateAuthToken(updatedUser.id);
+
+    return res.status(200).json({
+      authToken: authTokenResponse,
+      signingKey: chipKey.signaturePrivateKey,
+      verifyingKey: chipKey.signaturePublicKey,
+    });
+  }
+
+  // If user is not created, create user
   const user = await prisma.user.create({
     data: {
       chipId,
       isRegistered: true,
       displayName,
       encryptionPublicKey,
-      psiPublicKeysLink,
       signaturePublicKey: chipKey.signaturePublicKey,
+      psiPublicKeysLink,
       passwordSalt,
       passwordHash,
       authPublicKey,

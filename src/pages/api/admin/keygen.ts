@@ -43,6 +43,7 @@ export default async function handler(
               displayName: chipId,
               encryptionPublicKey: "",
               signaturePublicKey: verifyingKey,
+              psiPublicKeysLink: "",
             },
           });
         }

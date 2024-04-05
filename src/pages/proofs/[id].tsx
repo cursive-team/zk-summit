@@ -320,7 +320,7 @@ export default function QuestById() {
                         onClick={() => {
                           setCompleteQuestModal(true);
                         }}
-                        size="tiny"
+                        size="small"
                       >
                         View proof
                       </Button>
@@ -335,7 +335,7 @@ export default function QuestById() {
                           onClick={() => {
                             setCompleteQuestModal(true);
                           }}
-                          size="tiny"
+                          size="small"
                         >
                           Generate proof
                         </Button>

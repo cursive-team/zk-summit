@@ -305,8 +305,8 @@ export default function Register() {
       bio,
     });
     saveAuthToken({
-      value: data.value,
-      expiresAt: new Date(data.expiresAt),
+      value: authToken.value,
+      expiresAt: new Date(authToken.expiresAt),
     });
 
     let backupData = createBackup();
@@ -326,7 +326,7 @@ export default function Register() {
       },
       body: JSON.stringify({
         backup,
-        authToken: data.value,
+        authToken: authToken.value,
       }),
     });
 

@@ -169,6 +169,13 @@ export default async function handler(
     },
   });
   if (user) {
+    // If user is not registered, return person not registered response
+    if (!user.isRegistered) {
+      return res
+        .status(200)
+        .json({ code: TapResponseCode.PERSON_NOT_REGISTERED });
+    }
+
     // Get signature from chip
     const { message, signature } = await generateChipSignature(chipId);
 

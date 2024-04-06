@@ -8,22 +8,21 @@ const GetChipIdPage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const iykRef = router.query.iykRef as string;
-    if (iykRef) {
-      fetch(`/api/chip?iykRef=${iykRef}`)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data && data.chipId) {
-            setChipId(data.chipId);
-            setLoading(false);
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to fetch chip ID:", error);
-          toast.error("Failed to fetch chip ID");
-          setLoading(false);
-        });
-    }
+    const getChipId = async () => {
+      const iykRef = router.query.iykRef as string;
+      const response = await fetch(`/api/chip?iykRef=${iykRef}`);
+      const data = await response.json();
+      if (data && data.chipId) {
+        setChipId(data.chipId);
+        setLoading(false);
+      } else {
+        console.error("Failed to fetch chip ID: ", data.error);
+        toast.error("Failed to fetch chip ID");
+        setLoading(false);
+      }
+    };
+
+    getChipId();
   }, [router.query.iykRef]);
 
   const copyToClipboard = async () => {

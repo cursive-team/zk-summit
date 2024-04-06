@@ -22,7 +22,18 @@ export default async function handler(
   }
 
   try {
+    let i = 0;
     for (const [chipId, chipData] of Object.entries(initialKeygenData)) {
+      console.log(
+        "Generating keypair for chip",
+        chipId,
+        "(",
+        i++,
+        "of",
+        Object.keys(initialKeygenData).length,
+        ")"
+      );
+
       // Generate and save signing keypair
       const { signingKey, verifyingKey } = generateSignatureKeyPair();
       await prisma.chipKey.create({
@@ -35,19 +46,17 @@ export default async function handler(
 
       // Logic for person chips
       if (chipData.type === "person") {
-        // If user is a speaker, precreate user object
-        if (chipData.speaker) {
-          await prisma.user.create({
-            data: {
-              chipId,
-              isRegistered: false,
-              displayName: chipId,
-              encryptionPublicKey: "",
-              signaturePublicKey: verifyingKey,
-              psiPublicKeysLink: "",
-            },
-          });
-        }
+        // Precreate user object
+        await prisma.user.create({
+          data: {
+            chipId,
+            isRegistered: false,
+            displayName: chipId,
+            encryptionPublicKey: "",
+            signaturePublicKey: verifyingKey,
+            psiPublicKeysLink: "",
+          },
+        });
 
         // Logic for talk chips
       } else if (chipData.type === "talk") {

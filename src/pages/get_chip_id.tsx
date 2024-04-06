@@ -9,6 +9,10 @@ const GetChipIdPage = () => {
 
   useEffect(() => {
     const getChipId = async () => {
+      if (!router.query.iykRef) {
+        return;
+      }
+
       const iykRef = router.query.iykRef as string;
       const response = await fetch(`/api/chip?iykRef=${iykRef}`);
       const data = await response.json();

@@ -69,7 +69,7 @@ export default function CreateQuest() {
       })
       .then((data) => {
         setLoading(false);
-        router.push(`/quests/${data.id}`);
+        router.push(`/proofs/${data.id}`);
       })
       .catch((error) => {
         console.error("Error:", error);

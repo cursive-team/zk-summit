@@ -109,11 +109,13 @@ const QuestCard = ({
           />
         }
         {isCompleted ? (
-          <Card.Description>{"Proof Completed"}</Card.Description>
+          <Card.Description className="!text-primary">
+            {"Proof Completed"}
+          </Card.Description>
         ) : completedReqs === numRequirements ? (
-          <Card.Description>{`Generate proof of completion`}</Card.Description>
+          <Card.Description className="!text-primary">{`Generate proof of completion`}</Card.Description>
         ) : (
-          <Card.Description>{`${
+          <Card.Description className="!text-primary">{`${
             completedReqs || 0
           }/${numRequirements} completed`}</Card.Description>
         )}

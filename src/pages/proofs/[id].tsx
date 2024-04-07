@@ -1,15 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AppBackHeader } from "@/components/AppHeader";
 import { Icons } from "@/components/Icons";
-import { QuestRequirementCard } from "@/components/cards/QuestRequirementCard";
 import { classed } from "@tw-classed/react";
 import { useParams } from "next/navigation";
 import {
-  LocationRequirement,
   LocationRequirementPreview,
-  QuestRequirementType,
   QuestWithRequirements,
-  UserRequirement,
   UserRequirementPreview,
 } from "@/types";
 import { Button } from "@/components/Button";
@@ -71,16 +67,15 @@ export const UserDetail = ({
 
   return (
     <div className="flex flex-col gap-8">
-      <Header title={title} label="Requirement" completed={completed} />
       <div className="flex flex-col gap-4">
-        <Label>{`${numSigsCollected} met out of ${numSigsRequired} required`}</Label>
         <div>
           {users.map(({ displayName, signaturePublicKey }, index) => {
             const collected = userPubKeysCollected.includes(signaturePublicKey);
+            if (!collected) return null; // should not render uncollected users
             return (
               <div
                 key={index}
-                className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1"
+                className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
               >
                 <div className="flex items-center gap-2">
                   <IconCircle>
@@ -95,7 +90,7 @@ export const UserDetail = ({
                     {displayName}
                   </Card.Title>
                 </div>
-                {collected && <Icons.CheckCircle />}
+                {collected && <Icons.CheckCircle className="text-iron-600" />}
               </div>
             );
           })}
@@ -129,13 +124,13 @@ export const LocationDetail = ({
 
   return (
     <div className="flex flex-col gap-8">
-      <Header title={title} label="Requirement" completed={completed} />
       <div className="flex flex-col gap-4">
-        <Label>{`${numSigsCollected} attended out of ${numSigsRequired} required`}</Label>
         <div>
           {locations.map(({ name, signaturePublicKey }, index) => {
             const collected =
               locationPubKeysCollected.includes(signaturePublicKey);
+
+            if (!collected) return null; // should not render uncollected users
             return (
               <div
                 key={index}
@@ -322,7 +317,6 @@ export default function QuestById() {
             <>
               <QuestDetail quest={quest} />
               <ListWrapper
-                title="Requirements"
                 label={
                   <div className="flex gap-2 items-center">
                     {isQuestComplete && (
@@ -336,7 +330,7 @@ export default function QuestById() {
                       </Button>
                     )}
                     {!isQuestComplete && (
-                      <Label>{`${numRequirementsSatisfied}/${numRequirementsTotal}`}</Label>
+                      <Label className="text-gray-10 font-semibold font-sans">{`${numRequirementsSatisfied}/${numRequirementsTotal} collected`}</Label>
                     )}
                     {quest &&
                       numRequirementsSatisfied === numRequirementsTotal &&
@@ -354,26 +348,6 @@ export default function QuestById() {
                 }
               >
                 <>
-                  {/* {quest && quest.userTapReq !== null && (
-                    <Card.Base className="text-center flex justify-center py-4">
-                      <div className="flex flex-col gap-2 items-center">
-                        <div className={cn("flex items-center justify-center")}>
-                          <CircleCard size="sm" color="white" icon="proof" />
-                        </div>
-                        <div className="flex flex-col">
-                          <Card.Title>{`Tap ${quest.userTapReq} people!`}</Card.Title>
-                          <Card.Description>
-                            {userOutboundTaps >= quest.userTapReq
-                              ? "Complete"
-                              : `${userOutboundTaps}/${quest.userTapReq}`}
-                          </Card.Description>
-                        </div>
-                      </div>
-                      {userOutboundTaps >= quest.userTapReq && (
-                        <Icons.CheckCircle className="absolute right-[6px] top-[6px]" />
-                      )}
-                    </Card.Base>
-                  )} */}
                   {quest && quest.userRequirements.length > 0 && (
                     <UserDetail
                       users={quest.userRequirements[0].users}

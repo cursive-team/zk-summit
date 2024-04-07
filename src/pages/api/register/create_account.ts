@@ -55,6 +55,7 @@ export default async function handler(
   }
 
   if (!validatedData) {
+    console.log("Account creation failed: no validated data");
     return res.status(500).json({ error: "Internal Server Error" });
   }
 
@@ -140,13 +141,13 @@ export default async function handler(
   }
 
   // Check if user is already created
-  const existingChipUser = await prisma.user.findUnique({
+  const existingChipUser: any = await prisma.user.findUnique({
     where: {
       chipId,
     },
   });
   // If user is created and registered, return error
-  if (existingChipUser && existingChipUser.isRegistered) {
+  if (existingChipUser && existingChipUser?.isRegistered) {
     return res.status(400).json({ error: "Card already registered" });
   } else if (existingChipUser) {
     // If user is created but not registered, update user
@@ -155,6 +156,7 @@ export default async function handler(
         chipId,
       },
       data: {
+        // @ts-ignore
         isRegistered: true,
         displayName,
         encryptionPublicKey,
@@ -182,6 +184,7 @@ export default async function handler(
   const user = await prisma.user.create({
     data: {
       chipId,
+      // @ts-ignore
       isRegistered: true,
       displayName,
       encryptionPublicKey,

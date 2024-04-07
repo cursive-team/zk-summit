@@ -174,7 +174,7 @@ const LocationTapModal = ({
                   userTapReq,
                 } = quest;
                 return (
-                  <Link href={`/quests/${id}`} key={id}>
+                  <Link href={`/proofs/${id}`} key={id}>
                     <QuestCard
                       key={id}
                       title={name}

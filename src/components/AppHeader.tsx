@@ -39,6 +39,7 @@ interface AppBackHeaderProps {
   onBackClick?: () => void;
   actions?: ReactNode;
   label?: string;
+  sticky?: boolean;
 }
 
 export const AppBackHeader = ({
@@ -46,11 +47,16 @@ export const AppBackHeader = ({
   onBackClick,
   actions,
   label,
+  sticky = false,
 }: AppBackHeaderProps) => {
   const router = useRouter();
 
   return (
-    <div className="flex justify-between items-center h-[50px] xs:h-[60px]">
+    <div
+      className={cn("flex justify-between items-center h-[50px] xs:h-[60px]", {
+        "sticky top-0 bg-main": sticky,
+      })}
+    >
       <button
         type="button"
         className="flex items-center gap-1 text-iron-950"
@@ -181,7 +187,7 @@ const AppHeaderContent = ({
             // reset profile view
             actions.updateStateFromAction({
               ...getState(),
-              profileView: ProfileDisplayState.VIEW,
+              profileView: ProfileDisplayState.EDIT,
             });
             // reset active menu
             setActiveMenuIndex(null);

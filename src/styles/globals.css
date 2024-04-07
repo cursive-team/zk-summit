@@ -29,10 +29,12 @@ body {
   height: 100%;
   @apply text-iron-950;
   background-image: url('/bg-gradient.jpg');
+  background-repeat: no-repeat;
   background-size: cover;
   text-rendering: geometricPrecision;
   font-feature-settings: "calt" off;
   -webkit-overflow-scrolling: touch;
+  overflow: scroll;
 }
 
 @layer utilities {

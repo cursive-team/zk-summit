@@ -347,10 +347,10 @@ export const Icons: Record<string, any> = {
       {...props}
     >
       <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
+        fillRule="evenodd"
+        clipRule="evenodd"
         d="M8 15C11.866 15 15 11.866 15 8C15 4.13401 11.866 1 8 1C4.13401 1 1 4.13401 1 8C1 11.866 4.13401 15 8 15ZM6.70319 11L12 5.72928L11.2671 5L6.72772 9.51703L4.75661 7.42206L4 8.12694L6.70319 11Z"
-        fill="#7E8792"
+        fill="currentColor"
       />
     </svg>
   ),

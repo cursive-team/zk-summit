@@ -204,10 +204,11 @@ const CompleteQuestModal = ({
       case CompleteQuestDisplayState.PROVING:
         return (
           <div className="flex flex-col w-full justify-center text-center gap-5">
-            <div className="h-10 w-10 bg-slate-200 rounded-full self-center"></div>
             <div className="flex flex-col gap-1 self-center">
               <div className="flex flex-col">
-                <span className="text-xl text-gray-12 mb-2">{quest.name}</span>
+                <span className="text-xl text-iron-950 font-medium mb-2">
+                  {quest.name}
+                </span>
                 <Spinner
                   label={`Generating ZK proof (${provingState.currentRequirementNumSigsProven}/${provingState.currentRequirementNumSigsTotal} reqs)`}
                 />

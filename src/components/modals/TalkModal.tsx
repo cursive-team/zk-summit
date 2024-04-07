@@ -5,9 +5,10 @@ import Link from "next/link";
 import { Button } from "../Button";
 import { Icons } from "../Icons";
 
-interface SpeakerModalProps extends ModalProps {
+export interface TalkModalProps {
   stageName: string;
   shortDescription: string;
+  title?: string;
   description?: string;
   speakerName?: string;
   links?: { label: string; url: string; external?: boolean }[];
@@ -16,7 +17,7 @@ interface SpeakerModalProps extends ModalProps {
 const Title = classed.span("text-iron-800 text-xs font-normal font-sans");
 const Description = classed.h5("text-iron-950 font-normal text-sm");
 
-const SpeakerModal = ({
+const TalkModal = ({
   isOpen,
   setIsOpen,
   stageName,
@@ -24,7 +25,7 @@ const SpeakerModal = ({
   description,
   shortDescription,
   links,
-}: SpeakerModalProps) => {
+}: TalkModalProps & ModalProps) => {
   return (
     <Modal isOpen={isOpen} setIsOpen={setIsOpen} withBackButton>
       <div className="flex flex-col gap-4">
@@ -75,5 +76,5 @@ const SpeakerModal = ({
   );
 };
 
-SpeakerModal.displayName = "SpeakerModal";
-export { SpeakerModal };
+TalkModal.displayName = "TalkModal";
+export { TalkModal };

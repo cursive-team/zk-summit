@@ -26,6 +26,7 @@ import {
 } from "./localStorage";
 // @ts-ignore
 import { buildPoseidonReference as buildPoseidon } from "circomlibjs";
+import { MERKLE_TREE_DEPTH } from "@/shared/constants";
 
 // In our current configuration, this is the path to the circuits directory for client side proving
 export const getClientPathToCircuits = (): string => {
@@ -218,6 +219,7 @@ const generateProofForUserRequirement = async (
     const pubKey = publicKeyFromString(user.sigPk!);
     const publicInputs = getPublicInputsFromSignature(sig, msgHash, pubKey);
     const merkleProof = await computeMerkleProof(
+      MERKLE_TREE_DEPTH,
       requiredSigPubKeysEdwards,
       index,
       hashFn
@@ -227,6 +229,7 @@ const generateProofForUserRequirement = async (
       sig,
       msgHash,
       publicInputs,
+      merkleTreeDepth: MERKLE_TREE_DEPTH,
       merkleProof,
       sigNullifierRandomness,
       pubKeyNullifierRandomness,
@@ -298,6 +301,7 @@ const generateProofForLocationRequirement = async (
     const pubKey = publicKeyFromString(location.pk!);
     const publicInputs = getPublicInputsFromSignature(sig, msgHash, pubKey);
     const merkleProof = await computeMerkleProof(
+      MERKLE_TREE_DEPTH,
       requiredSigPubKeysEdwards,
       index,
       hashFn
@@ -307,6 +311,7 @@ const generateProofForLocationRequirement = async (
       sig,
       msgHash,
       publicInputs,
+      merkleTreeDepth: MERKLE_TREE_DEPTH,
       merkleProof,
       sigNullifierRandomness,
       pubKeyNullifierRandomness,

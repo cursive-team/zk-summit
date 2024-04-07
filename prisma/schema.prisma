@@ -12,13 +12,14 @@ datasource db {
 }
 
 model User {
-  id           Int     @id @default(autoincrement())
-  chipId       String  @unique
-  isRegistered Boolean @default(false)
-  displayName  String  @unique
-  twitter      String?
-  telegram     String?
-  bio          String?
+  id            Int     @id @default(autoincrement())
+  chipId        String  @unique
+  isRegistered  Boolean @default(false)
+  isUserSpeaker Boolean @default(false)
+  displayName   String  @unique
+  twitter       String?
+  telegram      String?
+  bio           String?
 
   encryptionPublicKey String
   signaturePublicKey  String
@@ -55,16 +56,17 @@ model ChipKey {
 }
 
 model Location {
-  id                     Int                   @id @default(autoincrement())
-  chipId                 String                @unique
-  signaturePublicKey     String
-  name                   String
-  description            String
-  sponsor                String
-  imageUrl               String
-  displayEmailWalletLink Boolean               @default(false)
-  createdAt              DateTime              @default(now())
-  questRequirements      LocationRequirement[] @relation("LocationQuestRequirements")
+  id                 Int                   @id @default(autoincrement())
+  chipId             String                @unique
+  signaturePublicKey String
+  name               String
+  stage              String
+  speaker            String
+  description        String
+  startTime          String
+  endTime            String
+  createdAt          DateTime              @default(now())
+  questRequirements  LocationRequirement[] @relation("LocationQuestRequirements")
 }
 
 model SigninCode {

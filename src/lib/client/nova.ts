@@ -169,6 +169,24 @@ export class MembershipFolder {
     }
   }
 
+   /**
+   * Gzip deflates a proof
+   * @param proof - the proof to compress
+   * @returns the compressed proof
+   */
+   async compress_proof(proof: string): Promise<Uint8Array> {
+    return await this.wasm.compress_proof(proof);
+  }
+
+  /**
+   * Gzip inflates a proof
+   * @param compressed - the compressed proof
+   * @returns the decompressed proof
+   */
+  async decompress_proof(compressed: Uint8Array): Promise<string> {
+    return await this.wasm.decompress_proof(compressed);
+  }
+
   /**
    * Builds the private inputs for the folded membership circuit using a user record
    * @notice assumes validation on user record has been performed previously
@@ -191,23 +209,7 @@ export class MembershipFolder {
     }
   }
 
-  /**
-   * Gzip deflates a proof
-   * @param proof - the proof to compress
-   * @returns the compressed proof
-   */
-  async compress_proof(proof: string): Promise<Uint8Array> {
-    return await this.wasm.compress_proof(proof);
-  }
-
-  /**
-   * Gzip inflates a proof
-   * @param compressed - the compressed proof
-   * @returns the decompressed proof
-   */
-  async decompress_proof(compressed: Uint8Array): Promise<string> {
-    return await this.wasm.decompress_proof(compressed);
-  }
+ 
 }
 
 export const getAllParamsByChunk = async (): Promise<string> => {

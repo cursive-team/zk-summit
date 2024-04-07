@@ -99,81 +99,81 @@ export default async function handler(
       } else {
         console.error("Invalid keygen type, chipId:", chipId);
       }
-
-      // BEGIN HARDCODED QUESTS FOR ZK SUMMIT
-      // Quest 1: Meet 10 attendees
-      await prisma.quest.create({
-        data: {
-          name: "🦋 Symposium Seeker",
-          description:
-            "Connect with 10 people to make this proof. Ask to tap their ZK11 badge, share socials, and discover event activity that you have in common.",
-          userRequirements: {
-            create: [
-              {
-                name: "Connect with 10 people at ZK Summit 11",
-                numSigsRequired: 10,
-                sigNullifierRandomness: getServerRandomNullifierRandomness(), // Ensures signatures cannot be reused to meet this requirement
-                users: {
-                  connect: allUserIds.map((id) => ({ id })),
-                },
-              },
-            ],
-          },
-          locationRequirements: {
-            create: [],
-          },
-        },
-      });
-
-      // Quest 2: Meet 3 speakers
-      await prisma.quest.create({
-        data: {
-          name: "🎤 Oracle Encounter",
-          description:
-            "Ask 3 speakers a question or share feedback about their talk. Ask to tap their ZK11 badge to collect a link to their presentation slides (if available)",
-          userRequirements: {
-            create: [
-              {
-                name: "Connect with 3 speakers at ZK Summit 11",
-                numSigsRequired: 3,
-                sigNullifierRandomness: getServerRandomNullifierRandomness(), // Ensures signatures cannot be reused to meet this requirement
-                users: {
-                  connect: speakerUserIds.map((id) => ({ id })),
-                },
-              },
-            ],
-          },
-          locationRequirements: {
-            create: [],
-          },
-        },
-      });
-
-      // Quest 3: Attend 5 talks
-      await prisma.quest.create({
-        data: {
-          name: "👩‍🏫 Acropolis Assembler",
-          description:
-            "Tap in to 5 talks at Zk Summit 11 to make this proof. Look for cards on posters at conference room entrances.",
-          userRequirements: {
-            create: [],
-          },
-          locationRequirements: {
-            create: [
-              {
-                name: "Attend 5 talks at ZK Summit 11",
-                numSigsRequired: 5,
-                sigNullifierRandomness: getServerRandomNullifierRandomness(), // Ensures signatures cannot be reused to meet this requirement
-                locations: {
-                  connect: allTalkIds.map((id) => ({ id })),
-                },
-              },
-            ],
-          },
-        },
-      });
-      // END HARDCODED QUESTS FOR ZK SUMMIT
     }
+
+    // BEGIN HARDCODED QUESTS FOR ZK SUMMIT
+    // Quest 1: Meet 10 attendees
+    await prisma.quest.create({
+      data: {
+        name: "🦋 Symposium Seeker",
+        description:
+          "Connect with 10 people to make this proof. Ask to tap their ZK11 badge, share socials, and discover event activity that you have in common.",
+        userRequirements: {
+          create: [
+            {
+              name: "Connect with 10 people at ZK Summit 11",
+              numSigsRequired: 10,
+              sigNullifierRandomness: getServerRandomNullifierRandomness(), // Ensures signatures cannot be reused to meet this requirement
+              users: {
+                connect: allUserIds.map((id) => ({ id })),
+              },
+            },
+          ],
+        },
+        locationRequirements: {
+          create: [],
+        },
+      },
+    });
+
+    // Quest 2: Meet 3 speakers
+    await prisma.quest.create({
+      data: {
+        name: "🎤 Oracle Encounter",
+        description:
+          "Ask 3 speakers a question or share feedback about their talk. Ask to tap their ZK11 badge to collect a link to their presentation slides (if available)",
+        userRequirements: {
+          create: [
+            {
+              name: "Connect with 3 speakers at ZK Summit 11",
+              numSigsRequired: 3,
+              sigNullifierRandomness: getServerRandomNullifierRandomness(), // Ensures signatures cannot be reused to meet this requirement
+              users: {
+                connect: speakerUserIds.map((id) => ({ id })),
+              },
+            },
+          ],
+        },
+        locationRequirements: {
+          create: [],
+        },
+      },
+    });
+
+    // Quest 3: Attend 5 talks
+    await prisma.quest.create({
+      data: {
+        name: "👩‍🏫 Acropolis Assembler",
+        description:
+          "Tap in to 5 talks at Zk Summit 11 to make this proof. Look for cards on posters at conference room entrances.",
+        userRequirements: {
+          create: [],
+        },
+        locationRequirements: {
+          create: [
+            {
+              name: "Attend 5 talks at ZK Summit 11",
+              numSigsRequired: 5,
+              sigNullifierRandomness: getServerRandomNullifierRandomness(), // Ensures signatures cannot be reused to meet this requirement
+              locations: {
+                connect: allTalkIds.map((id) => ({ id })),
+              },
+            },
+          ],
+        },
+      },
+    });
+    // END HARDCODED QUESTS FOR ZK SUMMIT
 
     res.status(200).json({});
   } catch (error) {

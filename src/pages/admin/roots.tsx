@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { getAllMerkleRoots } from "@/lib/client/folding";
-import { TreeResponse } from "@/pages/api/tree";
+import { TreeResponse } from "@/pages/api/tree/root";
 import { toast } from "sonner";
 
 const MerkleRootsPage: React.FC = () => {

@@ -143,11 +143,6 @@ const LocationTapModal = ({
               </span>
             )}
           </div>
-          <div className="w-full mt-2 px-2">
-            {location.displayEmailWalletLink &&
-              signature &&
-              getMintDisplayState()}
-          </div>
         </div>
         {locationQuestRequirementIds.length !== 0 && (
           <ListLayout label="Quests involving this location">

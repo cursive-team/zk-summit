@@ -17,6 +17,7 @@ import { deserializeQuestProof } from "../client/proving";
 const crypto = require("crypto");
 // @ts-ignore
 import { buildPoseidonReference as buildPoseidon } from "circomlibjs";
+import { MERKLE_TREE_DEPTH } from "@/shared/constants";
 
 // In our current configuration, this is the path to the circuits directory for server side proving
 export const getServerPathToCircuits = (): string => {
@@ -155,10 +156,15 @@ export const verifyProofForQuestRequirement = async (
   const publicKeys = requirementPublicKeys.map((publicKey) =>
     publicKeyFromString(publicKey).toEdwards()
   );
-  const merkleRoot = await computeMerkleRoot(publicKeys, hashFn);
+  const merkleRoot = await computeMerkleRoot(
+    MERKLE_TREE_DEPTH,
+    publicKeys,
+    hashFn
+  );
 
   return await batchVerifyMembership({
     proofs,
+    merkleTreeDepth: MERKLE_TREE_DEPTH,
     merkleRoot,
     sigNullifierRandomness: hexToBigInt(sigNullifierRandomness),
     usedSigNullifiers: [],

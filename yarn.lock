@@ -1313,10 +1313,10 @@ b4a@^1.0.1:
   resolved "https://registry.yarnpkg.com/b4a/-/b4a-1.6.6.tgz#a4cc349a3851987c3c4ac2d7785c18744f6da9ba"
   integrity sha512-5Tk1HLk6b6ctmjIkAcU/Ujv/1WqiDl0F0JdRCR80VsOcUlHcu7pWeWRlOqQLHfDEsVx9YH/aif5AG4ehoCtTmg==
 
-babyjubjub-ecdsa@^1.1.8:
-  version "1.1.8"
-  resolved "https://registry.yarnpkg.com/babyjubjub-ecdsa/-/babyjubjub-ecdsa-1.1.8.tgz#f31ee792e268bec9f88cad5ede409d37226c633e"
-  integrity sha512-vTX6M4jPbZgw+z7J2im+KI6FYRmLEd2IK4MWIU0rrlqALyKd297KKWzJoLotLl/icXkZbLlQHt6PoS1jwTID1A==
+babyjubjub-ecdsa@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/babyjubjub-ecdsa/-/babyjubjub-ecdsa-1.2.0.tgz#dbf521bc9dc6535092d7aca5eae86d0e07335cd3"
+  integrity sha512-u/wKbHni38dPzO9reSkobda59GCmz6zzOtGucMRMvnxcHxKc9r0c+znMCzUFCU0pON1/LoErqyw9nl1Qo2lJTg==
   dependencies:
     "@types/uuid" "^9.0.5"
     circomlibjs "^0.1.7"

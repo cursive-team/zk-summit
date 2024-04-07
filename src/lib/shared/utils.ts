@@ -1,3 +1,4 @@
+import { MerkleProof, bigIntToHex, hexToBigInt } from "babyjubjub-ecdsa";
 import dayjs from "dayjs";
 
 // This function check if nickname starts with @, if not, it adds it
@@ -69,6 +70,24 @@ export function loadScript(url: string) {
     script.src = url;
     document.getElementsByTagName("head")[0].appendChild(script);
   });
+}
+
+// todo: add toObject to merkle proof
+export const merkleProofToObject = (proof: MerkleProof): Object => { 
+  return {
+    root: bigIntToHex(proof.root),
+    pathIndices: proof.pathIndices,
+    siblings: proof.siblings.map(bigIntToHex),
+  }
+}
+
+// todo: add fromObject to merkle proof
+export const merkleProofFromObject = (obj: any): MerkleProof => {
+  return {
+    root: hexToBigInt(obj.root),
+    pathIndices: obj.pathIndices,
+    siblings: obj.siblings.map(hexToBigInt),
+  }
 }
 
 export const displayNameRegex = /^[a-zA-Z0-9]{1,20}$/;

@@ -12,16 +12,17 @@ import {
   bigIntToHex,
 } from "babyjubjub-ecdsa";
 import { TreeResponse } from "@/pages/api/tree/root";
+import useIndexDB from "@/hooks/useIndexDB";
 
 export type NovaWasm = typeof import("bjj_ecdsa_nova_wasm");
 
 /** Private inputs to the folded membership circuit */
 export type NovaPrivateInputs = {
   s: string;
-  tx: string;
-  ty: string;
-  ux: string;
-  uy: string;
+  Tx: string;
+  Ty: string;
+  Ux: string;
+  Uy: string;
   pathIndices: number[];
   siblings: string[];
 };
@@ -29,8 +30,8 @@ export type NovaPrivateInputs = {
 export class MembershipFolder {
   // private
 
-  public readonly r1cs_url = `${process.env.NOVA_BUCKET_URL}/bjj_ecdsa_batch_fold.r1cs`;
-  public readonly wasm_url = `${process.env.NOVA_BUCKET_URL}/bjj_ecdsa_batch_fold.wasm`;
+  public readonly r1cs_url = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/bjj_ecdsa_batch_fold.r1cs`;
+  public readonly wasm_url = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/bjj_ecdsa_batch_fold.wasm`;
   public readonly attendee_root: bigint = BigInt(
     "0x1d38ba4c24c07eb8f00732feac18d88e0e8b312f8b02fcd5b9909788b928708c"
   );
@@ -54,6 +55,27 @@ export class MembershipFolder {
   static async init(): Promise<MembershipFolder> {
     let wasm = await getWasm();
     let params = await getAllParamsByChunk();
+    return new MembershipFolder(wasm, params);
+  }
+
+  /**
+   * Initializes a new instance of the membership folder class
+   */
+  static async initWithIndexDB(
+    compressedParams: Blob
+  ): Promise<MembershipFolder> {
+    // get wasm
+    let wasm = await getWasm();
+    // decompress params
+    let ds = new DecompressionStream("gzip");
+    let reader = compressedParams.stream().pipeThrough(ds).getReader();
+    let done = false;
+    let params = "";
+    while (!done) {
+      let decompressed = await reader.read();
+      done = decompressed.done;
+      params += new TextDecoder().decode(decompressed.value);
+    }
     return new MembershipFolder(wasm, params);
   }
 
@@ -245,10 +267,10 @@ export class MembershipFolder {
     const { T, U } = getPublicInputsFromSignature(sig, messageHash, pubkey);
     return {
       s: sig.s.toString(),
-      tx: T.x.toString(),
-      ty: T.y.toString(),
-      ux: U.x.toString(),
-      uy: U.y.toString(),
+      Tx: T.x.toString(),
+      Ty: T.y.toString(),
+      Ux: U.x.toString(),
+      Uy: U.y.toString(),
       pathIndices: merkleProof.pathIndices,
       siblings: merkleProof.siblings.map((sibling) => sibling.toString()),
     };

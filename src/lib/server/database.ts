@@ -32,7 +32,6 @@ export const getQuestById = async (
             select: {
               id: true,
               name: true,
-              imageUrl: true,
               signaturePublicKey: true,
             },
           },

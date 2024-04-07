@@ -79,15 +79,6 @@ const SingleLocation = ({
     <>
       <Header title={title} label="Requirement" />
       <div className="flex flex-col gap-4 mt-2">
-        <div
-          className="bg-slate-200 rounded bg-cover bg-center bg-no-repeat object-cover overflow-hidden mx-auto"
-          style={{
-            width: `${imageWidth}px`,
-            height: `${imageWidth}px`,
-            backgroundImage: `url(${location.imageUrl})`,
-          }}
-        ></div>
-
         <div key={location.id} className="flex gap-6">
           <div className="flex flex-col">
             <Label>Location</Label>
@@ -169,14 +160,6 @@ const LocationList = ({
                   className="flex justify-between border-b w-full border-gray-300 last-of-type:border-none first-of-type:pt-0 py-1"
                 >
                   <div className="flex items-center gap-3">
-                    <div
-                      className="flex justify-center items-center bg-cover bg-center bg-[#677363] h-6 w-6 rounded"
-                      style={{
-                        backgroundImage: location?.imageUrl
-                          ? `url(${location.imageUrl})`
-                          : undefined,
-                      }}
-                    />
                     <Card.Title>{location.name}</Card.Title>
                   </div>
                   {collected && <Icons.checkedCircle />}

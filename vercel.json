@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "src/pages/api/admin/keygen.ts": {
+      "maxDuration": 300 
+    }
+  }
+}

@@ -23,7 +23,6 @@ import { loadMessages } from "@/lib/client/jubSignalClient";
 import { toast } from "sonner";
 import { Spinner } from "@/components/Spinner";
 import { getHaLoArgs } from "@/lib/client/libhalo";
-import { sigCardTapResponseSchema } from "./api/tap/sig_card";
 import { fixBJJSig } from "@/lib/shared/libhalo";
 import { hashPublicKeyToUUID } from "@/lib/client/utils";
 
@@ -228,117 +227,56 @@ export default function Tap() {
     // ----- HANDLE CMAC TAP -----
     const iykRef = router.query.iykRef as string;
     const mockRef = router.query.mockRef as string | undefined;
-    if (iykRef) {
-      fetch(`/api/tap/cmac?iykRef=${iykRef}${getMockRefUrlParam(mockRef)}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => {
-          if (!response.ok)
-            throw new Error(`HTTP error! status: ${response.status}`);
-          return response.json();
-        })
-        .then(async (data) => {
-          const tapResponse = tapResponseSchema.validateSync(data);
-          switch (tapResponse.code) {
-            case TapResponseCode.CMAC_INVALID:
-              throw new Error("CMAC invalid!");
-            case TapResponseCode.PERSON_NOT_REGISTERED:
-              handlePersonRegistration(iykRef, mockRef);
-              break;
-            case TapResponseCode.LOCATION_NOT_REGISTERED:
-              handleLocationRegistration(iykRef, mockRef);
-              break;
-            case TapResponseCode.VALID_PERSON:
-              if (!tapResponse.person) {
-                throw new Error("Person is null!");
-              }
-              await handlePersonTap(tapResponse.person);
-              break;
-            case TapResponseCode.VALID_LOCATION:
-              if (!tapResponse.location) {
-                throw new Error("Location is null!");
-              }
-              await handleLocationTap(tapResponse.location);
-              break;
-            case TapResponseCode.CHIP_KEY_NOT_FOUND:
-              throw new Error("Chip key not found!");
-            default:
-              throw new Error("Invalid tap response code!");
-          }
-        })
-        .catch((error) => {
-          console.error(error);
-          toast.error("Error! Please contact a member of the Cursive team.");
-        });
-    } else {
-      // ----- HANDLE CARD GENERATED SIGNATURE TAP -----
-      if (!location.hash) {
-        toast.error("Unable to process tap.");
-        router.push("/");
-        return;
-      }
-
-      const urlParams = new URLSearchParams(location.hash.slice(1));
-      const rawLocationSignature = getHaLoArgs(urlParams);
-      if (!rawLocationSignature) {
-        toast.error("Unable to process tap.");
-        router.push("/");
-        return;
-      }
-      const {
-        signaturePublicKey,
-        signatureMessage,
-        signature: rawHaloSig,
-      } = rawLocationSignature;
-      let signature: string = rawHaloSig;
-      try {
-        signature = fixBJJSig(signature);
-      } catch (error) {
-        toast.error("Unable to process tap.");
-        router.push("/");
-        return;
-      }
-
-      fetch(`/api/tap/sig_card?signaturePublicKey=${signaturePublicKey}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => {
-          if (!response.ok)
-            throw new Error(`HTTP error! status: ${response.status}`);
-          return response.json();
-        })
-        .then(async (data) => {
-          const sigCardTapResponse =
-            sigCardTapResponseSchema.validateSync(data);
-          if (!sigCardTapResponse.registered) {
-            handleSigCardLocationRegistration(signaturePublicKey);
-            return;
-          }
-
-          if (sigCardTapResponse.locationInfo) {
-            const tapResponse: LocationTapResponse = {
-              ...sigCardTapResponse.locationInfo,
-              signatureMessage,
-              signature,
-            };
-            handleLocationTap(tapResponse);
-          } else if (sigCardTapResponse.locationInfoWithSig) {
-            handleLocationTap(sigCardTapResponse.locationInfoWithSig);
-          } else {
-            throw new Error("Unable to retrieve location!");
-          }
-        })
-        .catch((error) => {
-          console.error(error);
-          toast.error("Error! Please refresh and try again.");
-        });
+    if (!iykRef) {
+      toast.error("Invalid tap! Please try again.");
+      router.push("/");
+      return;
     }
+
+    fetch(`/api/tap/cmac?iykRef=${iykRef}${getMockRefUrlParam(mockRef)}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => {
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then(async (data) => {
+        const tapResponse = tapResponseSchema.validateSync(data);
+        switch (tapResponse.code) {
+          case TapResponseCode.CMAC_INVALID:
+            throw new Error("CMAC invalid!");
+          case TapResponseCode.PERSON_NOT_REGISTERED:
+            handlePersonRegistration(iykRef, mockRef);
+            break;
+          case TapResponseCode.LOCATION_NOT_REGISTERED:
+            handleLocationRegistration(iykRef, mockRef);
+            break;
+          case TapResponseCode.VALID_PERSON:
+            if (!tapResponse.person) {
+              throw new Error("Person is null!");
+            }
+            await handlePersonTap(tapResponse.person);
+            break;
+          case TapResponseCode.VALID_LOCATION:
+            if (!tapResponse.location) {
+              throw new Error("Location is null!");
+            }
+            await handleLocationTap(tapResponse.location);
+            break;
+          case TapResponseCode.CHIP_KEY_NOT_FOUND:
+            throw new Error("Chip key not found!");
+          default:
+            throw new Error("Invalid tap response code!");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error("Error! Please contact a member of the Cursive team.");
+      });
   }, [router, processPersonTap, processLocationTap]);
 
   if (pendingPersonTapResponse) {

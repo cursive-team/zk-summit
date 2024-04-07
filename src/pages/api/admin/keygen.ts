@@ -177,6 +177,7 @@ export default async function handler(
 
     res.status(200).json({});
   } catch (error) {
-    res.status(500).json({ error: "Failed to read keygen file" });
+    console.log("Failed to generate keys", error);
+    res.status(500).json({ error: "Failed to generate keys" });
   }
 }

@@ -24,6 +24,7 @@ export type User = {
   outTs?: string; // Time of last outbound tap as ISO string
   inTs?: string; // Time of last inbound tap as ISO string
   oI?: string; // User's PSI overlap indices
+  folded?: boolean; // If true, user's membership proof has been folded in
 };
 
 export const saveUsers = (users: Record<string, User>): void => {

@@ -22,6 +22,7 @@
     "@tw-classed/react": "^1.7.0",
     "@vercel/blob": "^0.19.0",
     "babyjubjub-ecdsa": "^1.1.8",
+    "bjj_ecdsa_nova_wasm": "file:public/bjj_ecdsa_nova_wasm",
     "circomlibjs": "^0.1.7",
     "clsx": "^2.1.0",
     "dayjs": "^1.11.10",

@@ -85,7 +85,7 @@ const LoginFormStepIndex = ({ onSuccess, subtitle }: LoginFormStepProps) => {
   return (
     <FormStepLayout
       title="Login"
-      description="Welcome to ETHDenver"
+      description="Welcome to ZKSummit"
       subtitle={subtitle}
       onSubmit={handleSubmit(onSubmit)}
       className="pt-4"

@@ -422,8 +422,8 @@ export default function Register() {
           value={bio}
           onChange={(e) => setBio(e.target.value)}
         />
-        <Button type="submit">
-          {loading ? "Creating account..." : "Register with passkey"}
+        <Button type="submit" loading={loading}>
+          Register with passkey
         </Button>
         <span
           className="text-center text-sm"
@@ -457,8 +457,8 @@ export default function Register() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
-        <Button type="submit">
-          {loading ? "Creating account..." : "Register"}
+        <Button type="submit" loading={loading}>
+          Register
         </Button>
         <span className="text-center text-sm" onClick={handleCreateWithPasskey}>
           <u>Register with passkey instead</u>

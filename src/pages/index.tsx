@@ -27,6 +27,7 @@ import { ArtworkSnapshot } from "@/components/artwork/ArtworkSnapshot";
 import useSettings from "@/hooks/useSettings";
 import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
+import { IconCircle } from "@/components/IconCircle";
 
 interface ContactCardProps {
   name: string;
@@ -79,9 +80,7 @@ const FeedContent = ({ title, description, icon }: FeedContentProps) => {
   return (
     <div className="grid grid-cols-[1fr_80px] items-center justify-between py-1 gap-4">
       <div className="grid grid-cols-[24px_1fr] items-center gap-2">
-        <div className="flex justify-center items-center h-6 w-6 rounded-full bg-[#323232]">
-          {icon}
-        </div>
+        <IconCircle>{icon}</IconCircle>
         <Card.Title>{title}</Card.Title>
       </div>
       <Card.Description>{description}</Card.Description>

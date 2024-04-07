@@ -24,6 +24,7 @@ import init, { round1_js, round2_js, round3_js } from "@/lib/mp_psi/mp_psi";
 import { encryptOverlapComputedMessage } from "@/lib/client/jubSignal/overlapComputed";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { CircleCard } from "@/components/cards/CircleCard";
+import { IconCircle } from "@/components/IconCircle";
 
 const Label = classed.span("text-sm text-gray-12");
 
@@ -373,7 +374,7 @@ const UserProfilePage = () => {
       <AppBackHeader redirectTo="/" />
       {alreadyConnected && (
         <div className="flex items-start justify-center py-28">
-          <span className="text-xl text-gray-12">
+          <span className="text-xl text-iron-950">
             You have already connected with this user!
           </span>
         </div>
@@ -401,12 +402,12 @@ const UserProfilePage = () => {
           </div>
         </div>
         {!user.inTs && (
-          <div className="p-3 bg-zinc-900 rounded flex-col justify-center items-start gap-1 inline-flex">
+          <div className="p-3 bg-tertiary rounded flex-col justify-center items-start gap-1 inline-flex">
             <InputWrapper
               className="flex flex-col gap-2"
               label="Details pending"
             >
-              <span className="text-gray-11 text-[14px] left-5 mt-1">
+              <span className="text-iron-600 font-sans text-[14px] left-5 mt-1">
                 If {user.name} taps you back and shares their socials, they will
                 appear here.
               </span>
@@ -467,9 +468,9 @@ const UserProfilePage = () => {
                   >
                     <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
                       <div className="flex items-center gap-2">
-                        <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
+                        <IconCircle>
                           <CircleCard icon="person" />
-                        </div>
+                        </IconCircle>
                         <Card.Title>{name}</Card.Title>
                       </div>
                     </div>
@@ -481,9 +482,9 @@ const UserProfilePage = () => {
                   <Link href={`/locations/${locationId}`} key={index}>
                     <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
                       <div className="flex items-center gap-2">
-                        <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
+                        <IconCircle>
                           <CircleCard icon="location" />
-                        </div>
+                        </IconCircle>
                         <Card.Title>{name}</Card.Title>
                       </div>
                     </div>

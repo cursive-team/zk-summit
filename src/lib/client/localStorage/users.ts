@@ -25,6 +25,7 @@ export type User = {
   inTs?: string; // Time of last inbound tap as ISO string
   oI?: string; // User's PSI overlap indices
   isUserSpeaker?: boolean; // Whether the user is a speaker
+  folded?: boolean; // If true, user's membership proof has been folded in
 };
 
 export const saveUsers = (users: Record<string, User>): void => {

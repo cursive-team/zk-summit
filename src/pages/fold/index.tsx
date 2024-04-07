@@ -59,14 +59,36 @@ export default function Fold() {
   }, [chunksDownloaded]);
 
   const fold = async () => {
+    if (!membershipFolder) return;
     let users = getUsers();
     let usersToFold = Object.entries(users).filter(([_, user]) => !user.folded && user.pkId !== "0");
     let startTime = new Date().getTime();
 
-    let proof = await membershipFolder?.startFold(usersToFold[0][1]);
+    // build proof 1
+    let proof = await membershipFolder.startFold(usersToFold[0][1]);
     let endTime = new Date().getTime();
-    console.log(`Folded user ${usersToFold[0][1].name} in ${endTime - startTime}ms`);
-    console.log("Proof: ", proof?.substring(0, 30));
+    console.log(`Folded 1 in ${endTime - startTime}ms`);
+    console.log("Proof: ", proof.substring(0, 30));
+
+    // build proof 2
+    startTime = new Date().getTime();
+    let proof2 = await membershipFolder.continueFold(usersToFold[0][1], proof, 1);
+    endTime = new Date().getTime();
+    console.log(`Folded 2 in ${endTime - startTime}ms`);
+    console.log("Proof: ", proof2.substring(0, 30));
+
+    // obfuscate proof
+    // startTime = new Date().getTime();
+    // let obfuscatedProof = await membershipFolder.obfuscate(proof2, 2);
+    // endTime = new Date().getTime();
+    // console.log(`Obfuscated in ${endTime - startTime}ms`);
+    // console.log("Proof: ", obfuscatedProof.substring(0, 30));
+
+    // verify proof
+    startTime = new Date().getTime();
+    let verified = await membershipFolder.verify(proof2, 2, false);
+    endTime = new Date().getTime();
+    console.log(`Verified 1 in ${endTime - startTime}ms`);
   }
 
   return (

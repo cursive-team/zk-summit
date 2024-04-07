@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { getAllMerkleRoots } from "@/lib/client/folding";
-import { TreeResponse } from "@/pages/api/tree/root";
+import { TreeRoots } from "@/pages/api/tree/root";
 import { toast } from "sonner";
 
 const MerkleRootsPage: React.FC = () => {
-  const [merkleRoots, setMerkleRoots] = useState<TreeResponse | null>(null);
+  const [merkleRoots, setMerkleRoots] = useState<TreeRoots | null>(null);
   const [loading, setLoading] = useState(false);
 
   const fetchMerkleRoots = async () => {

@@ -1,6 +1,6 @@
 import { initialKeygenData } from "@/shared/keygen";
 import prisma from "@/lib/server/prisma";
-import { TreeResponse } from "@/pages/api/tree/root";
+import { TreeRoots } from "@/pages/api/tree/root";
 import {
   MerkleProof,
   bigIntToHex,
@@ -58,12 +58,12 @@ export const getPubkeys = async (pubkeyType: string): Promise<string[]> => {
     .findMany({
       where: { chipId: { in: chipKeys } },
       select: { signaturePublicKey: true },
-      orderBy: { id: "asc" },
+      // orderBy: { createdAt: "asc" },
     })
     .then((res) => res.map((r) => r.signaturePublicKey));
 };
 
-export const getAllMerkleRoots = async (): Promise<TreeResponse> => {
+export const getAllMerkleRoots = async (): Promise<TreeRoots> => {
   const poseidon = await buildPoseidon();
   const keygenData = initialKeygenData;
 

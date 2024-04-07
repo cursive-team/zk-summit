@@ -1,13 +1,13 @@
 /* tslint:disable */
 /* eslint-disable */
-export function random_fr(a: number): void;
-export function init_panic_hook(): void;
 export function verify_proof(a: number, b: number, c: number, d: number, e: number, f: number, g: number): number;
 export function generate_proof(a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number): number;
 export function continue_proof(a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number): number;
 export function obfuscate_proof(a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number): number;
 export function compress_proof(a: number, b: number): number;
 export function decompress_proof(a: number, b: number): void;
+export function random_fr(a: number): void;
+export function init_panic_hook(): void;
 export function __wbg_wbg_rayon_poolbuilder_free(a: number): void;
 export function wbg_rayon_poolbuilder_numThreads(a: number): number;
 export function wbg_rayon_poolbuilder_receiver(a: number): number;

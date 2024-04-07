@@ -2,7 +2,7 @@ import { getAllMerkleRoots } from "@/lib/server/folding";
 import { ErrorResponse } from "@/types";
 import { NextApiRequest, NextApiResponse } from "next";
 
-export type TreeResponse = {
+export type TreeRoots = {
   attendeeMerkleRoot: string;
   speakerMerkleRoot: string;
   talksMerkleRoot: string;
@@ -10,7 +10,7 @@ export type TreeResponse = {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<TreeResponse | ErrorResponse>
+  res: NextApiResponse<TreeRoots | ErrorResponse>
 ) {
   if (req.method === "GET") {
     const merkleRoots = await getAllMerkleRoots();

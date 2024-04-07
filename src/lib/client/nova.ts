@@ -1,42 +1,86 @@
+import { MERKLE_TREE_DEPTH } from "@/shared/constants";
+import { merkleProofFromObject } from "../shared/utils";
 import { User } from "./localStorage";
 import {
   derDecodeSignature,
   getPublicInputsFromSignature,
+  computeMerkleProof,
+  publicKeyFromString,
+  hexToBigInt,
+  getECDSAMessageHash,
+  MerkleProof,
+  bigIntToHex,
 } from "babyjubjub-ecdsa";
+import { TreeRoots } from "@/pages/api/tree/root";
+import useIndexDB from "@/hooks/useIndexDB";
 
 export type NovaWasm = typeof import("bjj_ecdsa_nova_wasm");
 
 /** Private inputs to the folded membership circuit */
 export type NovaPrivateInputs = {
-  s: bigint;
-  tx: bigint;
-  ty: bigint;
-  ux: bigint;
-  uy: bigint;
+  s: string;
+  Tx: string;
+  Ty: string;
+  Ux: string;
+  Uy: string;
   pathIndices: number[];
-  siblings: bigint[];
+  siblings: string[];
 };
 
 export class MembershipFolder {
   // private
 
-  public readonly r1cs_url = `${process.env.NOVA_BUCKET_URL}/bjj_ecdsa_batch_fold.r1cs`;
-  public readonly wasm_url = `${process.env.NOVA_BUCKET_URL}/bjj_ecdsa_batch_fold.wasm`;
+  public readonly r1cs_url = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/bjj_ecdsa_batch_fold.r1cs`;
+  public readonly wasm_url = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/bjj_ecdsa_batch_fold.wasm`;
 
   constructor(
     /** The wasm binary for membership folding operations */
     public readonly wasm: NovaWasm,
     /** The public params used to prove folds */
-    public readonly params: string
+    public readonly params: string,
+    /** Get the roots for the tree types */
+    public readonly roots: TreeRoots
   ) {}
 
   /**
    * Initializes a new instance of the membership folder class
    */
   static async init(): Promise<MembershipFolder> {
+    // get wasm
     let wasm = await getWasm();
+    // get tree roots
+    let roots: TreeRoots = await fetch("/api/tree/root").then(
+      async (res) => await res.json()
+    );
+    // get params
     let params = await getAllParamsByChunk();
-    return new MembershipFolder(wasm, params);
+    return new MembershipFolder(wasm, params, roots);
+  }
+
+  /**
+   * Initializes a new instance of the membership folder class
+   */
+  static async initWithIndexDB(
+    compressedParams: Blob
+  ): Promise<MembershipFolder> {
+    // get wasm
+    let wasm = await getWasm();
+    // get tree roots
+    let roots: TreeRoots = await fetch("/api/tree/root").then(
+      async (res) => await res.json()
+    );
+
+    // decompress params
+    let ds = new DecompressionStream("gzip");
+    let reader = compressedParams.stream().pipeThrough(ds).getReader();
+    let done = false;
+    let params = "";
+    while (!done) {
+      let decompressed = await reader.read();
+      done = decompressed.done;
+      params += new TextDecoder().decode(decompressed.value);
+    }
+    return new MembershipFolder(wasm, params, roots);
   }
 
   /**
@@ -46,7 +90,7 @@ export class MembershipFolder {
    * @param root - the root of the tree to prove membership in
    * @returns The folding proof of membership
    */
-  async startFold(user: User, root: bigint): Promise<string> {
+  async startFold(user: User): Promise<string> {
     // check the user is not self or has not tapped
     if (user.pkId === "0")
       throw new Error(
@@ -58,15 +102,22 @@ export class MembershipFolder {
         `User ${user.name}'s membership has already been folded!`
       );
 
+    // fetch merkle proof for the user
+    const merkleProof = await fetch(
+      `/api/tree/proof?treeType=attendee&pubkey=${user.sigPk}`
+    )
+      .then(async (res) => await res.json())
+      .then(merkleProofFromObject);
+
     // generate the private inputs for the folded membership circuit
-    let inputs = await MembershipFolder.makePrivateInputs(user);
+    let inputs = await MembershipFolder.makePrivateInputs(user, merkleProof);
 
     // prove the membership
     return await this.wasm.generate_proof(
       this.r1cs_url,
       this.wasm_url,
       this.params,
-      root.toString(),
+      merkleProof.root.toString(),
       JSON.stringify(inputs)
     );
   }
@@ -75,11 +126,15 @@ export class MembershipFolder {
    * Fold subsequent membership proofs
    *
    * @param user - The user to fold membership for
-   * @param root - the root of the tree to prove membership in
    * @param proof - the previous fold to increment from
+   * @param numFolds - the number of memberships verified in the fold
    * @returns The folding proof of membership
    */
-  async continueFold(user: User, root: bigint, proof: string): Promise<string> {
+  async continueFold(
+    user: User,
+    proof: string,
+    numFolds: number
+  ): Promise<string> {
     // check the user is not self or has not tapped
     if (user.pkId === "0")
       throw new Error(
@@ -91,16 +146,19 @@ export class MembershipFolder {
         `User ${user.name}'s membership has already been folded!`
       );
 
-    // generate the private inputs for the folded membership circuit
-    let inputs = await MembershipFolder.makePrivateInputs(user);
+    // fetch merkle proof for the user
+    const merkleProof = await fetch(
+      `/api/tree/proof?treeType=attendee&pubkey=${user.sigPk}`
+    )
+      .then(async (res) => await res.json())
+      .then(merkleProofFromObject);
 
-    // check the previous # of folds
-    // @TODO
-    let numFolds: bigint = BigInt(0);
+    // generate the private inputs for the folded membership circuit
+    let inputs = await MembershipFolder.makePrivateInputs(user, merkleProof);
 
     // build the zi_primary (output of previous fold)
     // this is predictable and getting it from verification doubles the work
-    let zi_primary = [root.toString(), numFolds.toString()];
+    let zi_primary = [merkleProof.root.toString(), BigInt(numFolds).toString()];
 
     // prove the membership
     return await this.wasm.continue_proof(
@@ -116,17 +174,16 @@ export class MembershipFolder {
   /**
    * Perform the chaff step with random witness for this instance to obfuscate folded total witness
    * @param proof - the proof to obfuscate
+   * @param numFolds - the number of memberships verified in the fold
    * @param root - the root of the tree to prove membership in
    * @returns the obfuscated "final" proof
    */
-  async obfuscate(proof: string, root: bigint): Promise<string> {
-    // check the previous # of folds
-    // @TODO
-    let numFolds: bigint = BigInt(0);
-
+  async obfuscate(proof: string, numFolds: number): Promise<string> {
     // build the zi_primary (output of previous fold)
-    // this is predictable and getting it from verification doubles the work
-    let zi_primary = [root.toString(), numFolds.toString()];
+    let zi_primary = [
+      hexToBigInt(this.roots.attendeeMerkleRoot).toString(),
+      BigInt(numFolds).toString(),
+    ];
 
     return await this.wasm.obfuscate_proof(
       this.r1cs_url,
@@ -141,25 +198,24 @@ export class MembershipFolder {
    * Verifies a folded membership proofs
    *
    * @param proof - the proof to verify
-   * @param num_folds - the number of proofs verified in the fold
+   * @param numFolds - the number of memberships verified in the fold
    * @param obfuscated - whether the proof is obfuscated
    */
   async verify(
     proof: string,
-    num_verified: bigint,
+    numFolds: number,
     obfuscated: boolean = false
   ): Promise<boolean> {
     // get root
-    let root = BigInt(0);
 
     // set num verified based on obfuscation
-    let iterations = obfuscated ? num_verified + BigInt(1) : num_verified;
+    let iterations = obfuscated ? numFolds + 1 : numFolds;
 
     try {
       await this.wasm.verify_proof(
         this.params,
         proof,
-        root.toString(),
+        hexToBigInt(this.roots.attendeeMerkleRoot).toString(),
         Number(iterations)
       );
       return true;
@@ -169,12 +225,12 @@ export class MembershipFolder {
     }
   }
 
-   /**
+  /**
    * Gzip deflates a proof
    * @param proof - the proof to compress
    * @returns the compressed proof
    */
-   async compress_proof(proof: string): Promise<Uint8Array> {
+  async compress_proof(proof: string): Promise<Uint8Array> {
     return await this.wasm.compress_proof(proof);
   }
 
@@ -192,24 +248,28 @@ export class MembershipFolder {
    * @notice assumes validation on user record has been performed previously
    *
    * @param user - The user record to fold
+   * @param merkleProof - the merkle inclusion proof for this user in the tree
    * @returns The private inputs for the folded membership circuit
    */
-  static async makePrivateInputs(user: User): Promise<NovaPrivateInputs> {
+  static async makePrivateInputs(
+    user: User,
+    merkleProof: MerkleProof
+  ): Promise<NovaPrivateInputs> {
     // decode the user's signature
     let sig = derDecodeSignature(user.sig!);
-    // let;
+    let messageHash = hexToBigInt(getECDSAMessageHash(user.msg!));
+    let pubkey = publicKeyFromString(user.sigPk!);
+    const { T, U } = getPublicInputsFromSignature(sig, messageHash, pubkey);
     return {
-        s: BigInt(0),
-        tx: BigInt(0),
-        ty: BigInt(0),
-        ux: BigInt(0),
-        uy: BigInt(0),
-        pathIndices: Array(9).fill(0),
-        siblings: Array(9).fill(BigInt(0)),
-    }
+      s: sig.s.toString(),
+      Tx: T.x.toString(),
+      Ty: T.y.toString(),
+      Ux: U.x.toString(),
+      Uy: U.y.toString(),
+      pathIndices: merkleProof.pathIndices,
+      siblings: merkleProof.siblings.map((sibling) => sibling.toString()),
+    };
   }
-
- 
 }
 
 export const getAllParamsByChunk = async (): Promise<string> => {

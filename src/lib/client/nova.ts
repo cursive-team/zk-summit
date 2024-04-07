@@ -11,7 +11,7 @@ import {
   MerkleProof,
   bigIntToHex,
 } from "babyjubjub-ecdsa";
-import { TreeResponse } from "@/pages/api/tree/root";
+import { TreeRoots } from "@/pages/api/tree/root";
 import useIndexDB from "@/hooks/useIndexDB";
 
 export type NovaWasm = typeof import("bjj_ecdsa_nova_wasm");
@@ -32,30 +32,29 @@ export class MembershipFolder {
 
   public readonly r1cs_url = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/bjj_ecdsa_batch_fold.r1cs`;
   public readonly wasm_url = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/bjj_ecdsa_batch_fold.wasm`;
-  public readonly attendee_root: bigint = BigInt(
-    "0x1d38ba4c24c07eb8f00732feac18d88e0e8b312f8b02fcd5b9909788b928708c"
-  );
-  public readonly speaker_root: bigint = BigInt(
-    "0x1427a8faa329cb273dd77ff77966eb7fe180d9b21b7a3e8cf2235b600161fc5d"
-  );
-  public readonly talk_root: bigint = BigInt(
-    "0x3050d69c58e4816855a6ac2d15c0ec6f6b59bf93312c86ba2e6d002ac53e2d11"
-  );
 
   constructor(
     /** The wasm binary for membership folding operations */
     public readonly wasm: NovaWasm,
     /** The public params used to prove folds */
-    public readonly params: string
+    public readonly params: string,
+    /** Get the roots for the tree types */
+    public readonly roots: TreeRoots
   ) {}
 
   /**
    * Initializes a new instance of the membership folder class
    */
   static async init(): Promise<MembershipFolder> {
+    // get wasm
     let wasm = await getWasm();
+    // get tree roots
+    let roots: TreeRoots = await fetch("/api/tree/root").then(
+      async (res) => await res.json()
+    );
+    // get params
     let params = await getAllParamsByChunk();
-    return new MembershipFolder(wasm, params);
+    return new MembershipFolder(wasm, params, roots);
   }
 
   /**
@@ -66,6 +65,11 @@ export class MembershipFolder {
   ): Promise<MembershipFolder> {
     // get wasm
     let wasm = await getWasm();
+    // get tree roots
+    let roots: TreeRoots = await fetch("/api/tree/root").then(
+      async (res) => await res.json()
+    );
+
     // decompress params
     let ds = new DecompressionStream("gzip");
     let reader = compressedParams.stream().pipeThrough(ds).getReader();
@@ -76,7 +80,7 @@ export class MembershipFolder {
       done = decompressed.done;
       params += new TextDecoder().decode(decompressed.value);
     }
-    return new MembershipFolder(wasm, params);
+    return new MembershipFolder(wasm, params, roots);
   }
 
   /**
@@ -123,9 +127,14 @@ export class MembershipFolder {
    *
    * @param user - The user to fold membership for
    * @param proof - the previous fold to increment from
+   * @param numFolds - the number of memberships verified in the fold
    * @returns The folding proof of membership
    */
-  async continueFold(user: User, proof: string): Promise<string> {
+  async continueFold(
+    user: User,
+    proof: string,
+    numFolds: number
+  ): Promise<string> {
     // check the user is not self or has not tapped
     if (user.pkId === "0")
       throw new Error(
@@ -147,13 +156,9 @@ export class MembershipFolder {
     // generate the private inputs for the folded membership circuit
     let inputs = await MembershipFolder.makePrivateInputs(user, merkleProof);
 
-    // check the previous # of folds
-    // @TODO
-    let numFolds: bigint = BigInt(0);
-
     // build the zi_primary (output of previous fold)
     // this is predictable and getting it from verification doubles the work
-    let zi_primary = [bigIntToHex(merkleProof.root), numFolds.toString()];
+    let zi_primary = [merkleProof.root.toString(), BigInt(numFolds).toString()];
 
     // prove the membership
     return await this.wasm.continue_proof(
@@ -174,18 +179,11 @@ export class MembershipFolder {
    * @returns the obfuscated "final" proof
    */
   async obfuscate(proof: string, numFolds: number): Promise<string> {
-    // check the previous # of folds
-    // @TODO
-    let iterations = bigIntToHex(BigInt(numFolds));
-
-    // fetch root
-    let root = await fetch("/api/tree/root")
-      .then(async (res) => await res.json())
-      .then((res: TreeResponse) => res.attendeeMerkleRoot);
-
     // build the zi_primary (output of previous fold)
-    // this is predictable and getting it from verification doubles the work
-    let zi_primary = [root, bigIntToHex(BigInt(numFolds))];
+    let zi_primary = [
+      hexToBigInt(this.roots.attendeeMerkleRoot).toString(),
+      BigInt(numFolds).toString(),
+    ];
 
     return await this.wasm.obfuscate_proof(
       this.r1cs_url,
@@ -209,9 +207,6 @@ export class MembershipFolder {
     obfuscated: boolean = false
   ): Promise<boolean> {
     // get root
-    let root = await fetch("/api/tree/root")
-      .then(async (res) => await res.json())
-      .then((res: TreeResponse) => res.attendeeMerkleRoot);
 
     // set num verified based on obfuscation
     let iterations = obfuscated ? numFolds + 1 : numFolds;
@@ -220,7 +215,7 @@ export class MembershipFolder {
       await this.wasm.verify_proof(
         this.params,
         proof,
-        root.toString(),
+        hexToBigInt(this.roots.attendeeMerkleRoot).toString(),
         Number(iterations)
       );
       return true;

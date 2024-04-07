@@ -1,18 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
-*/
-export function init_panic_hook(): void;
-/**
-*
-* * Get a random Fr element as a string for circuit input
-* * 
-* * @return - a random Fr element as a string
-* 
-* @returns {string}
-*/
-export function random_fr(): string;
-/**
 * Verify a proof 
 * @param {string} params_string
 * @param {string} proof_string
@@ -92,6 +80,18 @@ export function compress_proof(proof: string): Uint8Array;
 */
 export function decompress_proof(compressed: Uint8Array): string;
 /**
+*/
+export function init_panic_hook(): void;
+/**
+*
+* * Get a random Fr element as a string for circuit input
+* * 
+* * @return - a random Fr element as a string
+* 
+* @returns {string}
+*/
+export function random_fr(): string;
+/**
 * @param {string} path
 * @returns {Promise<Uint8Array>}
 */
@@ -131,14 +131,14 @@ export class wbg_rayon_PoolBuilder {
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
-  readonly random_fr: (a: number) => void;
-  readonly init_panic_hook: () => void;
   readonly verify_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
   readonly generate_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => number;
   readonly continue_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => number;
   readonly obfuscate_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
   readonly compress_proof: (a: number, b: number) => number;
   readonly decompress_proof: (a: number, b: number) => void;
+  readonly random_fr: (a: number) => void;
+  readonly init_panic_hook: () => void;
   readonly __wbg_wbg_rayon_poolbuilder_free: (a: number) => void;
   readonly wbg_rayon_poolbuilder_numThreads: (a: number) => number;
   readonly wbg_rayon_poolbuilder_receiver: (a: number) => number;

@@ -22,8 +22,8 @@ export const initialKeygenData: Record<string, KeygenData> = {
   "1231517214120336": {
     box: "brown",
     type: "person",
-    label: "andrew 2 (speaker)",
-    isPersonSpeaker: true,
+    label: "andrew 2",
+    isPersonSpeaker: false,
   },
   "1227316736104848": {
     box: "brown",
@@ -40,8 +40,8 @@ export const initialKeygenData: Record<string, KeygenData> = {
   "1249530306959760": {
     box: "brown",
     type: "person",
-    label: "vivek 2 (speaker)",
-    isPersonSpeaker: true,
+    label: "vivek 2",
+    isPersonSpeaker: false,
   },
   "1276094679685520": {
     box: "brown",

@@ -65,11 +65,9 @@ const QuestRequirementCard = ({
       >
         <div className="flex flex-col gap-2 items-center">
           <div className={cn("flex items-center justify-center")}>
-            {isUserRequirement && (
-              <CircleCard size="sm" color="white" icon="person" />
-            )}
+            {isUserRequirement && <CircleCard color="primary" icon="person" />}
             {isLocationRequirement && (
-              <CircleCard size="sm" color="white" icon="location" />
+              <CircleCard color="primary" icon="location" />
             )}
           </div>
           <div className="flex flex-col">

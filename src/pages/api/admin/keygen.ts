@@ -4,7 +4,7 @@ import { generateSignatureKeyPair } from "@/lib/shared/signature";
 import { initialKeygenData } from "@/shared/keygen";
 import { getServerRandomNullifierRandomness } from "@/lib/server/proving";
 
-export const maxDuration = 5;
+export const maxDuration = 300;
 
 export default async function handler(
   req: NextApiRequest,

@@ -19,13 +19,26 @@ const getParamsSequential = async (index: number): Promise<Blob> => {
 
 const getAllUsers = () => {
   const users = getUsers();
-  console.log("Users: ", users);
-}
+  console.log('Users: ', users);
+};
 
 export default function Fold() {
-  const { addItem, getItems, dbInitialized, itemCount } = useIndexDB('zksummit_folded', 'params');
+  const { addItem, getItems, dbInitialized, itemCount } = useIndexDB(
+    'zksummit_folded',
+    'params'
+  );
   const [chunksDownloaded, setChunksDownloaded] = useState<boolean>(false);
-  const [membershipFolder, setMembershipFolder] = useState<MembershipFolder | null>(null);
+  const [membershipFolder, setMembershipFolder] =
+    useState<MembershipFolder | null>(null);
+
+  // const paramWorker = new Worker(
+  //   new URL('./paramWorker.ts', import.meta.url)
+  // );
+  // paramWorker.postMessage({});
+  // paramWorker.onmessage = (event: MessageEvent) => {
+  //   console.log('Event: ', event);
+  // };
+
   useEffect(() => {
     if (!dbInitialized || chunksDownloaded) return;
     (async () => {
@@ -51,7 +64,7 @@ export default function Fold() {
     if (!chunksDownloaded || membershipFolder !== null) return;
     // begin folding users
     (async () => {
-      console.log("Doing something");
+      console.log('Doing something');
       const compressedParams = new Blob(await getItems());
       const folding = await MembershipFolder.initWithIndexDB(compressedParams);
       setMembershipFolder(folding);
@@ -61,21 +74,27 @@ export default function Fold() {
   const fold = async () => {
     if (!membershipFolder) return;
     let users = getUsers();
-    let usersToFold = Object.entries(users).filter(([_, user]) => !user.folded && user.pkId !== "0");
+    let usersToFold = Object.entries(users).filter(
+      ([_, user]) => !user.folded && user.pkId !== '0'
+    );
     let startTime = new Date().getTime();
 
     // build proof 1
     let proof = await membershipFolder.startFold(usersToFold[0][1]);
     let endTime = new Date().getTime();
     console.log(`Folded 1 in ${endTime - startTime}ms`);
-    console.log("Proof: ", proof.substring(0, 30));
+    console.log('Proof: ', proof.substring(0, 30));
 
     // build proof 2
     startTime = new Date().getTime();
-    let proof2 = await membershipFolder.continueFold(usersToFold[0][1], proof, 1);
+    let proof2 = await membershipFolder.continueFold(
+      usersToFold[0][1],
+      proof,
+      1
+    );
     endTime = new Date().getTime();
     console.log(`Folded 2 in ${endTime - startTime}ms`);
-    console.log("Proof: ", proof2.substring(0, 30));
+    console.log('Proof: ', proof2.substring(0, 30));
 
     // obfuscate proof
     // startTime = new Date().getTime();
@@ -89,7 +108,7 @@ export default function Fold() {
     let verified = await membershipFolder.verify(proof2, 2, false);
     endTime = new Date().getTime();
     console.log(`Verified 1 in ${endTime - startTime}ms`);
-  }
+  };
 
   return (
     <div>

@@ -75,28 +75,12 @@ const ArtworkSnapshot = ({
   const isLoaded = useScripts();
   const [rangeValue, setRangeValue] = useState<number>(1);
   const [signatures, setSignatures] = useState<PubKeyArrayElement[]>([]);
-  const [dataURL, setDataURL] = useState<string>("");
-  const firstRender = useRef(true);
 
   const HAS_PROFILE_PUB_KEY = !!pubKey;
 
-  useEffect(() => {
-    // define global variables for the artwork
-    window.artworkWidth = width ?? 200;
-    window.artworkHeight = height ?? 200;
-  }, []);
-
-  const renderRangeStep = (newIndex: number) => {
-    setRangeValue(newIndex);
-    window.params.upToPubKey = newIndex;
-  };
-
   const onRangeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.target.value);
-
-    setRangeValue(newValue); // Update state on change
-
-    renderRangeStep(newValue);
+    setRangeValue(newValue);
   };
 
   useEffect(() => {
@@ -142,11 +126,7 @@ const ArtworkSnapshot = ({
         name: "You",
         person: true,
       });
-
-      const signaturePublicKey = profile?.signaturePublicKey ?? "0";
-      window.myPubKey = signaturePublicKey;
     } else {
-      window.myPubKey = pubKey;
       combined.push({
         pubKey,
         timestamp: new Date().getTime(),
@@ -158,48 +138,50 @@ const ArtworkSnapshot = ({
   }, [pubKey]);
 
   useEffect(() => {
-    if (pubKey === "" || !isLoaded || signatures.length === 0) return;
-    // prevent after first render
-    if (!firstRender.current) return;
+    if (pubKey === "" || !isLoaded || !height) return;
 
-    window.params = {
-      fill: false,
-      stroke: true,
-      abstract: false,
-      upToPubKey: rangeValue,
-    };
+    const stage = new window.createjs.Stage(
+      document.getElementById("profile-pic")
+    );
+    const center_x = stage.canvas.width / 2;
+    const center_y = stage.canvas.height / 2;
 
-    window.signatures = signatures.map((s) => ({
-      pubKey: s.pubKey,
-      timestamp: s.timestamp,
-    }));
-
-    firstRender.current = false;
-
-    if (HAS_PROFILE_PUB_KEY && !dataURL) {
-      const dataURL = window.stamp(pubKey, width, height).getImage();
-      setDataURL(dataURL);
-    } else {
-      window?.render(); // render the artwork
+    let size = height / 4;
+    const flower = new Array();
+    for (var j = 0; j < 20; j++) {
+      let color = Math.round(Math.random() * 254);
+      const color_16_1 = color.toString(16);
+      color = Math.round(Math.random() * 254);
+      const color_16_2 = color.toString(16);
+      color = Math.round(Math.random() * 254);
+      const color_16_3 = color.toString(16);
+      const color_str = "#" + color_16_1 + color_16_2 + color_16_3;
+      flower[j] = new window.FlowerRnd();
+      flower[j]
+        .init()
+        .setColor(color_str)
+        .setPetal(12)
+        .setPile(1, 1.0)
+        .setNoise(1.2)
+        .setAlpha(0.5)
+        .setSize(size)
+        .setPetalSize(size + 5)
+        .create(center_x, center_y);
+      stage.addChild(flower[j].flower);
+      size = size - 2.2;
     }
-  }, [
-    height,
-    isLoaded,
-    width,
-    pubKey,
-    signatures,
-    slider,
-    rangeValue,
-    HAS_PROFILE_PUB_KEY,
-    dataURL,
-  ]);
+    stage.update();
+  }, [height, isLoaded, pubKey, slider, HAS_PROFILE_PUB_KEY]);
 
   // if profile public key is available, use the dataURL
   if (HAS_PROFILE_PUB_KEY || pubKey === "") {
     return (
-      <ArtworkWrapper title={title}>
-        <ProfileCardArtwork size={width ?? 200} image={dataURL} />
-      </ArtworkWrapper>
+      <canvas
+        className="artwork-webgl flex p-0 m-0 rounded-[8px] bg-[#ecf8ff]"
+        id="profile-pic"
+        height={128}
+        width={128}
+      ></canvas>
     );
   }
 
@@ -211,8 +193,9 @@ const ArtworkSnapshot = ({
         <ArtworkWrapper title={title}>
           <canvas
             className="artwork-webgl flex p-0 m-0 rounded-[8px]"
-            id="artwork-webgl"
-            {...props}
+            id="profile-pic"
+            height={height}
+            width={width}
           ></canvas>
         </ArtworkWrapper>
       )}

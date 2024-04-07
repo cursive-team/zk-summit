@@ -52,10 +52,12 @@ export default async function handler(
       // Logic for person chips
       if (chipData.type === "person") {
         // Precreate user object
+        const isUserSpeaker = chipData.isPersonSpeaker ? true : false;
         const user = await prisma.user.create({
           data: {
             chipId,
             isRegistered: false,
+            isUserSpeaker,
             displayName: chipId,
             encryptionPublicKey: "",
             signaturePublicKey: verifyingKey,
@@ -69,17 +71,27 @@ export default async function handler(
 
         // Logic for talk chips
       } else if (chipData.type === "talk") {
-        const talkName = chipData.talkName ? chipData.talkName : "Example Talk";
-        const talkDescription = chipData.talkDescription
+        const name = chipData.talkName ? chipData.talkName : "Example Talk";
+        const stage = chipData.talkStage ? chipData.talkStage : "Example Stage";
+        const speaker = chipData.talkSpeaker
+          ? chipData.talkSpeaker
+          : "Example Speaker";
+        const description = chipData.talkDescription
           ? chipData.talkDescription
           : "Example Description";
+        const startTime = chipData.talkStartTime
+          ? chipData.talkStartTime
+          : "12:00";
+        const endTime = chipData.talkEndTime ? chipData.talkEndTime : "13:00";
         const location = await prisma.location.create({
           data: {
             chipId,
-            name: talkName,
-            description: talkDescription,
-            sponsor: "",
-            imageUrl: "",
+            name,
+            stage,
+            speaker,
+            description,
+            startTime,
+            endTime,
             signaturePublicKey: verifyingKey,
           },
         });

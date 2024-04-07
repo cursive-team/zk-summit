@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/server/prisma";
-import { object, string } from "yup";
+import { boolean, object, string } from "yup";
 import { ErrorResponse } from "@/types";
 import { sign } from "@/lib/shared/signature";
 import { getCounterMessage } from "babyjubjub-ecdsa";
@@ -28,6 +28,7 @@ export type PersonTapResponse = {
   twitter?: string;
   telegram?: string;
   bio?: string;
+  isUserSpeaker: boolean;
   signaturePublicKey: string;
   signatureMessage: string;
   signature: string;
@@ -41,6 +42,7 @@ export const personTapResponseSchema = object({
   twitter: string().optional().default(undefined),
   telegram: string().optional().default(undefined),
   bio: string().optional().default(undefined),
+  isUserSpeaker: boolean().required(),
   signaturePublicKey: string().required(),
   signatureMessage: string().required(),
   signature: string().required(),
@@ -49,9 +51,11 @@ export const personTapResponseSchema = object({
 export type LocationTapResponse = {
   id: string;
   name: string;
+  stage: string;
+  speaker: string;
   description: string;
-  sponsor: string;
-  imageUrl: string;
+  startTime: string;
+  endTime: string;
   signaturePublicKey: string;
   signatureMessage: string;
   signature: string;
@@ -60,9 +64,11 @@ export type LocationTapResponse = {
 export const locationTapResponseSchema = object({
   id: string().required(),
   name: string().required(),
+  stage: string().required(),
+  speaker: string().required(),
   description: string().required(),
-  sponsor: string().required(),
-  imageUrl: string().required(),
+  startTime: string().required(),
+  endTime: string().required(),
   signaturePublicKey: string().required(),
   signatureMessage: string().required(),
   signature: string().required(),
@@ -187,6 +193,7 @@ export default async function handler(
       twitter: user.twitter ? user.twitter : undefined,
       telegram: user.telegram ? user.telegram : undefined,
       bio: user.bio ? user.bio : undefined,
+      isUserSpeaker: user.isUserSpeaker,
       signaturePublicKey: user.signaturePublicKey,
       signatureMessage: message,
       signature,
@@ -209,9 +216,11 @@ export default async function handler(
     const locationTapResponse: LocationTapResponse = {
       id: location.id.toString(),
       name: location.name,
+      stage: location.stage,
+      speaker: location.speaker,
       description: location.description,
-      sponsor: location.sponsor,
-      imageUrl: location.imageUrl,
+      startTime: location.startTime,
+      endTime: location.endTime,
       signaturePublicKey: location.signaturePublicKey,
       signatureMessage: message,
       signature,

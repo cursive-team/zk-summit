@@ -4,6 +4,35 @@ import { generateSignatureKeyPair } from "@/lib/shared/signature";
 import { initialKeygenData } from "@/shared/keygen";
 import { getServerRandomNullifierRandomness } from "@/lib/server/proving";
 
+type CreateChipKeyData = {
+  chipId: string;
+  signaturePublicKey: string;
+  signaturePrivateKey: string;
+};
+
+type PrecreateUserData = {
+  id: number;
+  chipId: string;
+  isRegistered: boolean;
+  isUserSpeaker: boolean;
+  displayName: string;
+  encryptionPublicKey: string;
+  signaturePublicKey: string;
+  psiPublicKeysLink: string;
+};
+
+type CreateLocationData = {
+  id: number;
+  chipId: string;
+  name: string;
+  stage: string;
+  speaker: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  signaturePublicKey: string;
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -27,13 +56,19 @@ export default async function handler(
     const speakerUserIds: number[] = [];
     const allTalkIds: number[] = [];
 
-    let i = 0;
+    const allChipKeyData: CreateChipKeyData[] = [];
+    const allUserData: PrecreateUserData[] = [];
+    const allLocationData: CreateLocationData[] = [];
+
+    let totalIndex = 1;
+    let userIndex = 1;
+    let locationIndex = 1;
     for (const [chipId, chipData] of Object.entries(initialKeygenData)) {
       console.log(
         "Generating keypair for chip",
         chipId,
         "(",
-        i++,
+        totalIndex++,
         "of",
         Object.keys(initialKeygenData).length,
         ")"
@@ -41,33 +76,31 @@ export default async function handler(
 
       // Generate and save signing keypair
       const { signingKey, verifyingKey } = generateSignatureKeyPair();
-      await prisma.chipKey.create({
-        data: {
-          chipId,
-          signaturePublicKey: verifyingKey,
-          signaturePrivateKey: signingKey,
-        },
+      allChipKeyData.push({
+        chipId,
+        signaturePublicKey: verifyingKey,
+        signaturePrivateKey: signingKey,
       });
 
       // Logic for person chips
       if (chipData.type === "person") {
         // Precreate user object
         const isUserSpeaker = chipData.isPersonSpeaker ? true : false;
-        const user = await prisma.user.create({
-          data: {
-            chipId,
-            isRegistered: false,
-            isUserSpeaker,
-            displayName: chipId,
-            encryptionPublicKey: "",
-            signaturePublicKey: verifyingKey,
-            psiPublicKeysLink: "",
-          },
+        allUserData.push({
+          id: userIndex,
+          chipId,
+          isRegistered: false,
+          isUserSpeaker,
+          displayName: chipId,
+          encryptionPublicKey: "",
+          signaturePublicKey: verifyingKey,
+          psiPublicKeysLink: "",
         });
-        allUserIds.push(user.id);
+        allUserIds.push(userIndex);
         if (chipData.isPersonSpeaker) {
-          speakerUserIds.push(user.id);
+          speakerUserIds.push(userIndex);
         }
+        userIndex++;
 
         // Logic for talk chips
       } else if (chipData.type === "talk") {
@@ -83,23 +116,38 @@ export default async function handler(
           ? chipData.talkStartTime
           : "12:00";
         const endTime = chipData.talkEndTime ? chipData.talkEndTime : "13:00";
-        const location = await prisma.location.create({
-          data: {
-            chipId,
-            name,
-            stage,
-            speaker,
-            description,
-            startTime,
-            endTime,
-            signaturePublicKey: verifyingKey,
-          },
+        allLocationData.push({
+          id: locationIndex,
+          chipId,
+          name,
+          stage,
+          speaker,
+          description,
+          startTime,
+          endTime,
+          signaturePublicKey: verifyingKey,
         });
-        allTalkIds.push(location.id);
+        allTalkIds.push(locationIndex);
+        locationIndex++;
       } else {
         console.error("Invalid keygen type, chipId:", chipId);
       }
     }
+
+    // Create all chip keys
+    await prisma.chipKey.createMany({
+      data: allChipKeyData,
+    });
+
+    // Create all users
+    await prisma.user.createMany({
+      data: allUserData,
+    });
+
+    // Create all locations
+    await prisma.location.createMany({
+      data: allLocationData,
+    });
 
     // BEGIN HARDCODED QUESTS FOR ZK SUMMIT
     // Quest 1: Meet 10 attendees

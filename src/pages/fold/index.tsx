@@ -36,6 +36,7 @@ export default function Fold() {
     addProof,
     getProof,
     incrementFold,
+    obfuscate,
   } = useFolds();
   const [chunksDownloaded, setChunksDownloaded] = useState<boolean>(false);
   const [membershipFolder, setMembershipFolder] =
@@ -91,7 +92,7 @@ export default function Fold() {
     let usersToFold = Object.entries(users).filter(
       ([_, user]) => !user.folded && user.pkId !== '0'
     );
-    // let startTime = new Date().getTime();
+    let startTime = new Date().getTime();
 
     // build proof 1
     let proof = await membershipFolder.startFold(usersToFold[0][1]);
@@ -100,27 +101,42 @@ export default function Fold() {
     let compressed = new Blob([await membershipFolder.compressProof(proof)]);
     await addProof(TreeType.Attendee, compressed);
 
+    let endTime = new Date().getTime();
+    console.log(`Folded 1 in ${endTime - startTime}ms`);
+
     // retrieve proof 1
     let proofData = await getProof(TreeType.Attendee);
     proof = await membershipFolder.decompressProof(new Uint8Array(await proofData!.proof.arrayBuffer()));
 
+    startTime = new Date().getTime();
     // build proof 2
     proof = await membershipFolder.continueFold(
       usersToFold[0][1],
       proof,
       proofData!.numFolds
     );
+    endTime = new Date().getTime();
+    console.log(`Folded 2 in ${endTime - startTime}ms`);    
 
     // store proof 2
     compressed = new Blob([await membershipFolder.compressProof(proof)]);
-    await incrementFold(TreeType.Attendee, compressed);
+    const x = await incrementFold(TreeType.Attendee, compressed);
+    console.log("x: ", x);
 
     // get proof 2
     proofData = await getProof(TreeType.Attendee);
-    console.log("Proof data: ", proofData!.numFolds);
-    // endTime = new Date().getTime();
-    // console.log(`Folded 2 in ${endTime - startTime}ms`);
-    // console.log('Proof: ', proof2.substring(0, 30));
+    proof = await membershipFolder.decompressProof(new Uint8Array(await proofData!.proof.arrayBuffer()));
+    
+    // obfuscate proof
+    let obfuscatedProof = await membershipFolder.obfuscate(proof, proofData!.numFolds);
+    
+    // store obfuscated proof
+    compressed = new Blob([await membershipFolder.compressProof(obfuscatedProof)]);
+    await obfuscate(TreeType.Attendee, compressed);
+
+    // retrieve obfuscated proof
+    proofData = await getProof(TreeType.Attendee);
+    console.log("Obfuscated: ", proofData!.obfuscated);
 
     // // obfuscate proof
     // startTime = new Date().getTime();

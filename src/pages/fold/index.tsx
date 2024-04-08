@@ -1,7 +1,11 @@
 import { Button } from '@/components/Button';
 import { useEffect, useState } from 'react';
 import { getUsers } from '@/lib/client/localStorage';
+import useParams from '@/hooks/useParams';
 import { MembershipFolder } from '@/lib/client/nova';
+import { Spinner } from '@/components/Spinner';
+import { toast } from 'sonner';
+import useFolds, { TreeType } from '@/hooks/useFolds';
 
 const getAllUsers = () => {
   const users = getUsers();
@@ -9,6 +13,8 @@ const getAllUsers = () => {
 };
 
 export default function Fold() {
+  const { addChunk, getChunks, chunkCount, paramsDbInitialized } = useParams();
+  const { addProof, getProof, incrementFold, obfuscate } = useFolds();
   const [chunks, setChunks] = useState<Array<Blob>>([]);
 
   useEffect(() => {
@@ -87,34 +93,84 @@ export default function Fold() {
       }
     };
 
-    // build proof 2
-    // startTime = new Date().getTime();
-    // let proof2 = await membershipFolder.continueFold(
-    //   usersToFold[0][1],
-    //   proof,
-    //   1
-    // );
-    // endTime = new Date().getTime();
-    // console.log(`Folded 2 in ${endTime - startTime}ms`);
-    // console.log('Proof: ', proof2.substring(0, 30));
+    // =========== NEED TO MOVE CODE BELOW INTO WORKER ===========
 
-    // @TODO: Obfuscate proof
+    // build proof 1
+    let proof = await membershipFolder.startFold(usersToFold[0][1]);
+
+    // store proof 1
+    let compressed = new Blob([await membershipFolder.compressProof(proof)]);
+    await addProof(TreeType.Attendee, compressed);
+
+    let endTime = new Date().getTime();
+    console.log(`Folded 1 in ${endTime - startTime}ms`);
+
+    // retrieve proof 1
+    let proofData = await getProof(TreeType.Attendee);
+    proof = await membershipFolder.decompressProof(
+      new Uint8Array(await proofData!.proof.arrayBuffer())
+    );
+
+    startTime = new Date().getTime();
+    // build proof 2
+    proof = await membershipFolder.continueFold(
+      usersToFold[0][1],
+      proof,
+      proofData!.numFolds
+    );
+    endTime = new Date().getTime();
+    console.log(`Folded 2 in ${endTime - startTime}ms`);
+
+    // store proof 2
+    compressed = new Blob([await membershipFolder.compressProof(proof)]);
+    const x = await incrementFold(TreeType.Attendee, compressed);
+    console.log('x: ', x);
+
+    // get proof 2
+    proofData = await getProof(TreeType.Attendee);
+    proof = await membershipFolder.decompressProof(
+      new Uint8Array(await proofData!.proof.arrayBuffer())
+    );
+
+    // obfuscate proof
+    let obfuscatedProof = await membershipFolder.obfuscate(
+      proof,
+      proofData!.numFolds
+    );
+
+    // store obfuscated proof
+    compressed = new Blob([
+      await membershipFolder.compressProof(obfuscatedProof),
+    ]);
+    await obfuscate(TreeType.Attendee, compressed);
+
+    // retrieve obfuscated proof
+    proofData = await getProof(TreeType.Attendee);
+    console.log('Obfuscated: ', proofData!.obfuscated);
+
+    // // obfuscate proof
     // startTime = new Date().getTime();
     // let obfuscatedProof = await membershipFolder.obfuscate(proof2, 2);
     // endTime = new Date().getTime();
     // console.log(`Obfuscated in ${endTime - startTime}ms`);
     // console.log("Proof: ", obfuscatedProof.substring(0, 30));
 
-    // Verify proof
+    // // verify proof
     // startTime = new Date().getTime();
-    // let verified = await membershipFolder.verify(proof2, 2, false);
+    // let verified = await membershipFolder.verify(obfuscatedProof, 2, true);
     // endTime = new Date().getTime();
-    // console.log(`Verified 1 in ${endTime - startTime}ms`)
+    // console.log(`Verified 1 in ${endTime - startTime}ms`);
   };
 
   return (
     <div>
-      <Button onClick={() => fold()}>Generate Proof</Button>
+      {!chunks.length ? (
+        <></>
+      ) : (
+        <>
+          <Button onClick={() => fold()}>Generate Proof</Button>
+        </>
+      )}
     </div>
   );
 }

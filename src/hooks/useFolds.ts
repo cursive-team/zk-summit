@@ -16,6 +16,8 @@ export enum TreeType {
   Talk = "talk",
 }
 
+export const validTreeTypes = ["attendee", "speaker", "talk"];
+
 const useFolds = () => {
   const DB_NAME = "zksummit_folded";
   const STORE_NAME = "folds";
@@ -139,15 +141,15 @@ const useFolds = () => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
     const data: FoldProof = await store.get(key);
-    console.log("Key: ", key);
-    console.log("Data: ", data);
     const foldedPks = data === undefined ? [] : data.included;
-    
+
     // filter out users that are not available to be folded in
     let validUsers = users.filter((user) => {
-      return user.pkId !== "0" 
-        && user.sigPk !== undefined
-        && !foldedPks.includes(user.sigPk);
+      return (
+        user.pkId !== "0" &&
+        user.sigPk !== undefined &&
+        !foldedPks.includes(user.sigPk)
+      );
     });
     // return the first user that can be folded in if exists
     return validUsers.length > 0 ? validUsers[0] : undefined;
@@ -173,7 +175,7 @@ const useFolds = () => {
     setLocked,
     obfuscate,
     incrementFold,
-    getUserToFold
+    getUserToFold,
   };
 };
 

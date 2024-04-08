@@ -1,4 +1,4 @@
-import { object, string } from "yup";
+import { boolean, object, string } from "yup";
 import { JUB_SIGNAL_MESSAGE_TYPE, encryptMessage } from ".";
 
 export type InboundTapMessage = {
@@ -12,6 +12,7 @@ export type InboundTapMessage = {
   pk: string; // Signature public key
   msg: string; // Signature message
   sig: string; // Signature
+  isSpk?: boolean; // Is speaker
 };
 
 export const inboundTapMessageSchema = object({
@@ -25,6 +26,7 @@ export const inboundTapMessageSchema = object({
   pk: string().required(),
   msg: string().required(),
   sig: string().required(),
+  isSpk: boolean().optional().default(false),
 });
 
 export type EncryptInboundTapMessageArgs = {
@@ -38,6 +40,7 @@ export type EncryptInboundTapMessageArgs = {
   signaturePublicKey: string;
   signatureMessage: string;
   signature: string;
+  isSpeaker?: boolean;
   senderPrivateKey: string;
   recipientPublicKey: string;
 };
@@ -53,6 +56,7 @@ export async function encryptInboundTapMessage({
   signaturePublicKey,
   signatureMessage,
   signature,
+  isSpeaker,
   senderPrivateKey,
   recipientPublicKey,
 }: EncryptInboundTapMessageArgs): Promise<string> {
@@ -67,6 +71,7 @@ export async function encryptInboundTapMessage({
     pk: signaturePublicKey,
     msg: signatureMessage,
     sig: signature,
+    isSpk: isSpeaker,
   };
 
   const encryptedMessage = await encryptMessage(

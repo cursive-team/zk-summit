@@ -22,8 +22,6 @@ import {
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { toast } from "sonner";
 import { Spinner } from "@/components/Spinner";
-import { getHaLoArgs } from "@/lib/client/libhalo";
-import { fixBJJSig } from "@/lib/shared/libhalo";
 import { hashPublicKeyToUUID } from "@/lib/client/utils";
 
 export default function Tap() {
@@ -70,6 +68,7 @@ export default function Tap() {
         signaturePublicKey: person.signaturePublicKey,
         signatureMessage: person.signatureMessage,
         signature: person.signature,
+        isSpeaker: person.isUserSpeaker,
         senderPrivateKey,
         recipientPublicKey: thisUserPublicKey,
       });

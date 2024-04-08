@@ -13,7 +13,6 @@ import { toast } from "sonner";
 import { useRouter } from "next/router";
 import { encryptQuestCompletedMessage } from "@/lib/client/jubSignal";
 import { loadMessages } from "@/lib/client/jubSignalClient";
-import { Spinner } from "../Spinner";
 import { Card } from "../cards/Card";
 
 const QRCodeWrapper = classed.div("bg-white max-w-[254px]");
@@ -248,16 +247,10 @@ const CompleteQuestModal = ({
                 </span>
               </QRCodeWrapper>
             </div>
-            <div
-              onClick={handleBackToQuests}
-              className="flex items-center gap-1 self-center"
-            >
-              <span className="text-sm text-iron-600">Back to proofs</span>
-            </div>
           </div>
         );
       default:
-        return <></>;
+        return null;
     }
   };
 

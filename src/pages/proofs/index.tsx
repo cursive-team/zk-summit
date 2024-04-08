@@ -1,4 +1,3 @@
-import { Filters } from "@/components/Filters";
 import { Placeholder } from "@/components/placeholders/Placeholder";
 import { QuestCard } from "@/components/cards/QuestCard";
 import { LoadingWrapper } from "@/components/wrappers/LoadingWrapper";

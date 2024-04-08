@@ -29,7 +29,6 @@ import {
 import { Card } from "@/components/cards/Card";
 import { IconCircle } from "@/components/IconCircle";
 import { cn } from "@/lib/client/utils";
-import { set } from "react-hook-form";
 
 interface QuestDetailProps {
   loading?: boolean;
@@ -256,6 +255,8 @@ export default function QuestById() {
     numRequirementsSatisfied === numRequirementsTotal &&
     !isQuestComplete;
 
+  console.log("quest", quest);
+
   return (
     <div>
       <AppBackHeader />
@@ -286,16 +287,6 @@ export default function QuestById() {
               <ListWrapper
                 label={
                   <div className="flex gap-2 items-center">
-                    {isQuestComplete && (
-                      <Button
-                        onClick={() => {
-                          setCompleteQuestModal(true);
-                        }}
-                        size="small"
-                      >
-                        View proof
-                      </Button>
-                    )}
                     {!isQuestComplete && (
                       <Label className="text-gray-10 font-semibold font-sans">{`${numRequirementsSatisfied}/${numRequirementsTotal} collected`}</Label>
                     )}
@@ -326,17 +317,33 @@ export default function QuestById() {
                     />
                   )}
                 </div>
-                <Button
-                  className="mt-auto"
-                  disabled={
-                    !canGenerateProof && !isQuestComplete && !hasMinRequirements
-                  }
-                  onClick={() => {
-                    setCompleteQuestModal(true);
-                  }}
-                >
-                  Generate proof
-                </Button>
+                {quest?.isCompleted ? (
+                  <Button
+                    variant="white"
+                    onClick={() => {
+                      setCompleteQuestModal(true);
+                    }}
+                  >
+                    <span className="w-full text-left font-normal">
+                      View proof
+                    </span>
+                    <Icons.Zoom className="ml-auto" />
+                  </Button>
+                ) : (
+                  <Button
+                    className="mt-auto"
+                    disabled={
+                      !canGenerateProof &&
+                      !isQuestComplete &&
+                      !hasMinRequirements
+                    }
+                    onClick={() => {
+                      setCompleteQuestModal(true);
+                    }}
+                  >
+                    Generate proof
+                  </Button>
+                )}
               </ListWrapper>
             </div>
           ) : (

@@ -1,11 +1,11 @@
-import { Button } from '@/components/Button';
-import { useEffect, useState } from 'react';
-import { getUsers } from '@/lib/client/localStorage';
-import useParams from '@/hooks/useParams';
-import { MembershipFolder } from '@/lib/client/nova';
-import { Spinner } from '@/components/Spinner';
-import { toast } from 'sonner';
-import useFolds, { TreeType } from '@/hooks/useFolds';
+import { Button } from "@/components/Button";
+import { useEffect, useState } from "react";
+import { getUsers } from "@/lib/client/localStorage";
+import useParams from "@/hooks/useParams";
+import { MembershipFolder } from "@/lib/client/nova";
+import { Spinner } from "@/components/Spinner";
+import { toast } from "sonner";
+import useFolds, { TreeType } from "@/hooks/useFolds";
 
 /**
  * Gets a public params gzipped chunk from the server
@@ -15,25 +15,15 @@ import useFolds, { TreeType } from '@/hooks/useFolds';
 const getParamsSequential = async (index: number): Promise<Blob> => {
   const fullUrl = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${index}.gz`;
   const res = await fetch(fullUrl, {
-    headers: { 'Content-Type': 'application/x-binary' },
+    headers: { "Content-Type": "application/x-binary" },
   });
   return await res.blob();
 };
 
 export default function Fold() {
-  const {
-    addChunk,
-    getChunks,
-    chunkCount,
-    paramsDbInitialized
-  } = useParams();
-  const {
-    addProof,
-    getProof,
-    incrementFold,
-    obfuscate,
-    getUserToFold
-  } = useFolds();
+  const { addChunk, getChunks, chunkCount, paramsDbInitialized } = useParams();
+  const { addProof, getProof, incrementFold, obfuscate, getUserToFold } =
+    useFolds();
   const [chunksDownloaded, setChunksDownloaded] = useState<boolean>(false);
   const [membershipFolder, setMembershipFolder] =
     useState<MembershipFolder | null>(null);
@@ -68,7 +58,7 @@ export default function Fold() {
   useEffect(() => {
     // instantiate membership folder class
     if (!chunksDownloaded || membershipFolder !== null) return;
-    let loadingId = isLoading
+    let loadingId = isLoading;
     if (loadingId === null)
       loadingId = toast.loading("Downloading Nova Folding params file!");
     // begin folding users
@@ -79,7 +69,6 @@ export default function Fold() {
       toast.dismiss(loadingId);
       setIsLoading(null);
     })();
-
   }, [chunksDownloaded]);
 
   useEffect(() => {
@@ -107,8 +96,8 @@ export default function Fold() {
 
   const fold = async () => {
     if (!membershipFolder) return;
-    // get users
-    const users = Object.values(getUsers());
+    // get users who are not speakers
+    const users = Object.values(getUsers()).filter((user) => !user.isSpeaker);
 
     // get user that can be folded in
     let user = await getUserToFold(TreeType.Attendee, users);
@@ -121,6 +110,7 @@ export default function Fold() {
     let proof = await membershipFolder.startFold(user);
     let compressed = new Blob([await membershipFolder.compressProof(proof)]);
     await addProof(TreeType.Attendee, compressed, user.sigPk!);
+    let proofCount = 1;
     setNumFolded(1);
 
     // build successive proofs
@@ -129,22 +119,26 @@ export default function Fold() {
       // get proof from indexdb
       const proofData = await getProof(TreeType.Attendee);
       // proof data should not be null since we just created a proof
-      proof = await membershipFolder.decompressProof(new Uint8Array(await proofData!.proof.arrayBuffer()));
+      proof = await membershipFolder.decompressProof(
+        new Uint8Array(await proofData!.proof.arrayBuffer())
+      );
       // fold in membership
       proof = await membershipFolder.continueFold(
         user,
         proof,
         proofData!.numFolds
       );
+
       compressed = new Blob([await membershipFolder.compressProof(proof)]);
       // store incremented fold
       await incrementFold(TreeType.Attendee, compressed, user.sigPk!);
       setNumFolded(proofData!.numFolds + 1);
+      proofCount++;
       // get next user to fold
       user = await getUserToFold(TreeType.Attendee, users);
     }
     setCanFinalize(true);
-    toast.success(`Folded proofs of ${numFolded} attendees met!`)
+    toast.success(`Folded proofs of ${proofCount} attendees met!`);
   };
 
   const finalize = async () => {
@@ -163,16 +157,23 @@ export default function Fold() {
     const proof = await membershipFolder.decompressProof(
       new Uint8Array(await proofData.proof.arrayBuffer())
     );
-    const obfuscatedProof = await membershipFolder.obfuscate(proof, proofData.numFolds);
+    const obfuscatedProof = await membershipFolder.obfuscate(
+      proof,
+      proofData.numFolds
+    );
 
     // store obfuscated proof
-    const compressed = new Blob([await membershipFolder.compressProof(obfuscatedProof)]);
+    const compressed = new Blob([
+      await membershipFolder.compressProof(obfuscatedProof),
+    ]);
     await obfuscate(TreeType.Attendee, compressed);
 
     setCanFinalize(false);
     setCanVerify(true);
-    toast.success(`Finalized folded proof of ${proofData.numFolds} attendees met!`)
-  }
+    toast.success(
+      `Finalized folded proof of ${proofData.numFolds} attendees met!`
+    );
+  };
 
   const verify = async () => {
     if (!membershipFolder) return;
@@ -189,19 +190,17 @@ export default function Fold() {
     const proof = await membershipFolder.decompressProof(
       new Uint8Array(await proofData.proof.arrayBuffer())
     );
-    await membershipFolder.verify(
-      proof,
-      proofData.numFolds,
-      true
+    console.log("pd", proofData.numFolds);
+    await membershipFolder.verify(proof, proofData.numFolds, true);
+    toast.success(
+      `Verified folded proof of ${proofData.numFolds} attendees met!`
     );
-    toast.success(`Verified folded proof of ${proofData.numFolds} attendees met!`)
-  }
+  };
 
   return (
     <div>
       {!chunksDownloaded || !membershipFolder ? (
-        <>
-        </>
+        <></>
       ) : (
         <>
           {numFolded !== 0 ? (

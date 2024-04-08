@@ -1,12 +1,6 @@
-import { getAllMerkleRoots } from "@/lib/server/folding";
+import { TreeRoots, getAllMerkleRoots } from "@/lib/server/folding";
 import { ErrorResponse } from "@/types";
 import { NextApiRequest, NextApiResponse } from "next";
-
-export type TreeRoots = {
-  attendeeMerkleRoot: string;
-  speakerMerkleRoot: string;
-  talksMerkleRoot: string;
-};
 
 export default async function handler(
   req: NextApiRequest,

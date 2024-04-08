@@ -41,7 +41,6 @@ const useParams = () => {
         },
       });
       setDb(res);
-      console.log(res);
     })();
   }, []);
 

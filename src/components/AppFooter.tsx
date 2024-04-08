@@ -56,12 +56,6 @@ const AppFooter = () => {
       icon: Icons.Proof,
       iconSize: 14,
     },
-    {
-      label: "Fold",
-      href: "/fold",
-      icon: Icons.Proof,
-      iconSize: 14,
-    },
   ];
 
   return (

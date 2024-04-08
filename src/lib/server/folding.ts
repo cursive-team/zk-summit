@@ -1,6 +1,5 @@
 import { initialKeygenData } from "@/shared/keygen";
 import prisma from "@/lib/server/prisma";
-import { TreeRoots } from "@/pages/api/tree/root";
 import {
   MerkleProof,
   bigIntToHex,
@@ -12,12 +11,21 @@ import { MERKLE_TREE_DEPTH } from "@/shared/constants";
 // @ts-ignore
 import { buildPoseidonReference as buildPoseidon } from "circomlibjs";
 
+export type TreeRoots = {
+  attendeeMerkleRoot: string;
+  speakerMerkleRoot: string;
+  talksMerkleRoot: string;
+};
+
 /**
  * Get the merkle proof for a given public key in a given tree type
  * @param pubkey - the public key to get for the proof
- * @param treeType - {attendees | speakers | talks} 
+ * @param treeType - {attendees | speakers | talks}
  */
-export const getMerkleProof = async (pubkey: string, treeType: string): Promise<MerkleProof> => {
+export const getMerkleProof = async (
+  pubkey: string,
+  treeType: string
+): Promise<MerkleProof> => {
   // get all public keys for the tree type
   const pubkeys = await getPubkeys(treeType);
   // get the index of the public key
@@ -29,10 +37,17 @@ export const getMerkleProof = async (pubkey: string, treeType: string): Promise<
   // build the poseidon hash function
   const poseidon = await buildPoseidon();
   // convert the public keys to twisted edwards form
-  const pubkeysEdwards = pubkeys.map((publicKey) => publicKeyFromString(publicKey).toEdwards());
+  const pubkeysEdwards = pubkeys.map((publicKey) =>
+    publicKeyFromString(publicKey).toEdwards()
+  );
   // compute the merkle inclusion proof for the requested public key
-  return await computeMerkleProof(MERKLE_TREE_DEPTH, pubkeysEdwards, index, poseidon);
-}
+  return await computeMerkleProof(
+    MERKLE_TREE_DEPTH,
+    pubkeysEdwards,
+    index,
+    poseidon
+  );
+};
 
 /**
  * Get the public keys for a given group
@@ -40,7 +55,6 @@ export const getMerkleProof = async (pubkey: string, treeType: string): Promise<
  * @returns the public keys for the group
  */
 export const getPubkeys = async (pubkeyType: string): Promise<string[]> => {
-  const poseidon = await buildPoseidon();
   // get chip ids for the requested pubkey type
   const chipKeys = Object.entries(initialKeygenData)
     .filter((keyStruct) => {

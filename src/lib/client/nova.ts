@@ -9,7 +9,7 @@ import {
   getECDSAMessageHash,
   MerkleProof,
 } from "babyjubjub-ecdsa";
-import { TreeRoots } from "@/pages/api/tree/root";
+import { TreeRoots } from "../server/folding";
 
 export type NovaWasm = typeof import("bjj_ecdsa_nova_wasm");
 
@@ -203,10 +203,11 @@ export class MembershipFolder {
     numFolds: number,
     obfuscated: boolean = false
   ): Promise<boolean> {
-    // get root
-
     // set num verified based on obfuscation
     let iterations = obfuscated ? numFolds + 1 : numFolds;
+
+    console.log("A", hexToBigInt(this.roots.attendeeMerkleRoot).toString());
+    console.log("B", iterations);
 
     try {
       await this.wasm.verify_proof(
@@ -252,10 +253,14 @@ export class MembershipFolder {
     user: User,
     merkleProof: MerkleProof
   ): Promise<NovaPrivateInputs> {
+    if (!user.sig || !user.sigPk || !user.msg) {
+      throw new Error("User record missing required fields");
+    }
+
     // decode the user's signature
-    let sig = derDecodeSignature(user.sig!);
-    let messageHash = hexToBigInt(getECDSAMessageHash(user.msg!));
-    let pubkey = publicKeyFromString(user.sigPk!);
+    let sig = derDecodeSignature(user.sig);
+    let messageHash = hexToBigInt(getECDSAMessageHash(user.msg));
+    let pubkey = publicKeyFromString(user.sigPk);
     const { T, U } = getPublicInputsFromSignature(sig, messageHash, pubkey);
     return {
       s: sig.s.toString(),
@@ -275,7 +280,7 @@ export const getAllParamsByChunk = async (): Promise<string> => {
   let data: Map<Number, Blob> = new Map();
   for (let i = 0; i < 10; i++) {
     let req = async () => {
-      let full_url = `${process.env.NOVA_BUCKET_URL}/params_${i}.gz`;
+      let full_url = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${i}.gz`;
       let res = await fetch(full_url, {
         headers: { "Content-Type": "application/x-binary" },
       }).then(async (res) => await res.blob());

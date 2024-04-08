@@ -1,3 +1,4 @@
+import { validTreeTypes } from "@/hooks/useFolds";
 import { getPubkeys } from "@/lib/server/folding";
 import { ErrorResponse } from "@/types";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -8,8 +9,10 @@ export default async function handler(
 ) {
   if (req.method === "GET") {
     let { pubkeyType } = req.query;
-    let validKeyTypes = ["attendee", "speaker", "talk"];
-    if (typeof pubkeyType !== "string" || !validKeyTypes.includes(pubkeyType)) {
+    if (
+      typeof pubkeyType !== "string" ||
+      !validTreeTypes.includes(pubkeyType)
+    ) {
       res.status(400).json({ error: "Invalid pubkey type" });
       return;
     }

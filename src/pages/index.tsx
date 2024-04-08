@@ -18,7 +18,7 @@ import {
   getUsers,
 } from "@/lib/client/localStorage";
 import { JUB_SIGNAL_MESSAGE_TYPE } from "@/lib/client/jubSignal";
-import { SnapshotModal } from "@/components/modals/SnapshotModal";
+import { SliderModal } from "@/components/modals/SliderModal";
 import { Button } from "@/components/Button";
 import { formatDate } from "@/lib/shared/utils";
 import { loadMessages } from "@/lib/client/jubSignalClient";
@@ -122,9 +122,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                <span className="text-iron-600">
-                  {"Discovered overlap with "}
-                </span>
+                <span className="text-iron-600">{"Overlapped with "}</span>
                 <span className="text-iron-750">{name}</span>
               </>
             }
@@ -205,7 +203,7 @@ export default function Social() {
   const router = useRouter();
   const { getState } = useStateMachine({ updateStateFromAction });
   const { pageWidth } = useSettings();
-  const [showSnapshotModal, setShowSnapshotModal] = useState(false);
+  const [showSliderModal, setShowSliderModal] = useState(false);
   const [profile, setProfile] = useState<Profile>();
   const [numConnections, setNumConnections] = useState<number>(0);
   const [tabsItems, setTabsItems] = useState<TabsProps["items"]>();
@@ -224,6 +222,7 @@ export default function Social() {
     let currentDate: string | undefined = undefined;
     let currentDateActivities: Activity[] = [];
     activities.forEach((activity) => {
+      if (activity.type === JUB_SIGNAL_MESSAGE_TYPE.REGISTERED) return;
       const date = new Date(activity.ts).toDateString();
       if (currentDate === undefined) {
         currentDateActivities.push(activity);
@@ -407,7 +406,7 @@ export default function Social() {
         const navigationEntry = navigationEntries[0];
         if (navigationEntry.type && navigationEntry.type === "reload") {
           try {
-            await loadMessages({ forceRefresh: false });
+            // await loadMessages({ forceRefresh: false });
           } catch (error) {
             console.error("Failed to load messages upon page reload:", error);
           }
@@ -440,24 +439,24 @@ export default function Social() {
   if (!profile || !tabsItems) return null;
   return (
     <>
-      <SnapshotModal
-        isOpen={showSnapshotModal}
-        setIsOpen={setShowSnapshotModal}
+      <SliderModal
+        isOpen={showSliderModal}
+        setIsOpen={setShowSliderModal}
         size={pageWidth - 60}
       />
       <div className="flex flex-col pt-4">
         <div className="flex gap-6 mb-6">
           <div
             onClick={() => {
-              setShowSnapshotModal(true);
+              setShowSliderModal(true);
             }}
             className="size-32 rounded-[4px] relative overflow-hidden"
           >
             <ArtworkSnapshot
               width={128}
               height={128}
-              isVisible={!showSnapshotModal && !isMenuOpen}
               pubKey={profile.signaturePublicKey}
+              homePage={true}
             />
             <button type="button" className="absolute right-1 top-1 z-1">
               <Icons.Zoom />

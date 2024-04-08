@@ -22,5 +22,6 @@ declare global {
     render: () => void;
     createjs: any;
     FlowerRnd: any;
+    Flower: any;
   }
 }

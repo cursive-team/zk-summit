@@ -129,7 +129,7 @@ export default function LeaderBoard() {
             <TableHeaderLabel className="text-center">#</TableHeaderLabel>
             <TableHeaderLabel>Display name</TableHeaderLabel>
             <TableHeaderLabel className="text-right">
-              Taps given
+              Total taps
             </TableHeaderLabel>
           </TableWrapper>
           <LoadingWrapper

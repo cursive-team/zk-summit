@@ -97,6 +97,7 @@ type LocationDetailProps = {
 export const LocationDetail = ({
   locations,
   locationPubKeysCollected,
+  completed,
 }: LocationDetailProps) => {
   const numSigsCollected = useMemo(() => {
     return locations.filter((location) =>
@@ -300,7 +301,7 @@ export default function QuestById() {
                         quest.userRequirements[0].numSigsRequired
                       }
                       title={quest.userRequirements[0].name}
-                      completed={false}
+                      completed={quest?.isCompleted}
                     />
                   )}
                   {quest && quest.locationRequirements.length > 0 && (
@@ -311,7 +312,7 @@ export default function QuestById() {
                         quest.locationRequirements[0].numSigsRequired
                       }
                       title={quest.locationRequirements[0].name}
-                      completed={false}
+                      completed={quest?.isCompleted}
                     />
                   )}
                 </div>

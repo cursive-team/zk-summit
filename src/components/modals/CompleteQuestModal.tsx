@@ -20,7 +20,7 @@ import Link from "next/link";
 const QRCodeWrapper = classed.div("bg-white max-w-[254px]");
 
 interface CompleteQuestModalProps extends ModalProps {
-  quest: QuestWithRequirements;
+  quest: QuestWithRequirements & { isCompleted: boolean };
   existingProofId?: string;
 }
 
@@ -59,8 +59,10 @@ const CompleteQuestModal = ({
     if (existingProofId) {
       setProofId(existingProofId);
       setDisplayState(CompleteQuestDisplayState.COMPLETED);
+    } else if (quest?.isCompleted) {
+      setDisplayState(CompleteQuestDisplayState.COMPLETED);
     }
-  }, [existingProofId]);
+  }, [existingProofId, quest?.isCompleted]);
 
   const handleCompleteQuest = async () => {
     const authToken = getAuthToken();

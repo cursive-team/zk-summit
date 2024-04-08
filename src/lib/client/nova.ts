@@ -4,15 +4,12 @@ import { User } from "./localStorage";
 import {
   derDecodeSignature,
   getPublicInputsFromSignature,
-  computeMerkleProof,
   publicKeyFromString,
   hexToBigInt,
   getECDSAMessageHash,
   MerkleProof,
-  bigIntToHex,
 } from "babyjubjub-ecdsa";
 import { TreeRoots } from "@/pages/api/tree/root";
-import useIndexDB from "@/hooks/useIndexDB";
 
 export type NovaWasm = typeof import("bjj_ecdsa_nova_wasm");
 
@@ -230,7 +227,7 @@ export class MembershipFolder {
    * @param proof - the proof to compress
    * @returns the compressed proof
    */
-  async compress_proof(proof: string): Promise<Uint8Array> {
+  async compressProof(proof: string): Promise<Uint8Array> {
     return await this.wasm.compress_proof(proof);
   }
 
@@ -239,7 +236,7 @@ export class MembershipFolder {
    * @param compressed - the compressed proof
    * @returns the decompressed proof
    */
-  async decompress_proof(compressed: Uint8Array): Promise<string> {
+  async decompressProof(compressed: Uint8Array): Promise<string> {
     return await this.wasm.decompress_proof(compressed);
   }
 

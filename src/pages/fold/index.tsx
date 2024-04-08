@@ -1,8 +1,11 @@
 import { Button } from '@/components/Button';
 import { useEffect, useState } from 'react';
 import { getUsers } from '@/lib/client/localStorage';
-import useIndexDB from '@/hooks/useIndexDB';
+import useParams from '@/hooks/useParams';
 import { MembershipFolder } from '@/lib/client/nova';
+import { Spinner } from '@/components/Spinner';
+import { toast } from 'sonner';
+import useFolds, { TreeType } from '@/hooks/useFolds';
 
 /**
  * Gets a public params gzipped chunk from the server
@@ -23,10 +26,17 @@ const getAllUsers = () => {
 };
 
 export default function Fold() {
-  const { addItem, getItems, dbInitialized, itemCount } = useIndexDB(
-    'zksummit_folded',
-    'params'
-  );
+  const {
+    addChunk,
+    getChunks,
+    chunkCount,
+    paramsDbInitialized
+  } = useParams();
+  const {
+    addProof,
+    getProof,
+    incrementFold,
+  } = useFolds();
   const [chunksDownloaded, setChunksDownloaded] = useState<boolean>(false);
   const [membershipFolder, setMembershipFolder] =
     useState<MembershipFolder | null>(null);
@@ -40,24 +50,28 @@ export default function Fold() {
   // };
 
   useEffect(() => {
-    if (!dbInitialized || chunksDownloaded) return;
+    console.log("Chunks downloaded", chunksDownloaded);
+    if (!paramsDbInitialized || chunksDownloaded) return;
     (async () => {
-      const startIndex = await itemCount();
+      // handle downloading chunks
+      const startIndex = await chunkCount();
       // If 10 chunks are not stored then fetch remaining
       if (startIndex !== 10) {
+        const id = toast.loading("Downloading Nova Folding params file!");
         console.log(`${startIndex} out of 10 param chunks stored`);
         for (let i = startIndex; i < 10; i++) {
           const param = await getParamsSequential(i);
           // Add chunk to indexdb
-          await addItem(i, param);
+          await addChunk(i, param);
           console.log(`Chunk ${i + 1} of 10 stored`);
-          setChunksDownloaded(true);
         }
+        toast.dismiss(id)
+        setChunksDownloaded(true);
       } else {
         setChunksDownloaded(true);
       }
     })();
-  }, [dbInitialized]);
+  }, [paramsDbInitialized]);
 
   useEffect(() => {
     // instantiate membership folder class
@@ -65,7 +79,7 @@ export default function Fold() {
     // begin folding users
     (async () => {
       console.log('Doing something');
-      const compressedParams = new Blob(await getItems());
+      const compressedParams = new Blob(await getChunks());
       const folding = await MembershipFolder.initWithIndexDB(compressedParams);
       setMembershipFolder(folding);
     })();
@@ -77,42 +91,61 @@ export default function Fold() {
     let usersToFold = Object.entries(users).filter(
       ([_, user]) => !user.folded && user.pkId !== '0'
     );
-    let startTime = new Date().getTime();
+    // let startTime = new Date().getTime();
 
     // build proof 1
     let proof = await membershipFolder.startFold(usersToFold[0][1]);
-    let endTime = new Date().getTime();
-    console.log(`Folded 1 in ${endTime - startTime}ms`);
-    console.log('Proof: ', proof.substring(0, 30));
+
+    // store proof 1
+    let compressed = new Blob([await membershipFolder.compressProof(proof)]);
+    await addProof(TreeType.Attendee, compressed);
+
+    // retrieve proof 1
+    let proofData = await getProof(TreeType.Attendee);
+    proof = await membershipFolder.decompressProof(new Uint8Array(await proofData!.proof.arrayBuffer()));
 
     // build proof 2
-    startTime = new Date().getTime();
-    let proof2 = await membershipFolder.continueFold(
+    proof = await membershipFolder.continueFold(
       usersToFold[0][1],
       proof,
-      1
+      proofData!.numFolds
     );
-    endTime = new Date().getTime();
-    console.log(`Folded 2 in ${endTime - startTime}ms`);
-    console.log('Proof: ', proof2.substring(0, 30));
 
-    // obfuscate proof
+    // store proof 2
+    compressed = new Blob([await membershipFolder.compressProof(proof)]);
+    await incrementFold(TreeType.Attendee, compressed);
+
+    // get proof 2
+    proofData = await getProof(TreeType.Attendee);
+    console.log("Proof data: ", proofData!.numFolds);
+    // endTime = new Date().getTime();
+    // console.log(`Folded 2 in ${endTime - startTime}ms`);
+    // console.log('Proof: ', proof2.substring(0, 30));
+
+    // // obfuscate proof
     // startTime = new Date().getTime();
     // let obfuscatedProof = await membershipFolder.obfuscate(proof2, 2);
     // endTime = new Date().getTime();
     // console.log(`Obfuscated in ${endTime - startTime}ms`);
     // console.log("Proof: ", obfuscatedProof.substring(0, 30));
 
-    // verify proof
-    startTime = new Date().getTime();
-    let verified = await membershipFolder.verify(proof2, 2, false);
-    endTime = new Date().getTime();
-    console.log(`Verified 1 in ${endTime - startTime}ms`);
+    // // verify proof
+    // startTime = new Date().getTime();
+    // let verified = await membershipFolder.verify(obfuscatedProof, 2, true);
+    // endTime = new Date().getTime();
+    // console.log(`Verified 1 in ${endTime - startTime}ms`);
   };
 
   return (
     <div>
-      <Button onClick={() => fold()}>Generate Proof</Button>
+      {!chunksDownloaded ? (
+        <>
+        </>
+      ) : (
+        <>
+          <Button onClick={() => fold()}>Generate Proof</Button>
+        </>
+      )}
     </div>
   );
 }

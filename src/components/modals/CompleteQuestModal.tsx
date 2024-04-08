@@ -180,7 +180,7 @@ const CompleteQuestModal = ({
 
   const handleBackToQuests = () => {
     setIsOpen(false);
-    router.push("/quests");
+    router.push("/proofs");
   };
 
   const getModalContent = (): JSX.Element => {

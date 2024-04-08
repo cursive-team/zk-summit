@@ -13,6 +13,7 @@ import {
   getActivities,
   getAuthToken,
   getKeys,
+  getLocationSignatures,
   getProfile,
   getUsers,
 } from "@/lib/client/localStorage";
@@ -29,21 +30,37 @@ import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
 import { IconCircle } from "@/components/IconCircle";
 import { NoResultContent } from "@/components/NoResultContent";
-import { TalksSection } from "@/components/sections/TalksSection";
 
-interface ContactCardProps {
+interface LinkCardProps {
   name: string;
-  userId: string;
   date: string;
+  href: string;
+  other?: string;
 }
 
-const ContactCard = ({ name, userId, date }: ContactCardProps) => {
+const LinkCard = ({ name, date, href, other }: LinkCardProps) => {
   return (
-    <Link href={`/users/${userId}`}>
-      <Card.Base className="flex justify-between p-3">
-        <Card.Title className="leading-none">{name}</Card.Title>
-        <Card.Description>{date}</Card.Description>
-      </Card.Base>
+    <Link href={href}>
+      <Button className="w-full !bg-white/40" variant="white">
+        <div className="grid grid-cols-[1fr_90px] w-full">
+          {other ? (
+            <div className="flex flex-row gap-2 truncate items-end">
+              <span className="text-iron-950 font-bold text-sm text-left">
+                {name}
+              </span>
+              <span className="text-iron-600 font-medium text-xs text-left truncate">
+                {other}
+              </span>
+            </div>
+          ) : (
+            <span className="text-iron-950 font-bold text-sm text-left truncate">
+              {name}
+            </span>
+          )}
+
+          <span className="text-iron-600 font-bold text-xs">{date}</span>
+        </div>
+      </Button>
     </Link>
   );
 };
@@ -101,7 +118,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
         <FeedContent
           title={
             <>
-              {"Tapped by "} <u>{name}</u>
+              {"Tapped by "} {name}
             </>
           }
           icon={<CircleCard icon="person" />}
@@ -117,7 +134,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
                 {"Overlap computed with "} <u>{name}</u>
               </>
             }
-            icon={<Icons.Cursive />}
+            icon={<CircleCard icon="overlap" />}
             description={date}
           />
         </Link>
@@ -223,7 +240,9 @@ export default function Social() {
       ...value,
       uuid: key,
     }));
-    const contactUsersList = usersList.filter((user) => user.outTs);
+    const contactUsersList = usersList.filter(
+      (user) => user.inTs && user.encPk !== profileData.encryptionPublicKey
+    );
     const sortedContactUsers = contactUsersList.sort((a, b) => {
       return a.name.localeCompare(b.name, "en", { sensitivity: "base" }); // Ignore case
     });
@@ -245,11 +264,19 @@ export default function Social() {
     });
     groupedContactUsers.push(currentLetterUsers);
 
+    const locationSignatures = getLocationSignatures();
+    const locations = Object.entries(locationSignatures)
+      .map(([key, value]) => ({
+        ...value,
+        id: key,
+      }))
+      .sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime());
+
     return [
       {
         label: "Activity Feed",
         children: (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 mt-2">
             {activities.length === 0 && (
               <NoResultContent>No activities yet</NoResultContent>
             )}
@@ -258,7 +285,10 @@ export default function Social() {
                 return (
                   <ListLayout
                     key={index}
-                    label={new Date(activities[0].ts).toDateString()}
+                    label={new Date(activities[0].ts).toLocaleDateString(
+                      "en-US",
+                      { month: "long", day: "numeric" }
+                    )}
                   >
                     {activities.map((activity, index) => {
                       return (
@@ -280,7 +310,7 @@ export default function Social() {
       {
         label: "Contacts",
         children: (
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 mt-2">
             {contactUsersList.length === 0 && (
               <NoResultContent>{"No people you've tapped"}</NoResultContent>
             )}
@@ -292,15 +322,16 @@ export default function Social() {
                   <ListLayout key={index} label={groupLetter}>
                     <div className="flex flex-col gap-1">
                       {users.map((user, index) => {
-                        const { name, outTs } = user;
-                        const date = outTs ? formatDate(outTs) : "-";
+                        const { name, inTs, bio } = user;
+                        const date = inTs ? formatDate(inTs) : "-";
 
                         return (
-                          <ContactCard
+                          <LinkCard
                             key={index}
                             name={name}
-                            userId={user.uuid}
                             date={date}
+                            other={bio ?? ""}
+                            href={`/users/${user.uuid}`}
                           />
                         );
                       })}
@@ -313,7 +344,30 @@ export default function Social() {
       },
       {
         label: "Talks",
-        children: <TalksSection />,
+        children: (
+          <div className="flex flex-col gap-5 mt-2">
+            {locations.length === 0 ? (
+              <NoResultContent>
+                {
+                  "Tap posters to collect links to slides for the talks you attend."
+                }
+              </NoResultContent>
+            ) : (
+              <div className="flex flex-col gap-2 w-full">
+                {locations.map((location, index) => {
+                  return (
+                    <LinkCard
+                      key={index}
+                      name={location.name}
+                      date={formatDate(location.ts)}
+                      href={`/locations/${location.id}`}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ),
       },
     ];
   };
@@ -358,7 +412,9 @@ export default function Social() {
       const users = getUsers();
       const activities = getActivities();
       setNumConnections(
-        Object.values(users).filter((user) => user.outTs).length
+        Object.values(users).filter(
+          (user) => user.inTs && user.encPk !== profileData.encryptionPublicKey
+        ).length
       );
       setTabsItems(computeTabsItems(profileData, users, activities));
       setLoading(false);
@@ -410,8 +466,8 @@ export default function Social() {
                 </h2>
                 <span className="text-sm font-normal text-iron-950">
                   {numConnections === 1
-                    ? `1 tap given`
-                    : `${numConnections} taps given`}
+                    ? `1 contact`
+                    : `${numConnections} contacts`}
                 </span>
               </div>
             </div>

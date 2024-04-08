@@ -38,7 +38,7 @@ export const formatDate = (date: string, formatReplace?: string): string => {
     ? formatReplace
     : isToday
     ? "hh:mm"
-    : "DD MMM, hh:mm";
+    : "MMM DD, hh:mm";
 
   const formattedDate = dayjs(date).format(dateFormat);
 

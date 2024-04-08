@@ -394,7 +394,10 @@ const UserProfilePage = () => {
             <h2 className=" text-xl font-gray-12 font-normal">{user.name}</h2>
             <div className="flex items-center gap-1">
               {user.bio && (
-                <span className="font-gray-12 text-[14px] mt-1 left-5">
+                <span
+                  className="font-gray-12 text-[14px] mt-1 left-5"
+                  style={{ whiteSpace: "pre-wrap" }}
+                >
                   {user.bio}
                 </span>
               )}
@@ -525,7 +528,7 @@ const UserProfilePage = () => {
 };
 
 UserProfilePage.getInitialProps = () => {
-  return { showHeader: false, showFooter: true };
+  return { showHeader: false, showFooter: false };
 };
 
 export default UserProfilePage;

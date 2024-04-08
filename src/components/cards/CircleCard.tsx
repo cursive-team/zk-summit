@@ -2,7 +2,7 @@ import Image from "next/image";
 import type * as Classed from "@tw-classed/react";
 import { IconCircle } from "../IconCircle";
 
-type CardIconType = "person" | "location" | "proof";
+type CardIconType = "person" | "location" | "proof" | "overlap";
 
 type CardIconVariants = Classed.VariantProps<typeof IconCircle>;
 
@@ -10,6 +10,7 @@ const CardIconMapping: Record<CardIconType, string> = {
   person: "/icons/person.svg",
   location: "/icons/location.svg",
   proof: "/icons/proof.svg",
+  overlap: "/icons/overlap.svg",
 };
 
 interface CircleCardProps extends CardIconVariants {

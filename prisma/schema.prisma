@@ -67,6 +67,9 @@ model Location {
   endTime            String
   createdAt          DateTime              @default(now())
   questRequirements  LocationRequirement[] @relation("LocationQuestRequirements")
+
+  slidesLink      String?
+  speakerSocial   String?
 }
 
 model SigninCode {

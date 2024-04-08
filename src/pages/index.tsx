@@ -30,6 +30,7 @@ import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
 import { IconCircle } from "@/components/IconCircle";
 import { NoResultContent } from "@/components/NoResultContent";
+import { classed } from "@tw-classed/react";
 
 interface LinkCardProps {
   name: string;
@@ -72,17 +73,29 @@ interface ActivityFeedProps {
   date: string;
 }
 
+const CardTitleOverride = classed.h1("text-sm leading-5 font-bold");
+
 interface FeedContentProps {
   title: React.ReactNode;
+  titleOverride?: boolean;
   description: string;
   icon: React.ReactNode;
 }
-const FeedContent = ({ title, description, icon }: FeedContentProps) => {
+const FeedContent = ({
+  title,
+  description,
+  titleOverride,
+  icon,
+}: FeedContentProps) => {
   return (
     <div className="grid grid-cols-[1fr_80px] items-center justify-between py-1 gap-4">
-      <div className="grid grid-cols-[24px_1fr] items-center gap-2">
+      <div className="grid grid-cols-[24px_1fr] items-center gap-2 truncate">
         <IconCircle>{icon}</IconCircle>
-        <Card.Title>{title}</Card.Title>
+        {titleOverride === true ? (
+          <CardTitleOverride className="truncate">{title}</CardTitleOverride>
+        ) : (
+          <Card.Title className="truncate">{title}</Card.Title>
+        )}
       </div>
       <Card.Description>{description}</Card.Description>
     </div>
@@ -91,34 +104,12 @@ const FeedContent = ({ title, description, icon }: FeedContentProps) => {
 
 const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
   switch (type) {
-    case JUB_SIGNAL_MESSAGE_TYPE.REGISTERED:
-      const profile = getProfile();
-      if (
-        profile?.bio ||
-        profile?.telegramUsername ||
-        profile?.twitterUsername
-      ) {
-        return (
-          <FeedContent
-            title="Registered and set up socials!"
-            description={date}
-            icon={<CircleCard icon="proof" />}
-          />
-        );
-      }
-      return (
-        <FeedContent
-          title="Registered! Set up your socials in upper-right menu."
-          description={date}
-          icon={<CircleCard icon="proof" />}
-        />
-      );
     case JUB_SIGNAL_MESSAGE_TYPE.OUTBOUND_TAP:
       return (
         <FeedContent
           title={
             <>
-              {"Tapped by "} {name}
+              {"Shared socials with "} {name}
             </>
           }
           icon={<CircleCard icon="person" />}
@@ -131,9 +122,13 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                {"Overlap computed with "} <u>{name}</u>
+                <span className="text-iron-600">
+                  {"Discovered overlap with "}
+                </span>
+                <span className="text-iron-750">{name}</span>
               </>
             }
+            titleOverride={true}
             icon={<CircleCard icon="overlap" />}
             description={date}
           />
@@ -145,9 +140,13 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                {"You tapped "} <u>{name}</u>
+                <span className="text-iron-750">{name}</span>
+                <span className="text-iron-600">
+                  {" shared socials with you"}
+                </span>
               </>
             }
+            titleOverride={true}
             icon={<CircleCard icon="person" />}
             description={date}
           />
@@ -159,9 +158,11 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                {"Attended talk "} <u>{name}</u>
+                <span className="text-iron-600">{"Attended talk "}</span>
+                <span className="text-iron-750">{name}</span>
               </>
             }
+            titleOverride={true}
             icon={<CircleCard icon="location" />}
             description={date}
           />
@@ -174,9 +175,11 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
             icon={<CircleCard icon="proof" />}
             title={
               <>
-                {"Made a proof "} <u>{name}</u>
+                <span className="text-iron-600">{"Made a proof "}</span>
+                <span className="text-iron-750">{name}</span>
               </>
             }
+            titleOverride={true}
             description={date}
           />
         </Link>
@@ -277,10 +280,12 @@ export default function Social() {
         label: "Activity Feed",
         children: (
           <div className="flex flex-col gap-4 mt-2">
-            {activities.length === 0 && (
-              <NoResultContent>No activities yet</NoResultContent>
+            {activities.length === 1 && (
+              <NoResultContent>
+                Get started by tapping badges and talk posters!
+              </NoResultContent>
             )}
-            {activities.length !== 0 &&
+            {activities.length > 1 &&
               groupedActivities.map((activities, index) => {
                 return (
                   <ListLayout
@@ -289,6 +294,7 @@ export default function Social() {
                       "en-US",
                       { month: "long", day: "numeric" }
                     )}
+                    spacing="sm"
                   >
                     {activities.map((activity, index) => {
                       return (
@@ -312,7 +318,9 @@ export default function Social() {
         children: (
           <div className="flex flex-col gap-5 mt-2">
             {contactUsersList.length === 0 && (
-              <NoResultContent>{"No people you've tapped"}</NoResultContent>
+              <NoResultContent>
+                Tap badges to share socials and connect with others!
+              </NoResultContent>
             )}
             {contactUsersList.length !== 0 &&
               groupedContactUsers.map((users, index) => {
@@ -348,9 +356,7 @@ export default function Social() {
           <div className="flex flex-col gap-5 mt-2">
             {locations.length === 0 ? (
               <NoResultContent>
-                {
-                  "Tap posters to collect links to slides for the talks you attend."
-                }
+                {"Tap talk check-ins to collect slide links and talk details!"}
               </NoResultContent>
             ) : (
               <div className="flex flex-col gap-2 w-full">

@@ -1,4 +1,3 @@
-import { MERKLE_TREE_DEPTH } from "@/shared/constants";
 import { merkleProofFromObject } from "../shared/utils";
 import { User } from "./localStorage";
 import {
@@ -93,6 +92,14 @@ export class MembershipFolder {
       throw new Error(
         `Cannot fold user ${user.name}'s membership: self or untapped!`
       );
+
+    // check the user has a signature
+    if (!user.sig || !user.sigPk || !user.msg) {
+      throw new Error(
+        `Cannot fold user ${user.name}'s membership: no signature!`
+      );
+    }
+
     // check the user has not already been folded
     // fetch merkle proof for the user
     const merkleProof = await fetch(
@@ -132,7 +139,13 @@ export class MembershipFolder {
       throw new Error(
         `Cannot fold user ${user.name}'s membership: self or untapped!`
       );
-    // check the user has not already been folded
+
+    // check the user has a signature
+    if (!user.sig || !user.sigPk || !user.msg) {
+      throw new Error(
+        `Cannot fold user ${user.name}'s membership: no signature!`
+      );
+    }
 
     // fetch merkle proof for the user
     const merkleProof = await fetch(

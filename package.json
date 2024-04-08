@@ -17,6 +17,7 @@
     "@prisma/client": "^5.8.1",
     "@simplewebauthn/browser": "^9.0.1",
     "@simplewebauthn/server": "^9.0.3",
+    "@socialgouv/matomo-next": "^1.8.1",
     "@supabase/supabase-js": "^2.42.0",
     "@tanstack/react-query": "^5.17.19",
     "@tw-classed/react": "^1.7.0",

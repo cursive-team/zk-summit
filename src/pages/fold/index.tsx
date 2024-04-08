@@ -6,6 +6,7 @@ import { MembershipFolder } from "@/lib/client/nova";
 import { Spinner } from "@/components/Spinner";
 import { toast } from "sonner";
 import useFolds, { TreeType } from "@/hooks/useFolds";
+import { push } from "@socialgouv/matomo-next";
 
 /**
  * Gets a public params gzipped chunk from the server
@@ -31,7 +32,7 @@ export default function Fold() {
   const [canVerify, setCanVerify] = useState<boolean>(false);
   const [numFolded, setNumFolded] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<string | number | null>(null);
-  const [isProving, setIsProving] = useState<boolean>(false)
+  const [isProving, setIsProving] = useState<boolean>(false);
 
   useEffect(() => {
     if (!paramsDbInitialized || chunksDownloaded) return;
@@ -96,6 +97,7 @@ export default function Fold() {
   }, [membershipFolder, canFinalize, canVerify]);
 
   const fold = async () => {
+    push(["synchronousFoldingFold"]);
     if (!membershipFolder) return;
     setIsProving(true);
     // get users who are not speakers
@@ -146,6 +148,7 @@ export default function Fold() {
   };
 
   const finalize = async () => {
+    push(["synchronousFoldingFinalize"]);
     if (!membershipFolder) return;
     // get proof from indexdb
     setIsProving(true);
@@ -184,6 +187,7 @@ export default function Fold() {
   };
 
   const verify = async () => {
+    push(["synchronousFoldingVerify"]);
     if (!membershipFolder) return;
     setIsProving(true);
     // get proof from indexdb
@@ -227,7 +231,9 @@ export default function Fold() {
             </>
           ) : (
             <>
-              {!isProving && (<Button onClick={() => fold()}>Generate Proof</Button>)}
+              {!isProving && (
+                <Button onClick={() => fold()}>Generate Proof</Button>
+              )}
             </>
           )}
           {isProving && <Spinner />}

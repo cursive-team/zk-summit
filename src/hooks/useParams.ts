@@ -33,7 +33,7 @@ const useParams = () => {
   useEffect(() => {
     (async () => {
       // Create new db
-      const res = await openDB(DB_NAME, 2, {
+      const res = await openDB(DB_NAME, 1, {
         upgrade(db) {
           // Create new store
           db.createObjectStore(STORE_NAME);

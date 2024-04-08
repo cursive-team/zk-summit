@@ -41,7 +41,7 @@ const CompleteQuestModal = ({
   quest,
   isOpen,
   setIsOpen,
-  existingProofId = "12",
+  existingProofId,
 }: CompleteQuestModalProps) => {
   const router = useRouter();
   const [displayState, setDisplayState] = useState<CompleteQuestDisplayState>(

@@ -6,7 +6,7 @@ import { MembershipFolder } from "@/lib/client/nova";
 import { Spinner } from "@/components/Spinner";
 import { toast } from "sonner";
 import useFolds, { TreeType } from "@/hooks/useFolds";
-import { push } from "@socialgouv/matomo-next";
+import { logInteraction } from "@/lib/client/metrics";
 
 /**
  * Gets a public params gzipped chunk from the server
@@ -97,7 +97,11 @@ export default function Fold() {
   }, [membershipFolder, canFinalize, canVerify]);
 
   const fold = async () => {
-    push(["synchronousFoldingFold"]);
+    logInteraction({
+      category: "folding",
+      action: "click",
+      name: "synchronousFoldingFold",
+    });
     if (!membershipFolder) return;
     setIsProving(true);
     // get users who are not speakers
@@ -148,7 +152,11 @@ export default function Fold() {
   };
 
   const finalize = async () => {
-    push(["synchronousFoldingFinalize"]);
+    logInteraction({
+      category: "folding",
+      action: "click",
+      name: "synchronousFoldingFinalize",
+    });
     if (!membershipFolder) return;
     // get proof from indexdb
     setIsProving(true);
@@ -187,7 +195,11 @@ export default function Fold() {
   };
 
   const verify = async () => {
-    push(["synchronousFoldingVerify"]);
+    logInteraction({
+      category: "folding",
+      action: "click",
+      name: "synchronousFoldingVerify",
+    });
     if (!membershipFolder) return;
     setIsProving(true);
     // get proof from indexdb

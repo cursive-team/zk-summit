@@ -4,7 +4,7 @@ import type * as Classed from "@tw-classed/react";
 
 const Label = classed.span("text-xs text-gray-10 font-normal");
 
-const ListWrapperContainer = classed.div("flex flex-col", {
+const ListWrapperContainer = classed.div("flex flex-col grow", {
   variants: {
     gap: {
       sm: "gap-2",

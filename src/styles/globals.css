@@ -56,3 +56,7 @@ body {
 .sticky > * {
   -webkit-transform: translateZ(0);
 }
+
+.h-modal {
+  height: calc(100vh - 90px);
+}

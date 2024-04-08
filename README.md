@@ -1,7 +1,5 @@
 # ZK Summit 11 x Cursive
 
-## Overview
-
 This app is built for [ZK Summit 11](https://www.zksummit.com/) in Athens. Every attendee will get an NFC card alongside their badge, and additional NFC cards will be placed in front of rooms where talks and workshops are held. Tapping another attendee's card allows you to see their contact information, as well as receive a digital signature that verifiably represents the fact that you met them. Tapping a card associated with a talk gives you a digital signature proving you attended that talk. There are 3 main things you can do with these signatures: make zero knowledge proofs, privately compute the things you've done in common with someone else, and aggregate the signatures into one big proof of your entire event experience - ZK Summit Folded!
 
 ## Zero Knowledge Proofs

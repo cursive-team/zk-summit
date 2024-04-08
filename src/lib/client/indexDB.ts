@@ -192,13 +192,13 @@ export class IndexDBWrapper {
   }
 
   /**
-   * Filters out all users that are not available to be folded in and selects one from the top
-   *
+   * Filters out all users that are not available to be folded in returns them
    * @param key - the type of proof to fold
    * @param users - the users to filter
-   * @returns - a user that can be folded into the membership proof for this type
+   * @
+   * @returns - users that can be folded into the membership proof for this type
    */
-  async getUserToFold(key: TreeType, users: User[]): Promise<User | undefined> {
+  async getUsersToFold(key: TreeType, users: User[]): Promise<User[] | undefined> {
     if (this.db) {
       // get pubkeys already folded in
       const tx = this.db.transaction(this.foldsStore, "readwrite");
@@ -215,7 +215,7 @@ export class IndexDBWrapper {
         );
       });
       // return the first user that can be folded in if exists
-      return validUsers.length > 0 ? validUsers[0] : undefined;
+      return validUsers.length > 0 ? validUsers : undefined;
     } else {
       throw Error("DB not initialized");
     }

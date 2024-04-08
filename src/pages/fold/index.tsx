@@ -13,6 +13,7 @@ export default function Fold() {
     downloadParamsChunk,
     startFold,
     incrementFold,
+    foldAll,
     obfuscateFold,
     folding,
     downloadingChunks,
@@ -24,19 +25,6 @@ export default function Fold() {
   const [db, setDB] = useState<IndexDBWrapper | null>(null);
   const [isProving, setIsProving] = useState<boolean>(false);
   const [numFolded, setNumFolded] = useState<number>(0);
-
-  // /**
-  //  * Gets a public params gzipped chunk from the server
-  //  * @param index - the chunk index to retrieve
-  //  * @returns - the gzipped chunk
-  //  */
-  // const getParamsSequential = async (index: number): Promise<Blob> => {
-  //   const fullUrl = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${index}.gz`;
-  //   const res = await fetch(fullUrl, {
-  //     headers: { 'Content-Type': 'application/x-binary' },
-  //   });
-  //   return await res.blob();
-  // };
 
   useEffect(() => {
     (async () => {
@@ -108,42 +96,24 @@ export default function Fold() {
     const users = Object.values(getUsers()).filter((user) => !user.isSpeaker);
 
     // get user that can be folded in
-    let user = await db.getUserToFold(TreeType.Attendee, users);
-    if (user === undefined) {
+    let foldableUsers = await db.getUsersToFold(TreeType.Attendee, users);
+    if (foldableUsers === undefined) {
       toast.info('No attendees to fold in!');
       setIsProving(false);
       return;
     }
 
-    // Check for previous fold
+    // Get proof count
     const proof = await db.getFold(TreeType.Attendee);
+    const proofCount = proof?.numFolds ?? 0;
 
-    let proofCount = proof ? proof.numFolds : 0;
-    // If proof does not exist then start fold
-    if (!proof) {
-      // generate the first proof
-      console.log('Above first fold');
-      await startFold(user);
-      console.log('Below first fold');
-      proofCount = 1;
-      setNumFolded(proofCount);
-    }
-
-    // build successive proofs
-    user = await db.getUserToFold(TreeType.Attendee, users);
-    while (user !== undefined) {
-      // increment proof in web worker
-      await incrementFold(user);
-      proofCount++;
-      setNumFolded(proofCount);
-      // get next user to fold
-      user = await db.getUserToFold(TreeType.Attendee, users);
-      // await membershipFolder.verify(proof, proofData!.numFolds + 1, false);
-    }
+    await foldAll(foldableUsers);
 
     setCanFinalize(true);
     setIsProving(false);
-    toast.success(`Folded proofs of ${proofCount} attendees met!`);
+    toast.success(
+      `Folded proofs of ${proofCount + foldableUsers.length} attendees met!`
+    );
   };
 
   const verify = async () => {

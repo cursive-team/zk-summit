@@ -4,6 +4,55 @@ import { User } from "@/lib/client/localStorage";
 import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
 
 /**
+ * Starts a fold if none exists and / or increments a fold
+ * 
+ * @param user 
+ */
+async function workerFold(users: User[]) {
+  // Initialize indexdb
+  const db = new IndexDBWrapper();
+  await db.init();
+
+  console.log(`${users.length} to fold`)
+
+  // get params
+  const params = new Blob(await db.getChunks());
+  // Initialize membership folder
+  const membershipFolder = await MembershipFolder.initWithIndexDB(params);
+
+  // Check if fold already exists
+  let previousProof = await db.getFold(TreeType.Attendee);
+
+  let startIndex = previousProof ? 0 : 1;
+  // If proof data doesn't exist then start fold
+  if (!previousProof) {
+    const proof = await membershipFolder.startFold(users[0]);
+    // compress the proof
+    const compressed = await membershipFolder.compressProof(proof);
+    const proofBlob = new Blob([compressed]);
+    // store the compressed proof
+    await db.addFold(TreeType.Attendee, proofBlob, users[0].sigPk!);
+    console.log(`1 of ${users.length} users folded`)
+  }
+
+  for (let i = startIndex; i < users.length; i++) {
+    const user = users[0];
+    const proofData = await db.getFold(TreeType.Attendee);
+    let proof = await membershipFolder.decompressProof(
+      new Uint8Array(await proofData!.proof.arrayBuffer())
+    );
+    // fold in membership
+    proof = await membershipFolder.continueFold(user, proof, proofData!.numFolds);
+    // compress the proof
+    const compressed = await membershipFolder.compressProof(proof);
+    const proofBlob = new Blob([compressed]);
+    // store the compressed proof
+    await db.incrementFold(TreeType.Attendee, proofBlob, user.sigPk!);
+    console.log(`${i} of ${users.length} users folded`)
+  }
+}
+
+/**
  * Start a fold for via web worker
  *
  * @param params - gzip compressed params
@@ -116,6 +165,7 @@ async function workerGetParamsChunk(): Promise<boolean> {
 }
 
 const exports = {
+  workerFold,
   workerStartFold,
   workerIncrementFold,
   workerObfuscateFold,

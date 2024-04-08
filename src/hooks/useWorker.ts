@@ -9,6 +9,7 @@ export const useWorker = () => {
     const [chunksDownloaded, setChunksDownloaded] = useState<boolean>(false)
 
     const workerAPIRef = useRef<Remote<{
+        workerFold: (users: User[]) => Promise<void>,
         workerStartFold: (user: User) => Promise<void>,
         workerIncrementFold: (user: User) => Promise<void>,
         workerObfuscateFold: () => Promise<void>,
@@ -30,6 +31,13 @@ export const useWorker = () => {
         }
     }
 
+    const foldAll = async (users: User[]) => {
+        setFolding(true);
+        await workerAPIRef.current?.workerFold(users);
+        setFolding(false);
+    }
+
+
     const startFold = async (user: User) => {
         setFolding(true);
         await workerAPIRef.current?.workerStartFold(user);
@@ -50,6 +58,7 @@ export const useWorker = () => {
 
     return {
         downloadParamsChunk,
+        foldAll,
         startFold,
         incrementFold,
         obfuscateFold,

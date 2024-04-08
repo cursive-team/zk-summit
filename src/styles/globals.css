@@ -60,3 +60,20 @@ body {
 .h-modal {
   height: calc(100vh - 90px);
 }
+
+.swiper-pagination {
+  top: 16px !important;
+  padding: 8px 20px !important;
+  display: grid !important;
+  gap: 8px !important;
+  height: 10px !important;
+  grid-template-columns: repeat( auto-fit, minmax(50px, 1fr) );
+}
+
+.swiper-pagination .folded-dot {
+  @apply bg-white/80 h-1 w-full rounded-none;
+}
+
+.swiper-pagination .folded-dot-active {
+  @apply !bg-white !opacity-100;
+}

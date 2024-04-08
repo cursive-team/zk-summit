@@ -41,48 +41,51 @@ export default function QuestsPage() {
 
   return (
     <div className="flex flex-col gap-4 pt-4">
-      <span className="text-gray-10 font-sans text-xs">
+      <span className="text-iron-600 font-sans text-xs">
         Prove claims about your ZK11 experience, while preserving privacy over
         the people you met and talks you attended.
       </span>
-      <FolderCard />
+
       <LoadingWrapper
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-4"
         isLoading={isLoading}
         fallback={<Placeholder.List items={3} />}
         noResultsLabel="No proofs found"
       >
-        {displayQuests.map(
-          (
-            {
-              id,
-              name,
-              description,
-              userRequirements,
-              locationRequirements,
-              isCompleted = false,
-              userTapReq,
-            }: QuestWithCompletion,
-            index
-          ) => {
-            const key = `${id}-${index}`;
+        <>
+          <FolderCard />
+          {displayQuests.map(
+            (
+              {
+                id,
+                name,
+                description,
+                userRequirements,
+                locationRequirements,
+                isCompleted = false,
+                userTapReq,
+              }: QuestWithCompletion,
+              index
+            ) => {
+              const key = `${id}-${index}`;
 
-            return (
-              <Link href={`/proofs/${id}`} key={key}>
-                <QuestCard
-                  title={name}
-                  description={description}
-                  userTapReqCount={userTapReq ? 1 : 0}
-                  completedReqs={numRequirementsSatisfied[index]}
-                  userRequirements={userRequirements}
-                  locationRequirements={locationRequirements}
-                  isCompleted={isCompleted}
-                  isPinned={pinnedQuests.current.has(id)}
-                />
-              </Link>
-            );
-          }
-        )}
+              return (
+                <Link href={`/proofs/${id}`} key={key}>
+                  <QuestCard
+                    title={name}
+                    description={description}
+                    userTapReqCount={userTapReq ? 1 : 0}
+                    completedReqs={numRequirementsSatisfied[index]}
+                    userRequirements={userRequirements}
+                    locationRequirements={locationRequirements}
+                    isCompleted={isCompleted}
+                    isPinned={pinnedQuests.current.has(id)}
+                  />
+                </Link>
+              );
+            }
+          )}
+        </>
       </LoadingWrapper>
     </div>
   );

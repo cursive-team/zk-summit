@@ -116,7 +116,7 @@ export const LocationDetail = ({
             return (
               <div
                 key={index}
-                className="flex justify-between border-b w-full border-gray-300 gap-2 last-of-type:border-none first-of-type:pt-0 py-1"
+                className="flex justify-between border-b w-full border-white gap-2 last-of-type:border-none first-of-type:pt-0 py-1"
               >
                 <div className="flex items-center gap-2">
                   <IconCircle>
@@ -254,8 +254,6 @@ export default function QuestById() {
     quest &&
     numRequirementsSatisfied === numRequirementsTotal &&
     !isQuestComplete;
-
-  console.log("quest", quest);
 
   return (
     <div>

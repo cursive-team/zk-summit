@@ -272,7 +272,7 @@ const AppHeader = ({ isMenuOpen, setIsMenuOpen }: AppHeaderProps) => {
       {!isMenuOpen && (
         <Link href="/">
           <button type="button" className="flex gap-2 items-center">
-            <Icons.Cursive />
+            <Icons.Cursive className="text-iron-950" />
           </button>
         </Link>
       )}

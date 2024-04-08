@@ -1,6 +1,7 @@
 import { sha256 } from "js-sha256";
 import { getLocationSignatures, getProfile, getUsers } from "./localStorage";
 
+// need to call `useScripts` before this will work
 export function createFlower(
   stage: any,
   pubKey: string,

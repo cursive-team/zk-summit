@@ -5,7 +5,6 @@ import { classed } from "@tw-classed/react";
 import { cn } from "@/lib/client/utils";
 import {
   PubKeyArrayElement,
-  createFlower,
   generateSpiralPattern,
   getArtSignatures,
   makeGarden,

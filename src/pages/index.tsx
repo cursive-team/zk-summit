@@ -109,7 +109,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
         <FeedContent
           title={
             <>
-              {"Shared socials with "} {name}
+              {"Sent socials to "} {name}
             </>
           }
           icon={<CircleCard icon="person" />}
@@ -138,10 +138,10 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                <span className="text-iron-750">{name}</span>
                 <span className="text-iron-600">
-                  {" shared socials with you"}
+                  {"Received socials from "}
                 </span>
+                <span className="text-iron-750">{name}</span>
               </>
             }
             titleOverride={true}

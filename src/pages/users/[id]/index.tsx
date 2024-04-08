@@ -25,6 +25,8 @@ import { encryptOverlapComputedMessage } from "@/lib/client/jubSignal/overlapCom
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { CircleCard } from "@/components/cards/CircleCard";
 import { IconCircle } from "@/components/IconCircle";
+import { ProfilePicModal } from "@/components/modals/ProfilePicModal";
+import useSettings from "@/hooks/useSettings";
 
 const Label = classed.span("text-sm text-gray-12");
 
@@ -63,6 +65,9 @@ const UserProfilePage = () => {
   const { id } = router.query;
   const [user, setUser] = useState<User>();
   const alreadyConnected = router?.query?.alreadyConnected === "true";
+  const [showProfilePicModal, setShowProfilePicModal] =
+    useState<boolean>(false);
+  const { pageWidth } = useSettings();
 
   const [selfEncPk, setSelfEncPk] = useState<string>();
   const [otherEncPk, setOtherEncPk] = useState<string>();
@@ -371,6 +376,13 @@ const UserProfilePage = () => {
 
   return (
     <div>
+      <ProfilePicModal
+        isOpen={showProfilePicModal}
+        setIsOpen={setShowProfilePicModal}
+        size={pageWidth - 60}
+        name={user.name}
+        pubKey={user.sigPk ?? ""}
+      />
       <AppBackHeader redirectTo="/" />
       {alreadyConnected && (
         <div className="flex items-start justify-center py-28">
@@ -381,23 +393,27 @@ const UserProfilePage = () => {
       )}
       <div className="flex flex-col gap-6">
         <div className="flex gap-4 xs:gap-5 items-center">
-          {user ? (
+          <div
+            onClick={() => {
+              setShowProfilePicModal(true);
+            }}
+            className="w-32 h-32 rounded-[4px] relative flex-shrink-0"
+          >
             <ArtworkSnapshot
               width={128}
               height={128}
               pubKey={user.sigPk ?? ""}
             />
-          ) : (
-            <ArtworkSnapshot width={128} height={128} pubKey={""} />
-          )}
+            <button type="button" className="absolute right-1 top-1 z-1">
+              <Icons.Zoom />
+            </button>
+          </div>
+
           <div className="flex flex-col gap-1">
             <h2 className=" text-xl font-gray-12 font-normal">{user.name}</h2>
             <div className="flex items-center gap-1">
               {user.bio && (
-                <span
-                  className="font-gray-12 text-[14px] mt-1 left-5"
-                  style={{ whiteSpace: "pre-wrap" }}
-                >
+                <span className="font-gray-12 text-[14px] mt-1 left-5">
                   {user.bio}
                 </span>
               )}

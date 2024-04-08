@@ -117,7 +117,7 @@ const QuestCard = ({
         ) : (
           <Card.Description className="!text-primary">{`${
             completedReqs || 0
-          }/${numRequirements} completed`}</Card.Description>
+          }/${numRequirements}`}</Card.Description>
         )}
       </div>
       <Card.Progress

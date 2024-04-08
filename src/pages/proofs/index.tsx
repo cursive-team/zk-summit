@@ -41,7 +41,7 @@ export default function QuestsPage() {
   const { numRequirementsSatisfied } = useQuestRequirements(displayQuests);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 pt-4">
       <span className="text-gray-10 font-sans text-xs">
         Prove claims about your ZK11 experience, while preserving privacy over
         the people you met and talks you attended.

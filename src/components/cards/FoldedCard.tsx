@@ -8,7 +8,7 @@ import { Card } from "./Card";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/client/utils";
 
-const UNFOLDED_DATE = "2024-04-11 23:59:59";
+const UNFOLDED_DATE = "2024-04-10 14:59:59";
 
 const CountdownLabel = classed.span("text-primary font-semibold text-xs");
 
@@ -48,8 +48,11 @@ export const FolderCard = () => {
       className={cn({
         "opacity-60 pointer-events-none": hasCountdown,
       })}
+      style={{
+        backgroundImage: "url('/bg-glitter.png')",
+      }}
     >
-      <div className="flex flex-col gap-2 text-center pt-[22px] pb-[38px] px-6 ">
+      <div className="flex flex-col gap-2 text-center pt-4 pb-4 px-6 ">
         {hasCountdown && (
           <CountdownLabel>
             Available in: {days} days, {hours}:{minutes}:{seconds}

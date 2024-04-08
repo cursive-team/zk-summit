@@ -14,6 +14,8 @@ import { useRouter } from "next/router";
 import { encryptQuestCompletedMessage } from "@/lib/client/jubSignal";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { Card } from "../cards/Card";
+import { Icons } from "../Icons";
+import Link from "next/link";
 
 const QRCodeWrapper = classed.div("bg-white max-w-[254px]");
 
@@ -39,7 +41,7 @@ const CompleteQuestModal = ({
   quest,
   isOpen,
   setIsOpen,
-  existingProofId,
+  existingProofId = "12",
 }: CompleteQuestModalProps) => {
   const router = useRouter();
   const [displayState, setDisplayState] = useState<CompleteQuestDisplayState>(
@@ -195,6 +197,17 @@ const CompleteQuestModal = ({
       provingState.currentRequirementNumSigsTotal) *
     100;
 
+  const qrCodeUrl = `${window.location.origin}/qr/${proofId}`;
+
+  const copyProofLink = async () => {
+    await navigator.clipboard.writeText(qrCodeUrl);
+    toast.success("Proof link copied to clipboard!");
+  };
+
+  const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+    `I completed ${quest.name} at ZKSummit!`
+  )}&url=${encodeURIComponent(qrCodeUrl)}`;
+
   const getModalContent = (): JSX.Element => {
     switch (displayState) {
       case CompleteQuestDisplayState.INITIAL:
@@ -246,11 +259,20 @@ const CompleteQuestModal = ({
                   Anyone can scan this QR code to verify your proof
                 </span>
               </QRCodeWrapper>
+              <Button onClick={copyProofLink}>Copy link to proof</Button>
+              <Link href={twitterShareUrl} target="_blank">
+                <Button
+                  variant="transparent"
+                  icon={<Icons.Twitter className="text-primary" />}
+                >
+                  Share on Twitter
+                </Button>
+              </Link>
             </div>
           </div>
         );
       default:
-        return null;
+        return <></>;
     }
   };
 

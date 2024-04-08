@@ -385,6 +385,21 @@ export const Icons: Record<string, any> = {
       />
     </svg>
   ),
+  Twitter: (props: any) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="17"
+      height="16"
+      viewBox="0 0 17 16"
+      fill="none"
+      {...props}
+    >
+      <path
+        d="M12.6627 1.5H14.868L10.05 7.00667L15.718 14.5H11.28L7.80402 9.95533L3.82669 14.5H1.62002L6.77336 8.61L1.33602 1.5H5.88669L9.02869 5.654L12.6627 1.5ZM11.8887 13.18H13.1107L5.22269 2.75067H3.91136L11.8887 13.18Z"
+        fill="currentColor"
+      />
+    </svg>
+  ),
   quest: (props: any) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"

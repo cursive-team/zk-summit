@@ -52,7 +52,7 @@ const ProfileCardArtwork = ({ size, image }: ProfileCardArtworkProps) => {
 type ArtworkWrapperProps = Pick<ArtworkSnapshotProps, "children" | "title">;
 const ArtworkWrapper = ({ children, title }: ArtworkWrapperProps) => {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 bg-white/40 rounded-[8px]">
       {children}
       {title && (
         <span className="text-xs text-gray-900 font-normal mx-auto">
@@ -252,7 +252,7 @@ const ArtworkSnapshot = ({
                 >
                   <Description>
                     {isFirstElement
-                      ? "ETHDenver stamp collection NFT"
+                      ? "ZKSummit stamp collection NFT"
                       : `Collection when ${
                           person ? `you met ${name}` : `you went to ${name}`
                         }`}

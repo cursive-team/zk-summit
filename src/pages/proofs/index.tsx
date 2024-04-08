@@ -10,6 +10,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { QuestWithCompletion } from "@/types";
 import { getPinnedQuest } from "@/lib/client/localStorage/questPinned";
 import { useQuestRequirements } from "@/hooks/useQuestRequirements";
+import { FolderCard } from "@/components/cards/FoldedCard";
 
 export default function QuestsPage() {
   const pinnedQuests = useRef<Set<number>>(getPinnedQuest());
@@ -40,7 +41,12 @@ export default function QuestsPage() {
   const { numRequirementsSatisfied } = useQuestRequirements(displayQuests);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4 pt-4">
+      <span className="text-gray-10 font-sans text-xs">
+        Prove claims about your ZK11 experience, while preserving privacy over
+        the people you met and talks you attended.
+      </span>
+      <FolderCard />
       <LoadingWrapper
         className="flex flex-col gap-2"
         isLoading={isLoading}

@@ -22,7 +22,7 @@ type ListWrapperContainerVariants = Classed.VariantProps<
 >;
 
 interface ListWrapperProps extends ListWrapperContainerVariants {
-  title: ReactNode;
+  title?: ReactNode;
   label?: ReactNode; // label or extra info for the list
   children?: React.ReactNode;
 }
@@ -31,7 +31,7 @@ const ListWrapper = ({ title, label, children, gap }: ListWrapperProps) => {
   return (
     <ListWrapperContainer gap={gap}>
       <div className="flex items-center justify-between">
-        <Label>{title}</Label>
+        {title && <Label>{title}</Label>}
         {label && (
           <div className="flex items-center gap-2">
             <Label>{label}</Label>

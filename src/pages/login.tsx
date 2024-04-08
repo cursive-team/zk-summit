@@ -207,7 +207,7 @@ export default function Login() {
     return (
       <FormStepLayout
         title="zkSummit 11 x Cursive"
-        description="Login to view your social graph and event activity, or tap your card if you haven’t registered."
+        subtitle="Login to view your social graph and event activity, or tap your card if you haven’t registered."
         className="pt-4"
         onSubmit={handleSubmitWithPassword}
       >

@@ -1,34 +1,10 @@
-import { classed } from "@tw-classed/react";
 import Image from "next/image";
 import type * as Classed from "@tw-classed/react";
+import { IconCircle } from "../IconCircle";
 
 type CardIconType = "person" | "location" | "proof";
-const CircleIconCard = classed.div(
-  "flex justify-center items-center rounded-full overflow-hidden float-none",
-  {
-    variants: {
-      color: {
-        white: "bg-[#677363]",
-        gray: "bg-[#323232]",
-      },
-      size: {
-        xs: "size-6",
-        sm: "size-10",
-        md: "size-16",
-      },
-    },
-    defaultVariants: {
-      color: "gray",
-      size: "xs",
-    },
-  }
-);
 
-type CardIconVariants = Classed.VariantProps<typeof CircleIconCard>;
-const CircleCardQuest = classed.div(
-  CircleIconCard,
-  "border-2 -ml-[4px] border-gray-200"
-);
+type CardIconVariants = Classed.VariantProps<typeof IconCircle>;
 
 const CardIconMapping: Record<CardIconType, string> = {
   person: "/icons/person.svg",
@@ -53,19 +29,12 @@ const IconSizeClass: Record<"xs" | "sm" | "md", string> = {
   md: "h-[32px]",
 };
 
-const CircleCard = ({
-  icon,
-  isMultiple,
-  color = "gray",
-  size = "xs",
-}: CircleCardProps) => {
-  const Component = isMultiple ? CircleCardQuest : CircleIconCard;
-
-  const iconSize = IconSizeMapping[size];
-  const iconSizeClass = IconSizeClass[size];
+const CircleCard = ({ icon, color, border }: CircleCardProps) => {
+  const iconSize = IconSizeMapping["xs"];
+  const iconSizeClass = IconSizeClass["xs"];
 
   return (
-    <Component color={color} size={size}>
+    <IconCircle color={color} border={border}>
       <Image
         src={CardIconMapping[icon]}
         height={iconSize}
@@ -73,7 +42,7 @@ const CircleCard = ({
         className={iconSizeClass}
         alt={`${icon} icon`}
       />
-    </Component>
+    </IconCircle>
   );
 };
 

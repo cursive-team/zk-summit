@@ -111,7 +111,7 @@ const LocationTapModal = ({
     <Modal isOpen={isOpen} setIsOpen={setIsOpen} withBackButton>
       <div className="flex flex-col min-h-[60vh]">
         <div className="flex flex-col items-center gap-[10px] pt-24 pb-28">
-          <CircleCard icon="location" size="md" />
+          <CircleCard icon="location" />
           <div className="flex flex-col gap-2 items-center mx-6">
             <span className="text-xl tracking-[-0.2px] font-normal text-gray-12">
               Success!
@@ -174,7 +174,7 @@ const LocationTapModal = ({
                   userTapReq,
                 } = quest;
                 return (
-                  <Link href={`/quests/${id}`} key={id}>
+                  <Link href={`/proofs/${id}`} key={id}>
                     <QuestCard
                       key={id}
                       title={name}

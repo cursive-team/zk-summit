@@ -9,14 +9,14 @@ interface PlaceholderPlaceholderProps {
   items?: number;
 }
 
-const PlaceholderBase = classed.div("bg-slate-100 animate-pulse");
+const PlaceholderBase = classed.div("bg-iron-600/20 animate-pulse");
 const PlaceholderCard = classed.div(
   PlaceholderBase,
   Card.Base,
-  "min-h-[120px] bg-slate-100"
+  "min-h-[120px] bg-iron-600/20"
 );
 
-const PlaceholderLine = classed.div(PlaceholderBase, "!bg-tertiary", {
+const PlaceholderLine = classed.div(PlaceholderBase, "!bg-iron-600/20", {
   variants: {
     size: {
       tiny: "h-0.5",
@@ -41,7 +41,7 @@ const PlaceholderLine = classed.div(PlaceholderBase, "!bg-tertiary", {
 
 const PlaceholderCircle = classed.div(
   PlaceholderBase,
-  "!bg-slate-200 block rounded-full",
+  "!bg-iron-600/20 block rounded-full",
   {
     variants: {
       size: {

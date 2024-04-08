@@ -1,15 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AppBackHeader } from "@/components/AppHeader";
 import { Icons } from "@/components/Icons";
-import { QuestRequirementCard } from "@/components/cards/QuestRequirementCard";
 import { classed } from "@tw-classed/react";
 import { useParams } from "next/navigation";
 import {
-  LocationRequirement,
   LocationRequirementPreview,
-  QuestRequirementType,
   QuestWithRequirements,
-  UserRequirement,
   UserRequirementPreview,
 } from "@/types";
 import { Button } from "@/components/Button";
@@ -37,13 +33,15 @@ import {
 import { toast } from "sonner";
 import { Card } from "@/components/cards/Card";
 import { Header } from "@/components/modals/QuestRequirementModal";
+import { IconCircle } from "@/components/IconCircle";
+import { cn } from "@/lib/client/utils";
 
 interface QuestDetailProps {
   loading?: boolean;
   quest: QuestWithRequirements | null;
 }
 
-const Label = classed.span("text-xs text-gray-10 font-normal");
+const Label = classed.span("text-xs font-sans text-iron-600 font-semibold");
 
 type UserDetailProps = {
   label?: string;
@@ -69,24 +67,30 @@ export const UserDetail = ({
 
   return (
     <div className="flex flex-col gap-8">
-      <Header title={title} label="Requirement" completed={completed} />
       <div className="flex flex-col gap-4">
-        <Label>{`${numSigsCollected} met out of ${numSigsRequired} required`}</Label>
         <div>
           {users.map(({ displayName, signaturePublicKey }, index) => {
             const collected = userPubKeysCollected.includes(signaturePublicKey);
+            if (!collected) return null; // should not render uncollected users
             return (
               <div
                 key={index}
-                className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1"
+                className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
               >
                 <div className="flex items-center gap-2">
-                  <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
-                    <Icons.person size={12} />
-                  </div>
-                  <Card.Title>{displayName}</Card.Title>
+                  <IconCircle>
+                    <Icons.Person size={12} />
+                  </IconCircle>
+                  <Card.Title
+                    className={cn("text-sm font-sans", {
+                      "text-iron-950 font-bold": collected,
+                      "text-iron-600 font-normal": !collected,
+                    })}
+                  >
+                    {displayName}
+                  </Card.Title>
                 </div>
-                {collected && <Icons.checkedCircle />}
+                {collected && <Icons.CheckCircle className="text-iron-600" />}
               </div>
             );
           })}
@@ -120,25 +124,32 @@ export const LocationDetail = ({
 
   return (
     <div className="flex flex-col gap-8">
-      <Header title={title} label="Requirement" completed={completed} />
       <div className="flex flex-col gap-4">
-        <Label>{`${numSigsCollected} attended out of ${numSigsRequired} required`}</Label>
         <div>
           {locations.map(({ name, signaturePublicKey }, index) => {
             const collected =
               locationPubKeysCollected.includes(signaturePublicKey);
+
+            if (!collected) return null; // should not render uncollected users
             return (
               <div
                 key={index}
                 className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1"
               >
                 <div className="flex items-center gap-2">
-                  <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
-                    <Icons.person size={12} />
-                  </div>
-                  <Card.Title>{name}</Card.Title>
+                  <IconCircle>
+                    <Icons.Person size={12} />
+                  </IconCircle>
+                  <Card.Title
+                    className={cn("text-sm font-sans", {
+                      "text-iron-950 font-bold": collected,
+                      "text-iron-600 font-normal": !collected,
+                    })}
+                  >
+                    {name}
+                  </Card.Title>
                 </div>
-                {collected && <Icons.checkedCircle />}
+                {collected && <Icons.CheckCircle />}
               </div>
             );
           })}
@@ -166,14 +177,8 @@ const QuestDetail = ({ quest, loading = false }: QuestDetailProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <div className="grid grid-cols-[40px_1fr] gap-2 xs:gap-3 items-center">
-          <div className="size-10 bg-slate-200 rounded-full"></div>
-          <span className="text-lg xs:text-xl font-normal leading-6">
-            {title}
-          </span>
-        </div>
         {/* <button
           type="button"
           className="flex gap-2 items-center disabled:opacity-50 outline-none focus:outline-none"
@@ -186,10 +191,10 @@ const QuestDetail = ({ quest, loading = false }: QuestDetailProps) => {
           {isQuestPinned ? <Icons.Unpin /> : <IconsP />}
         </button> */}
       </div>
-      <div className="flex flex-col gap-4">
-        <span className=" text-gray-11 text-xs font-normal">{description}</span>
-        <div className="flex flex-col gap-2"></div>
-      </div>
+      <span className="text-lg xs:text-xl text-iron-950 leading-6 font-medium">
+        {title}
+      </span>
+      <span className="text-iron-600 text-sm font-normal">{description}</span>
     </div>
   );
 };
@@ -312,7 +317,6 @@ export default function QuestById() {
             <>
               <QuestDetail quest={quest} />
               <ListWrapper
-                title="Requirements"
                 label={
                   <div className="flex gap-2 items-center">
                     {isQuestComplete && (
@@ -326,7 +330,7 @@ export default function QuestById() {
                       </Button>
                     )}
                     {!isQuestComplete && (
-                      <Label>{`${numRequirementsSatisfied}/${numRequirementsTotal}`}</Label>
+                      <Label className="text-gray-10 font-semibold font-sans">{`${numRequirementsSatisfied}/${numRequirementsTotal} collected`}</Label>
                     )}
                     {quest &&
                       numRequirementsSatisfied === numRequirementsTotal &&
@@ -344,26 +348,6 @@ export default function QuestById() {
                 }
               >
                 <>
-                  {/* {quest && quest.userTapReq !== null && (
-                    <Card.Base className="text-center flex justify-center py-4">
-                      <div className="flex flex-col gap-2 items-center">
-                        <div className={cn("flex items-center justify-center")}>
-                          <CircleCard size="sm" color="white" icon="proof" />
-                        </div>
-                        <div className="flex flex-col">
-                          <Card.Title>{`Tap ${quest.userTapReq} people!`}</Card.Title>
-                          <Card.Description>
-                            {userOutboundTaps >= quest.userTapReq
-                              ? "Complete"
-                              : `${userOutboundTaps}/${quest.userTapReq}`}
-                          </Card.Description>
-                        </div>
-                      </div>
-                      {userOutboundTaps >= quest.userTapReq && (
-                        <Icons.checkedCircle className="absolute right-[6px] top-[6px]" />
-                      )}
-                    </Card.Base>
-                  )} */}
                   {quest && quest.userRequirements.length > 0 && (
                     <UserDetail
                       users={quest.userRequirements[0].users}

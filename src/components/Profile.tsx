@@ -4,14 +4,12 @@ import { Input } from "./Input";
 import { ReactNode, useState } from "react";
 import {
   Profile as ProfileType,
-  createBackup,
   getAuthToken,
   saveProfile,
 } from "@/lib/client/localStorage";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
-import { generateSalt, hashPassword } from "@/lib/client/utils";
-import { encryptBackupString } from "@/lib/shared/backup";
+import { hashPassword } from "@/lib/client/utils";
 import { ProfileForm, ProfileFormProps } from "./profileFormSteps";
 import { useMutation } from "@tanstack/react-query";
 import { useStateMachine } from "little-state-machine";
@@ -25,7 +23,7 @@ interface ProfileProps {
 const Profile = ({ handleSignout }: ProfileProps) => {
   const { actions, getState } = useStateMachine({ updateStateFromAction });
 
-  const displayState = getState().profileView ?? ProfileDisplayState.VIEW;
+  const displayState = getState().profileView ?? ProfileDisplayState.EDIT;
 
   const router = useRouter();
 
@@ -36,13 +34,6 @@ const Profile = ({ handleSignout }: ProfileProps) => {
   const [cachedPasswordSalt, setCachedPasswordSalt] = useState<string>();
   const [cachedPasswordHash, setCachedPasswordHash] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
-
-  const updateProfileViewState = (newView: ProfileDisplayState) => {
-    actions.updateStateFromAction({
-      ...getState(),
-      profileView: newView,
-    });
-  };
 
   const clearFormValues = () => {
     // clear input password
@@ -109,8 +100,6 @@ const Profile = ({ handleSignout }: ProfileProps) => {
     setPreviousProfile(profile);
     setLoading(false);
     toast.success("Profile updated successfully!");
-
-    updateProfileViewState(ProfileDisplayState.VIEW);
   };
 
   const handleSaveEdit = async (formValues: ProfileFormProps) => {
@@ -211,7 +200,6 @@ const Profile = ({ handleSignout }: ProfileProps) => {
     event.preventDefault();
     setPassword(undefined);
     setConfirmPassword(undefined);
-    updateProfileViewState(ProfileDisplayState.EDIT);
   };
 
   const handleInputPasswordChange = (
@@ -235,35 +223,13 @@ const Profile = ({ handleSignout }: ProfileProps) => {
     mutationFn: (formValues: ProfileFormProps) => handleSaveEdit(formValues),
   });
 
-  const ViewByState: Record<ProfileDisplayState, ReactNode> = {
-    [ProfileDisplayState.VIEW]: (
-      <ProfileForm
-        isReadOnly
-        previousProfile={previousProfile}
-        setPreviousProfile={setPreviousProfile}
-        onHandleEdit={() => {
-          updateProfileViewState(ProfileDisplayState.EDIT);
-        }}
-        onHandleSignout={() => {
-          handleSignout();
-        }}
-        onCancelEdit={() => {}}
-        onHandleSaveEdit={() => {}}
-      />
-    ),
+  const ViewByState: Partial<Record<ProfileDisplayState, ReactNode>> = {
     [ProfileDisplayState.EDIT]: (
       <ProfileForm
-        isReadOnly={false} // form is editable
         previousProfile={previousProfile}
         setPreviousProfile={setPreviousProfile}
-        onHandleEdit={() => {
-          // no implementation needed because the form is already editable
-        }}
         onHandleSignout={() => {
-          // no implementation needed because the form is already editable
-        }}
-        onCancelEdit={() => {
-          updateProfileViewState(ProfileDisplayState.VIEW);
+          handleSignout();
         }}
         onHandleSaveEdit={(formValues: ProfileFormProps) => {
           handleSaveEditMutation.mutateAsync(formValues);

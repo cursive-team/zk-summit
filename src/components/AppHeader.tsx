@@ -9,9 +9,21 @@ import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
 import { ProfileDisplayState } from "@/types";
 import { supabase } from "@/lib/client/realtime";
+import { Button } from "./Button";
+import { LINKS } from "@/hooks/useSettings";
+import { cn } from "@/lib/client/utils";
 
-const Title = classed.h3("block text-base text-iron-950 font-medium leading-5");
-const Subtitle = classed.h4("text-sm text-iron-950 leading-5");
+const Title = classed.h3("block font-sans text-iron-950", {
+  variants: {
+    size: {
+      small: "text-base leading-1 font-semibold",
+      medium: "text-[21px] leading-5 font-medium",
+    },
+  },
+  defaultVariants: {
+    size: "small",
+  },
+});
 const Description = classed.span("text-sm text-iron-950 leading-5");
 
 const ContentWrapper = classed.div("flex flex-col gap-3 mt-3 xs:gap-4 xs:mt-6");
@@ -27,6 +39,7 @@ interface AppBackHeaderProps {
   onBackClick?: () => void;
   actions?: ReactNode;
   label?: string;
+  sticky?: boolean;
 }
 
 export const AppBackHeader = ({
@@ -34,11 +47,16 @@ export const AppBackHeader = ({
   onBackClick,
   actions,
   label,
+  sticky = false,
 }: AppBackHeaderProps) => {
   const router = useRouter();
 
   return (
-    <div className="flex justify-between items-center h-[50px] xs:h-[60px]">
+    <div
+      className={cn("flex justify-between items-center h-[50px] xs:h-[60px]", {
+        "sticky top-0 bg-main": sticky,
+      })}
+    >
       <button
         type="button"
         className="flex items-center gap-1 text-iron-950"
@@ -73,7 +91,7 @@ const AppHeaderContent = ({
   const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
 
   const profileViewState: ProfileDisplayState =
-    getState().profileView || ProfileDisplayState.VIEW;
+    getState().profileView || ProfileDisplayState.EDIT;
 
   if (!isMenuOpen) return null;
 
@@ -83,133 +101,62 @@ const AppHeaderContent = ({
       children: <Profile handleSignout={handleSignout} />,
     },
     {
-      label: "Information & FAQ's",
+      label: "About",
       children: (
         <>
           <ContentWrapper>
-            <Title>Information</Title>
+            <Title>About the app</Title>
             <Description>
-              BUIDLQuest is a way for ETHDenver attendees to connect with each
-              other and unlock unique experiences and merch by tapping NFC
-              chips. You collect unique stamps and signatures from tapping
-              people’s chipped badges to prove you met them, or from tapping
-              chips around the venue to prove you’ve been to in-person events.
+              This app allows you to verifiably digitize your ZK Summit
+              experience and make provable claims about the things you do at the
+              event. Every single tap gives you a digital signature representing
+              the fact that you either met someone or attended a talk. You can
+              make zk proofs about these signatures, like proving that you met 3
+              ZK Summit speakers without revealing who they were or the
+              signatures themselves.
             </Description>
             <Description>
-              If you satisfy the tap requirements of a quest, you can generate a
-              ZK proof of completion to earn $BUIDL to buy items at the BUIDL
-              Store! The store is at the front of the ETHDenver venue, full of
-              some of the best IYK chipped goods, claimed
-              first-come-first-serve!
+              Crucially, all the data you collect in this app is yours - our
+              servers only store an encrypted backup. You get to decide who sees
+              your data and how it is used.
             </Description>
-          </ContentWrapper>
-          <ContentWrapper>
-            <Title>FAQ</Title>
-            <div className="flex flex-col gap-2">
-              <Subtitle>Who is behind BUIDLQuest?</Subtitle>
-              <Description>
-                BUIDLQuest is a joint collaboration between{" "}
-                <u>
-                  <a
-                    href="https://zksync.io/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    ZKSync
-                  </a>
-                </u>
-                ,{" "}
-                <u>
-                  <a
-                    href="https://iyk.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    IYK
-                  </a>
-                </u>
-                ,{" "}
-                <u>
-                  <a
-                    href="https://cursive.team"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Cursive
-                  </a>
-                </u>
-                , ,{" "}
-                <u>
-                  <a
-                    href="https://getclave.io/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Clave
-                  </a>
-                </u>
-                ,{" "}
-                <u>
-                  <a
-                    href="https://summon.xyz/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Summon
-                  </a>
-                </u>
-                , and{" "}
-                <u>
-                  <a
-                    href="https://ethdenver.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    ETHDenver
-                  </a>
-                </u>
-                .
-              </Description>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Subtitle>What do I get from participating?</Subtitle>
-              <Description>
-                IYK has set up an expansive merch store at the front of the main
-                venue, filled with chipped goods that you can claim for $BUIDL
-                earned from completing quests!
-              </Description>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Subtitle>{"Where do I get support?"}</Subtitle>
-              <Description>
-                Join this Cursive ETHDenver{" "}
-                <a
-                  href="https://t.me/+pggQrl-a0W1mZGQ5"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <u>Telegram group</u>
-                </a>{" "}
-                for technical support and questions!
-              </Description>
-            </div>
-          </ContentWrapper>
-          <ContentWrapper className="pb-20">
-            <Title>Project Links</Title>
-            <div className="flex flex-col gap-2">
-              <Subtitle>
-                GitHub:{" "}
-                <u>
-                  <a
-                    href="https://github.com/cursive-team/nfc-denver"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
-                    https://github.com/cursive-team/nfc-denver
-                  </a>
-                </u>
-              </Subtitle>
-            </div>
+            <Description>
+              Cursive{" "}
+              <a
+                target="_blank"
+                className="underline"
+                href="https://cursive.team"
+              >
+                (cursive.team)
+              </a>{" "}
+              is a team building applications of signed data. We want to build
+              experiences where people own their data and use it in powerful
+              ways. If this is something you're interested in, please reach out!
+            </Description>
+            <Description>
+              <Link href={LINKS.GITHUB} target="_blank">
+                <Button variant="white">
+                  <div className="flex w-full items-center justify-between">
+                    <span className="text-iron-600 font-semibold text-xs">
+                      App GitHub
+                    </span>
+                    <Icons.ExternalLink className="text-gray-10" />
+                  </div>
+                </Button>
+              </Link>
+            </Description>
+            <Description>
+              <Link href={LINKS.CURSIVE_SITE} target="_blank">
+                <Button variant="white">
+                  <div className="flex w-full items-center justify-between">
+                    <span className="text-iron-600 font-semibold text-xs">
+                      Cursive homepage
+                    </span>
+                    <Icons.ExternalLink className="text-gray-10" />
+                  </div>
+                </Button>
+              </Link>
+            </Description>
           </ContentWrapper>
         </>
       ),
@@ -223,16 +170,8 @@ const AppHeaderContent = ({
     ) {
       actions.updateStateFromAction({
         ...getState(),
-        profileView: ProfileDisplayState.VIEW,
       });
       return; //
-    }
-
-    if (profileViewState === ProfileDisplayState.EDIT) {
-      actions.updateStateFromAction({
-        ...getState(),
-        profileView: ProfileDisplayState.VIEW,
-      });
     }
 
     setActiveMenuIndex(null);
@@ -242,7 +181,7 @@ const AppHeaderContent = ({
 
   return (
     <div className="fixed inset-0 w-full overflow-auto px-3 xs:px-4 z-10 h-full bg-main">
-      <div className="flex h-[40px] xs:h-[60px]">
+      <div className="flex xs:h-[60px] py-5">
         {showBackButton && (
           <button
             onClick={onBack}
@@ -260,7 +199,7 @@ const AppHeaderContent = ({
             // reset profile view
             actions.updateStateFromAction({
               ...getState(),
-              profileView: ProfileDisplayState.VIEW,
+              profileView: ProfileDisplayState.EDIT,
             });
             // reset active menu
             setActiveMenuIndex(null);
@@ -278,6 +217,7 @@ const AppHeaderContent = ({
             return (
               <Title
                 key={item.label}
+                size="medium"
                 onClick={() => {
                   setActiveMenuIndex(index);
                 }}
@@ -323,7 +263,12 @@ const AppHeader = ({ isMenuOpen, setIsMenuOpen }: AppHeaderProps) => {
   };
 
   return (
-    <div className="flex w-full items-center p-3 py-3 xs:p-4 bg-main z-50">
+    <div
+      className={cn("flex w-full items-center p-3 py-5 xs:p-4 z-50", {
+        "bg-main": isMenuOpen,
+        "bg-transparent": !isMenuOpen,
+      })}
+    >
       {!isMenuOpen && (
         <Link href="/">
           <button type="button" className="flex gap-2 items-center">

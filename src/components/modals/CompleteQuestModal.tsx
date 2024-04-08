@@ -180,7 +180,7 @@ const CompleteQuestModal = ({
 
   const handleBackToQuests = () => {
     setIsOpen(false);
-    router.push("/quests");
+    router.push("/proofs");
   };
 
   const getModalContent = (): JSX.Element => {
@@ -188,10 +188,12 @@ const CompleteQuestModal = ({
       case CompleteQuestDisplayState.INITIAL:
         return (
           <div className="flex flex-col w-full justify-center items-center text-center gap-5">
-            <div className="h-10 w-10 bg-slate-200 rounded-full self-center"></div>
+            <div className="h-10 w-10 bg-iron-600/60 rounded-full self-center"></div>
             <div className="flex flex-col gap-1 self-center">
               <div className="flex flex-col gap-2">
-                <span className="text-xl text-gray-12">{quest.name}</span>
+                <span className="text-xl font-medium text-iron-950">
+                  {quest.name}
+                </span>
               </div>
             </div>
             <div className="self-center w-full">
@@ -202,10 +204,11 @@ const CompleteQuestModal = ({
       case CompleteQuestDisplayState.PROVING:
         return (
           <div className="flex flex-col w-full justify-center text-center gap-5">
-            <div className="h-10 w-10 bg-slate-200 rounded-full self-center"></div>
             <div className="flex flex-col gap-1 self-center">
               <div className="flex flex-col">
-                <span className="text-xl text-gray-12 mb-2">{quest.name}</span>
+                <span className="text-xl text-iron-950 font-medium mb-2">
+                  {quest.name}
+                </span>
                 <Spinner
                   label={`Generating ZK proof (${provingState.currentRequirementNumSigsProven}/${provingState.currentRequirementNumSigsTotal} reqs)`}
                 />
@@ -220,13 +223,12 @@ const CompleteQuestModal = ({
         const qrCodeData = `${window.location.origin}/qr/${proofId}`;
         return (
           <div className="flex flex-col w-full justify-center text-center gap-5">
-            <div className="h-10 w-10 bg-slate-200 rounded-full self-center"></div>
             <div className="flex flex-col gap-1 self-center">
-              <div className="flex flex-col">
-                <span className="text-xl text-gray-12 font-bold">
-                  {"Proved:"}
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-iron-600 font-bold">Proof:</span>
+                <span className="text-[21px] font-sans text-iron-950 font-medium">
+                  {quest.name}
                 </span>
-                <span className="text-xl text-gray-12">{quest.name}</span>
               </div>
               <QRCodeWrapper>
                 <QRCode
@@ -235,13 +237,16 @@ const CompleteQuestModal = ({
                   value={qrCodeData}
                   viewBox={`0 0 156 156`}
                 />
+                <span className="text-xs px-10 text-iron-950 text-center leading-[16px] break-all">
+                  Anyone can scan this QR code to verify your proof
+                </span>
               </QRCodeWrapper>
             </div>
             <div
               onClick={handleBackToQuests}
               className="flex items-center gap-1 self-center"
             >
-              <span className="text-sm text-gray-11">Back to proofs</span>
+              <span className="text-sm text-iron-600">Back to proofs</span>
             </div>
           </div>
         );

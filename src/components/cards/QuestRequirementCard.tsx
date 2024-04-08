@@ -65,11 +65,9 @@ const QuestRequirementCard = ({
       >
         <div className="flex flex-col gap-2 items-center">
           <div className={cn("flex items-center justify-center")}>
-            {isUserRequirement && (
-              <CircleCard size="sm" color="white" icon="person" />
-            )}
+            {isUserRequirement && <CircleCard color="primary" icon="person" />}
             {isLocationRequirement && (
-              <CircleCard size="sm" color="white" icon="location" />
+              <CircleCard color="primary" icon="location" />
             )}
           </div>
           <div className="flex flex-col">
@@ -82,7 +80,7 @@ const QuestRequirementCard = ({
           </div>
         </div>
         {completed && (
-          <Icons.checkedCircle className="absolute right-[6px] top-[6px]" />
+          <Icons.CheckCircle className="absolute right-[6px] top-[6px]" />
         )}
         <Icons.ArrowRight className={cn("absolute right-[6px] bottom-[6px]")} />
         {showProgress && <Card.Progress />}

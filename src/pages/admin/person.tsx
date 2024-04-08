@@ -6,6 +6,7 @@ import { Icons } from "@/components/Icons";
 import { Card } from "@/components/cards/Card";
 import useRequireAdmin from "@/hooks/useRequireAdmin";
 import { getAuthToken } from "@/lib/client/localStorage";
+import { IconCircle } from "@/components/IconCircle";
 
 const AdminTapPersonPage = () => {
   const router = useRouter();
@@ -51,9 +52,9 @@ const AdminTapPersonPage = () => {
                   className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
-                      <Icons.person size={12} />
-                    </div>
+                    <IconCircle>
+                      <Icons.Person size={12} />
+                    </IconCircle>
                     <Card.Title>{displayName}</Card.Title>
                   </div>
                 </div>

@@ -27,6 +27,9 @@ import { ArtworkSnapshot } from "@/components/artwork/ArtworkSnapshot";
 import useSettings from "@/hooks/useSettings";
 import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
+import { IconCircle } from "@/components/IconCircle";
+import { NoResultContent } from "@/components/NoResultContent";
+import { TalksSection } from "@/components/sections/TalksSection";
 
 interface ContactCardProps {
   name: string;
@@ -42,24 +45,6 @@ const ContactCard = ({ name, userId, date }: ContactCardProps) => {
         <Card.Description>{date}</Card.Description>
       </Card.Base>
     </Link>
-  );
-};
-
-const PendingContactCard = ({ name, userId, date }: ContactCardProps) => {
-  return (
-    <Card.Base className="flex items-center justify-between p-3">
-      <div className="flex items-center gap-2">
-        <Card.Title className="leading-none">{name}</Card.Title>
-        <Card.Description>{date}</Card.Description>
-      </div>
-      <div>
-        <Link href={`/users/${userId}/share`}>
-          <Button variant="tertiary" size="small">
-            Share back
-          </Button>
-        </Link>
-      </div>
-    </Card.Base>
   );
 };
 
@@ -79,20 +64,10 @@ const FeedContent = ({ title, description, icon }: FeedContentProps) => {
   return (
     <div className="grid grid-cols-[1fr_80px] items-center justify-between py-1 gap-4">
       <div className="grid grid-cols-[24px_1fr] items-center gap-2">
-        <div className="flex justify-center items-center h-6 w-6 rounded-full bg-[#323232]">
-          {icon}
-        </div>
+        <IconCircle>{icon}</IconCircle>
         <Card.Title>{title}</Card.Title>
       </div>
       <Card.Description>{description}</Card.Description>
-    </div>
-  );
-};
-
-const NoResultContent = ({ children }: any) => {
-  return (
-    <div className="flex justify-center items-center h-[30vh]">
-      <span className="text-iron-600 font-bold">{children || "No result"}</span>
     </div>
   );
 };
@@ -177,7 +152,7 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
       );
     case JUB_SIGNAL_MESSAGE_TYPE.QUEST_COMPLETED:
       return (
-        <Link href={`/quests/${id}`}>
+        <Link href={`/proofs/${id}`}>
           <FeedContent
             icon={<CircleCard icon="proof" />}
             title={
@@ -270,17 +245,6 @@ export default function Social() {
     });
     groupedContactUsers.push(currentLetterUsers);
 
-    // Sort pending contacts by timestamp
-    const pendingUsersList = usersList.filter(
-      (user) =>
-        user.inTs &&
-        !user.outTs &&
-        user.encPk !== profileData.encryptionPublicKey
-    );
-    const sortedPendingUserList = pendingUsersList.sort(
-      (a, b) => new Date(b.inTs!).getTime() - new Date(a.inTs!).getTime()
-    );
-
     return [
       {
         label: "Activity Feed",
@@ -348,34 +312,8 @@ export default function Social() {
         ),
       },
       {
-        label: "Pending",
-        badge: sortedPendingUserList.length > 0,
-        children: (
-          <div className="flex flex-col gap-5">
-            {sortedPendingUserList.length === 0 && (
-              <NoResultContent>
-                {"No people you haven't tapped back"}
-              </NoResultContent>
-            )}
-            {sortedPendingUserList.length !== 0 && (
-              <div className="flex flex-col gap-1">
-                {sortedPendingUserList.map((user, index) => {
-                  const { name, inTs } = user;
-                  const date = inTs ? formatDate(inTs) : "-";
-
-                  return (
-                    <PendingContactCard
-                      key={index}
-                      name={name}
-                      userId={user.uuid}
-                      date={date}
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        ),
+        label: "Talks",
+        children: <TalksSection />,
       },
     ];
   };

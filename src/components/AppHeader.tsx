@@ -138,7 +138,19 @@ const AppHeaderContent = ({
                 <Button variant="white">
                   <div className="flex w-full items-center justify-between">
                     <span className="text-iron-600 font-semibold text-xs">
-                      Github
+                      App GitHub
+                    </span>
+                    <Icons.ExternalLink className="text-gray-10" />
+                  </div>
+                </Button>
+              </Link>
+            </Description>
+            <Description>
+              <Link href={LINKS.CURSIVE_SITE} target="_blank">
+                <Button variant="white">
+                  <div className="flex w-full items-center justify-between">
+                    <span className="text-iron-600 font-semibold text-xs">
+                      Cursive homepage
                     </span>
                     <Icons.ExternalLink className="text-gray-10" />
                   </div>
@@ -169,7 +181,7 @@ const AppHeaderContent = ({
 
   return (
     <div className="fixed inset-0 w-full overflow-auto px-3 xs:px-4 z-10 h-full bg-main">
-      <div className="flex h-[40px] xs:h-[60px]">
+      <div className="flex xs:h-[60px] py-5">
         {showBackButton && (
           <button
             onClick={onBack}
@@ -252,7 +264,7 @@ const AppHeader = ({ isMenuOpen, setIsMenuOpen }: AppHeaderProps) => {
 
   return (
     <div
-      className={cn("flex w-full items-center p-3 py-3 xs:p-4 z-50", {
+      className={cn("flex w-full items-center p-3 py-5 xs:p-4 z-50", {
         "bg-main": isMenuOpen,
         "bg-transparent": !isMenuOpen,
       })}

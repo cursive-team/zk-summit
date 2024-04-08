@@ -6,6 +6,7 @@ export const MAX_LEADERBOARD_LENGTH = 100;
 
 export const LINKS = {
   GITHUB: "https://github.com/cursive-team/zk-summit",
+  CURSIVE_SITE: "https://cursive.team",
 };
 
 export default function useSettings() {

@@ -94,11 +94,6 @@ export class MembershipFolder {
         `Cannot fold user ${user.name}'s membership: self or untapped!`
       );
     // check the user has not already been folded
-    if (user.folded === true)
-      throw new Error(
-        `User ${user.name}'s membership has already been folded!`
-      );
-
     // fetch merkle proof for the user
     const merkleProof = await fetch(
       `/api/tree/proof?treeType=attendee&pubkey=${user.sigPk}`
@@ -138,10 +133,6 @@ export class MembershipFolder {
         `Cannot fold user ${user.name}'s membership: self or untapped!`
       );
     // check the user has not already been folded
-    if (user.folded === true)
-      throw new Error(
-        `User ${user.name}'s membership has already been folded!`
-      );
 
     // fetch merkle proof for the user
     const merkleProof = await fetch(
@@ -205,16 +196,19 @@ export class MembershipFolder {
   ): Promise<boolean> {
     // set num verified based on obfuscation
     let iterations = obfuscated ? numFolds + 1 : numFolds;
-
-    console.log("A", hexToBigInt(this.roots.attendeeMerkleRoot).toString());
-    console.log("B", iterations);
-
+    // let iterations = 2;
     try {
-      await this.wasm.verify_proof(
+      let res = await this.wasm.verify_proof(
         this.params,
         proof,
         hexToBigInt(this.roots.attendeeMerkleRoot).toString(),
         Number(iterations)
+      );
+      console.log(
+        `Verification output of ${
+          obfuscated ? "chaffed " : ""
+        }proof of ${numFolds} memberships:`,
+        res
       );
       return true;
     } catch (e) {

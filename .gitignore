@@ -40,3 +40,6 @@ next-env.d.ts
 
 # docker
 docker-compose.yml
+
+# only package-lock.json
+yarn.lock

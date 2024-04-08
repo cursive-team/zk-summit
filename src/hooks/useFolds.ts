@@ -83,7 +83,7 @@ const useFolds = () => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
     const data = await store.get(key);
-    if (data === null) return false;
+    if (data === undefined) return false;
     data.obfuscated = true;
     data.proof = newProof;
     await store.put(data, key);
@@ -105,9 +105,9 @@ const useFolds = () => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
     const data = await store.get(key);
-    if (data === null) return false;
+    if (data === undefined) return false;
     data.numFolds += 1;
-    data.proofs = newProof;
+    data.proof = newProof;
     data.included.push(pubkey);
     await store.put(data, key);
     return true;

@@ -31,8 +31,6 @@ const Description = classed.span("text-sm text-iron-600 leading-5");
 
 type ProfileProps = {
   onHandleSignout: () => void;
-  onHandleEdit: () => void;
-  onCancelEdit?: () => void;
   onHandleSaveEdit?: (
     formValues: ProfileFormProps,
     formState: FormState<ProfileFormProps>
@@ -52,8 +50,6 @@ export const DEFAULT_PROFILE_VALUES: ProfileFormProps = {
 
 const ProfileForm = ({
   onHandleSignout,
-  onCancelEdit,
-  onHandleEdit,
   onHandleSaveEdit,
   previousProfile,
   setPreviousProfile,
@@ -152,6 +148,9 @@ const ProfileForm = ({
             loading={loading}
           >
             Save Changes
+          </Button>
+          <Button type="button" onClick={onHandleSignout}>
+            Logout
           </Button>
         </div>
       }

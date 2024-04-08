@@ -228,11 +228,8 @@ const Profile = ({ handleSignout }: ProfileProps) => {
       <ProfileForm
         previousProfile={previousProfile}
         setPreviousProfile={setPreviousProfile}
-        onHandleEdit={() => {
-          // no implementation needed because the form is already editable
-        }}
         onHandleSignout={() => {
-          // no implementation needed because the form is already editable
+          handleSignout();
         }}
         onHandleSaveEdit={(formValues: ProfileFormProps) => {
           handleSaveEditMutation.mutateAsync(formValues);

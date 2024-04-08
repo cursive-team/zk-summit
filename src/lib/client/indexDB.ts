@@ -25,7 +25,7 @@ export class IndexDBWrapper {
     public readonly name = "zksummit_folded",
     public readonly paramsStore = "params",
     public readonly foldsStore = "folds"
-  ) {}
+  ) { }
 
   /**
    * Initialize db and store
@@ -146,7 +146,7 @@ export class IndexDBWrapper {
         throw new Error(`IncrementFold: Proof for ${key} does not exist`);
       }
       data.numFolds += 1;
-      data.proofs = newProof;
+      data.proof = newProof;
       data.included.push(pubkey);
       await store.put(data, key);
     } else {
@@ -162,8 +162,8 @@ export class IndexDBWrapper {
    */
   async obfuscateFold(key: TreeType, newProof: Blob) {
     if (this.db) {
-      const tx = this.db.transaction(this.paramsStore, "readwrite");
-      const store = tx.objectStore(this.paramsStore);
+      const tx = this.db.transaction(this.foldsStore, "readwrite");
+      const store = tx.objectStore(this.foldsStore);
       const data = await store.get(key);
       if (data === undefined) {
         throw new Error(`ObfuscateFold: Proof for ${key} does not exist`);

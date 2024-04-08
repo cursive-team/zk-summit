@@ -97,15 +97,22 @@ async function workerGetParamsChunk(): Promise<boolean> {
   await db.init();
   // get chunk count
   const chunkIndex = await db.countChunks();
-  if (chunkIndex === 10) return true;
+  if (chunkIndex === 10) {
+    console.log('All chunks stored')
+    return true;
+  }
   // get the next chunk
-  const chunkURI = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${chunkIndex}.gz`;
-  const chunk = await fetch(chunkURI, {
-    headers: { "Content-Type": "application/x-binary" },
-  }).then(async (res) => await res.blob());
-  // store the chunk in the db
-  await db.addChunk(chunkIndex, chunk);
-  return chunkIndex === 9;
+  console.log(`${chunkIndex} of 10 chunks stored`)
+  for (let i = chunkIndex; i < 10; i++) {
+    const chunkURI = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${i}.gz`;
+    const chunk = await fetch(chunkURI, {
+      headers: { "Content-Type": "application/x-binary" },
+    }).then(async (res) => await res.blob());
+    // store the chunk in the db
+    await db.addChunk(i, chunk);
+    console.log(`Chunk ${i + 1} of 10 stored`);
+  }
+  return true;
 }
 
 const exports = {

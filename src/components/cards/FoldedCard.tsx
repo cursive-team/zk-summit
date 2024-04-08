@@ -32,7 +32,7 @@ interface FolderCardProps {
   onClose?: () => void;
 }
 
-const FOLDED_MOCKS: FolderCardProps["items"] = [
+export const FOLDED_MOCKS: FolderCardProps["items"] = [
   {
     image: "/bg-gradient-card.png",
     children: (
@@ -153,7 +153,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   );
 };
 
-export const FolderCard = ({ items = FOLDED_MOCKS }: FolderCardProps) => {
+export const FolderCard = ({ items }: FolderCardProps) => {
   const [isOpened, setIsOpened] = useState(false);
   const [hasCountdown, setHasCountdown] = useState(false);
   const [countdown, setCountdown] = useState({

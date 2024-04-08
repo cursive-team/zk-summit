@@ -9,7 +9,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { QuestWithCompletion } from "@/types";
 import { getPinnedQuest } from "@/lib/client/localStorage/questPinned";
 import { useQuestRequirements } from "@/hooks/useQuestRequirements";
-import { FolderCard } from "@/components/cards/FoldedCard";
+import { FOLDED_MOCKS, FolderCard } from "@/components/cards/FoldedCard";
 
 export default function QuestsPage() {
   const pinnedQuests = useRef<Set<number>>(getPinnedQuest());
@@ -53,7 +53,7 @@ export default function QuestsPage() {
         noResultsLabel="No proofs found"
       >
         <>
-          <FolderCard />
+          <FolderCard items={FOLDED_MOCKS} />
           {displayQuests.map(
             (
               {

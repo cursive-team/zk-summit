@@ -1,9 +1,16 @@
+import webpack from 'webpack';
+import withWorkers from '@zeit/next-workers';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   webpack: (config) => {
     // Needed to make snarkJs work client side
     config.resolve.fallback = { fs: false, readline: false };
+    // https://github.com/dmpierre/zkconnect4/blob/main/apps/web/next.config.js#L9-L11
+    config.plugins.push(
+      new webpack.ContextReplacementPlugin(/web-worker/)
+    );
     return config;
   },
   images: {
@@ -34,4 +41,4 @@ const nextConfig = {
   }
 };
 
-export default nextConfig;
+export default withWorkers(nextConfig);

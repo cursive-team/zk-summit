@@ -23,6 +23,7 @@ import { loadMessages } from "@/lib/client/jubSignalClient";
 import { toast } from "sonner";
 import { Spinner } from "@/components/Spinner";
 import { hashPublicKeyToUUID } from "@/lib/client/utils";
+import { logClientEvent } from "@/lib/client/metrics";
 
 export default function Tap() {
   const router = useRouter();
@@ -232,6 +233,8 @@ export default function Tap() {
       return;
     }
 
+    logClientEvent("tapProcessNewTap", {});
+
     fetch(`/api/tap/cmac?iykRef=${iykRef}${getMockRefUrlParam(mockRef)}`, {
       method: "GET",
       headers: {
@@ -249,18 +252,22 @@ export default function Tap() {
           case TapResponseCode.CMAC_INVALID:
             throw new Error("CMAC invalid!");
           case TapResponseCode.PERSON_NOT_REGISTERED:
+            logClientEvent("tapPersonNotRegistered", {});
             handlePersonRegistration(iykRef, mockRef);
             break;
           case TapResponseCode.LOCATION_NOT_REGISTERED:
+            logClientEvent("tapLocationNotRegistered", {});
             handleLocationRegistration(iykRef, mockRef);
             break;
           case TapResponseCode.VALID_PERSON:
+            logClientEvent("tapValidPerson", {});
             if (!tapResponse.person) {
               throw new Error("Person is null!");
             }
             await handlePersonTap(tapResponse.person);
             break;
           case TapResponseCode.VALID_LOCATION:
+            logClientEvent("tapValidLocation", {});
             if (!tapResponse.location) {
               throw new Error("Location is null!");
             }

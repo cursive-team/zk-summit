@@ -30,6 +30,7 @@ import { classed } from "@tw-classed/react";
 import { Card } from "@/components/cards/Card";
 import { Spinner } from "@/components/Spinner";
 import Link from "next/link";
+import { logClientEvent } from "@/lib/client/metrics";
 
 enum DisplayState {
   PASSKEY,
@@ -91,6 +92,8 @@ export default function Register() {
   };
 
   const handleCreateWithPassword = async () => {
+    logClientEvent("registerAttemptCreateWithPassword", {});
+
     if (!iykRef) {
       toast.error("Please tap your card to link it to your account.");
       return;
@@ -128,15 +131,21 @@ export default function Register() {
       return;
     }
 
+    logClientEvent("registerSuccessCreateWithPassword", {});
+
     setDisplayState(DisplayState.PASSWORD);
   };
 
   const handleCreateWithPasskey = () => {
+    logClientEvent("registerSuccessCreateWithPasskey", {});
+
     setDisplayState(DisplayState.PASSKEY);
   };
 
   const handleSubmitWithPasskey = async (e: FormEvent<Element>) => {
     e.preventDefault();
+
+    logClientEvent("registerAttemptSubmitWithPasskey", {});
 
     if (!iykRef) {
       toast.error("Please tap your card to link it to your account.");
@@ -168,6 +177,8 @@ export default function Register() {
       toast.error("Bio must be 200 characters or less.");
       return;
     }
+
+    logClientEvent("registerSuccessSubmitWithPasskey", {});
 
     setLoading(true);
 
@@ -220,6 +231,8 @@ export default function Register() {
       toast.error("Passwords do not match.");
       return;
     }
+
+    logClientEvent("registerSuccessSubmitWithPassword", {});
 
     setLoading(true);
 

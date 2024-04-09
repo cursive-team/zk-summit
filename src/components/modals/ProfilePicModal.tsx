@@ -1,12 +1,12 @@
-import { ModalProps, Modal } from "./Modal";
-import { useEffect } from "react";
-import { useScripts } from "@/hooks/useScripts";
-import { classed } from "@tw-classed/react";
-import { createFlower } from "@/lib/client/flower";
+import { ModalProps, Modal } from './Modal';
+import { useEffect } from 'react';
+import { useScripts } from '@/hooks/useScripts';
+import { classed } from '@tw-classed/react';
+import { createFlower } from '@/lib/client/flower';
 
-const Label = classed.span("text-iron-600 text-xs font-normal");
+const Label = classed.span('text-iron-600 text-xs font-normal');
 const Description = classed.span(
-  "text-center text-iron-700 text-sm font-regular"
+  'text-center text-iron-700 text-sm font-regular'
 );
 
 interface ProfilePicModalProps extends ModalProps {
@@ -27,7 +27,7 @@ const ProfilePicModal = ({
   useEffect(() => {
     if (!isLoaded || !isOpen) return;
     const stage = new window.createjs.Stage(
-      document.getElementById("propic-modal")
+      document.getElementById('propic-modal')
     );
     const center_x = stage.canvas.width / 2;
     const center_y = stage.canvas.height / 2;
@@ -36,25 +36,26 @@ const ProfilePicModal = ({
 
   return (
     <Modal isOpen={isOpen} setIsOpen={setIsOpen} withBackButton>
-      <div className="flex flex-col gap-10 mt-10">
-        <div className="flex flex-col gap-4">
-          <div className="mx-auto">
-            <div className="flex flex-col gap-4 h-full">
-              <div className="flex flex-col gap-2 bg-white/40 rounded-[8px]">
+      <div className='p-4'></div>
+      <div className='flex flex-col gap-10 mt-10'>
+        <div className='flex flex-col gap-4'>
+          <div className='mx-auto'>
+            <div className='flex flex-col gap-4 h-full'>
+              <div className='flex flex-col gap-2 bg-white/40 rounded-[8px]'>
                 <canvas
-                  className="artwork-webgl flex p-0 m-0 rounded-[8px]"
-                  id="propic-modal"
+                  className='artwork-webgl flex p-0 m-0 rounded-[8px]'
+                  id='propic-modal'
                   height={size}
                   width={size}
                 ></canvas>
               </div>
-              <div className="relative flex flex-col gap-4">
-                <div className={"absolute inset-0 flex flex-col gap-2 w-full"}>
+              <div className='relative flex flex-col gap-4'>
+                <div className={'absolute inset-0 flex flex-col gap-2 w-full'}>
                   <Description>
                     {`Flower representation of `} <b>{name}</b>
                     {`'s pubkey`}
                   </Description>
-                  <div className="text-center px-5" style={{ lineHeight: 1 }}>
+                  <div className='text-center px-5' style={{ lineHeight: 1 }}>
                     <Label>
                       {`Upon tapping ${name}'s card, you received a unique digital signature 
                       as a private, verifiable proof of meeting. ${name}'s pubkey is
@@ -71,5 +72,5 @@ const ProfilePicModal = ({
   );
 };
 
-ProfilePicModal.displayName = "ProfilePicModal";
+ProfilePicModal.displayName = 'ProfilePicModal';
 export { ProfilePicModal };

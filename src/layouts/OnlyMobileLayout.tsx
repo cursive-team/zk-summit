@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import MobileDetect from "mobile-detect";
-import React, { useEffect, useRef } from "react";
-import { APP_CONFIG } from "@/shared/constants";
-import { FullPageBanner } from "@/components/FullPageBanner";
+import MobileDetect from 'mobile-detect';
+import React, { useEffect, useRef } from 'react';
+import { APP_CONFIG } from '@/shared/constants';
+import { FullPageBanner } from '@/components/FullPageBanner';
 
 interface OnlyMobileProps {
   children?: React.ReactNode;
@@ -15,7 +15,7 @@ export default function OnlyMobileLayout({ children }: OnlyMobileProps) {
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       md.current = new MobileDetect(window?.navigator?.userAgent);
       setIsMobile(md.current?.mobile() !== null);
       setIsLoaded(true);

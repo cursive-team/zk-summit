@@ -1,21 +1,21 @@
-import { AppFooter } from "@/components/AppFooter";
-import { AppHeader } from "@/components/AppHeader";
-import { FullPageBanner } from "@/components/FullPageBanner";
-import { TransitionWrapper } from "@/components/Transition";
-import useSettings from "@/hooks/useSettings";
-import OnlyMobileLayout from "@/layouts/OnlyMobileLayout";
-import { DM_Sans } from "next/font/google";
-import "@/styles/globals.css";
+import { AppFooter } from '@/components/AppFooter';
+import { AppHeader } from '@/components/AppHeader';
+import { FullPageBanner } from '@/components/FullPageBanner';
+import { TransitionWrapper } from '@/components/Transition';
+import useSettings from '@/hooks/useSettings';
+import OnlyMobileLayout from '@/layouts/OnlyMobileLayout';
+import { DM_Sans } from 'next/font/google';
+import '@/styles/globals.css';
 import {
   QueryCache,
   QueryClient,
   QueryClientProvider,
-} from "@tanstack/react-query";
-import { StateMachineProvider } from "little-state-machine";
-import type { AppProps } from "next/app";
-import { useEffect, useState } from "react";
-import { toast, Toaster } from "sonner";
-import { init } from "@socialgouv/matomo-next";
+} from '@tanstack/react-query';
+import { StateMachineProvider } from 'little-state-machine';
+import type { AppProps } from 'next/app';
+import { useEffect, useState } from 'react';
+import { toast, Toaster } from 'sonner';
+import { init } from '@socialgouv/matomo-next';
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -24,8 +24,8 @@ const queryClient = new QueryClient({
 });
 
 const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
+  subsets: ['latin'],
+  variable: '--font-dm-sans',
 });
 
 const MATOMO_URL = process.env.NEXT_PUBLIC_MATOMO_URL!;
@@ -55,8 +55,8 @@ export default function App({ Component, pageProps }: AppProps) {
     return (
       <FullPageBanner
         iconSize={40}
-        title="Maintenance Mode"
-        description="We are repairing things behind the scenes, be back soon!"
+        title='Maintenance Mode'
+        description='We are repairing things behind the scenes, be back soon!'
       />
     );
   }
@@ -77,7 +77,7 @@ export default function App({ Component, pageProps }: AppProps) {
               height: `${pageHeight}px`,
             }}
           >
-            <div className="flex flex-col grow">
+            <div className='flex flex-col grow'>
               {showHeader && !fullPage && (
                 <AppHeader
                   isMenuOpen={isMenuOpen}
@@ -86,7 +86,7 @@ export default function App({ Component, pageProps }: AppProps) {
               )}
               <div
                 className={`flex flex-col grow px-4 xs:px-4 ${
-                  footerVisible ? "mb-20" : ""
+                  footerVisible ? 'mb-20' : ''
                 }`}
               >
                 <Component {...pageProps} />
@@ -98,10 +98,10 @@ export default function App({ Component, pageProps }: AppProps) {
           </main>
         </OnlyMobileLayout>
         <Toaster
-          position="top-center"
+          position='top-center'
           toastOptions={{
             duration: 5000,
-            className: "font-sans text-iron-950",
+            className: 'font-sans text-iron-950',
           }}
         />
       </QueryClientProvider>

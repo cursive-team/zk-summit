@@ -1,6 +1,3 @@
-import webpack from 'webpack';
-// import withWorkers from '@zeit/next-workers';
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,

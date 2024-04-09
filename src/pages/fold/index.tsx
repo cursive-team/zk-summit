@@ -9,16 +9,7 @@ import { TreeType } from '@/lib/client/indexDB';
 import { IndexDBWrapper } from '@/lib/client/indexDB';
 
 export default function Fold() {
-  const {
-    downloadParamsChunk,
-    startFold,
-    incrementFold,
-    foldAll,
-    obfuscateFold,
-    folding,
-    downloadingChunks,
-    chunksDownloaded,
-  } = useWorker();
+  const { downloadParamsChunk, foldAll, obfuscateFold } = useWorker();
   const [canFinalize, setCanFinalize] = useState<boolean>(false);
   const [canVerify, setCanVerify] = useState<boolean>(false);
   const [chunks, setChunks] = useState<Array<Blob>>([]);
@@ -80,7 +71,6 @@ export default function Fold() {
 
     // Obfuscate in web worker
     await obfuscateFold();
-
     setCanFinalize(false);
     setCanVerify(true);
     setIsProving(false);
@@ -108,7 +98,6 @@ export default function Fold() {
     const proofCount = proof?.numFolds ?? 0;
 
     await foldAll(foldableUsers);
-
     setCanFinalize(true);
     setIsProving(false);
     toast.success(

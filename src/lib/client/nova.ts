@@ -37,7 +37,7 @@ export class MembershipFolder {
     public readonly params: string,
     /** Get the roots for the tree types */
     public readonly roots: TreeRoots
-  ) {}
+  ) { }
 
   /**
    * Initializes a new instance of the membership folder class
@@ -318,6 +318,6 @@ export const getWasm = async (): Promise<NovaWasm> => {
   await wasm.default();
   let concurrency = Math.floor(navigator.hardwareConcurrency / 4);
   if (concurrency < 1) concurrency = 1;
-  await wasm.initThreadPool(concurrency); 
+  await wasm.initThreadPool(concurrency);
   return wasm;
 };

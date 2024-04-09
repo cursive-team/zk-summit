@@ -13,7 +13,7 @@ async function workerFold(users: User[]) {
   const db = new IndexDBWrapper();
   await db.init();
 
-  console.log(`${users.length} to fold`)
+  console.log(`${users.length} users to fold`)
 
   // get params
   const params = new Blob(await db.getChunks());

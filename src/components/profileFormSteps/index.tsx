@@ -135,75 +135,62 @@ const ProfileForm = ({
   return (
     <FormStepLayout
       onSubmit={handleSubmit(updateProfile)}
+      title={"Your profile"}
+      subtitle={
+        "This will be visible to anyone you interact with. Updates are not shared with previous connections."
+      }
+      className="pt-4"
       actions={
-        <div className="flex flex-col gap-2">
-          <Button
-            disabled={!formState.isDirty || loading}
-            onClick={async () => {
-              const isValid = await trigger();
-              if (isValid) {
-                handleSubmit(updateProfile)();
-              }
-            }}
-            loading={loading}
-          >
-            Save Changes
-          </Button>
+        <div className="flex flex-col gap-2 mb-12">
+          <div className="flex flex-col bg-tertiary">
+            <Button
+              disabled={!formState.isDirty || loading}
+              onClick={async () => {
+                const isValid = await trigger();
+                if (isValid) {
+                  handleSubmit(updateProfile)();
+                }
+              }}
+              loading={loading}
+            >
+              Save Changes
+            </Button>
+          </div>
           <Button type="button" onClick={onHandleSignout}>
             Logout
           </Button>
         </div>
       }
     >
-      <div className="flex flex-col gap-12">
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1 ">
-            <Title>Your profile</Title>
-            <Description>
-              This will be visible to anyone you interact with
-            </Description>
-          </div>
           <Input
             label="Display name"
             disabled={true}
             error={errors.displayName?.message}
             {...register("displayName")}
           />
-        </div>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1 ">
-            <Title>Social settings</Title>
-            <Description>
-              Updates are not shared with previous connections
-            </Description>
-          </div>
-          <div className="flex flex-col gap-6">
-            <Input
-              label="Twitter"
-              error={errors.twitterUsername?.message}
-              {...register("twitterUsername", {
-                onChange: (e) => {
-                  const value = e.target.value;
-                  handleUsername("twitterUsername", value);
-                },
-              })}
-            />
-            <Input
-              label="Telegram"
-              error={errors.telegramUsername?.message}
-              {...register("telegramUsername", {
-                onChange: (e) => {
-                  const value = e.target.value;
-                  handleUsername("telegramUsername", value);
-                },
-              })}
-            />
-            <Input
-              label="Bio"
-              error={errors.bio?.message}
-              {...register("bio")}
-            />
-          </div>
+          <Input
+            label="Twitter"
+            error={errors.twitterUsername?.message}
+            {...register("twitterUsername", {
+              onChange: (e) => {
+                const value = e.target.value;
+                handleUsername("twitterUsername", value);
+              },
+            })}
+          />
+          <Input
+            label="Telegram"
+            error={errors.telegramUsername?.message}
+            {...register("telegramUsername", {
+              onChange: (e) => {
+                const value = e.target.value;
+                handleUsername("telegramUsername", value);
+              },
+            })}
+          />
+          <Input label="Bio" error={errors.bio?.message} {...register("bio")} />
         </div>
       </div>
     </FormStepLayout>

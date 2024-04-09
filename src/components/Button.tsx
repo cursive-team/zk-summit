@@ -4,7 +4,7 @@ import type * as Classed from "@tw-classed/react";
 import { classed } from "@tw-classed/react";
 
 const ButtonComponent = classed.button(
-  "font-sans flex items-center disabled:opacity-70 disabled:pointer-events-none w-full flex focus:ring-0 focus:outline-none active:scale-95",
+  "font-sans flex items-center disabled:opacity-20 disabled:pointer-events-none w-full flex focus:ring-0 focus:outline-none active:scale-95",
   {
     variants: {
       size: {

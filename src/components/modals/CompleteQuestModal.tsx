@@ -174,11 +174,6 @@ const CompleteQuestModal = ({
     setDisplayState(CompleteQuestDisplayState.COMPLETED);
   };
 
-  const handleBackToQuests = () => {
-    setIsOpen(false);
-    router.push("/proofs");
-  };
-
   const ContentHeader = () => {
     return (
       <div className="flex flex-col gap-1 self-center">
@@ -227,7 +222,12 @@ const CompleteQuestModal = ({
             <div className="flex flex-col gap-6">
               <ContentHeader />
               <div className="flex flex-col gap-2">
-                <span className="text-iron-950 text-xs text-center">{`Generating ZK proof (${provingState.currentRequirementNumSigsProven}/${provingState.currentRequirementNumSigsTotal} reqs)`}</span>
+                <span className="text-iron-950 text-xs text-center">
+                  {provingState.currentRequirementNumSigsProven ===
+                  provingState.currentRequirementNumSigsTotal
+                    ? "Submitting proof for verification..."
+                    : `Generating ZK proof (${provingState.currentRequirementNumSigsProven}/${provingState.currentRequirementNumSigsTotal} reqs)`}
+                </span>
                 <div className="relative">
                   <Card.Progress
                     style={{

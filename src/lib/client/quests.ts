@@ -1,4 +1,5 @@
 import { LocationRequirement, UserRequirement } from "@/types";
+import { getProfile } from "./localStorage";
 
 export const computeNumRequirementsSatisfied = (args: {
   userPublicKeys: string[]; // List of signature public keys for users who have sent signatures
@@ -47,11 +48,19 @@ export const computeNumRequirementSignatures = (args: {
     );
   }
 
+  const profile = getProfile();
+
+  if (!profile) {
+    throw new Error("User profile not found in local storage");
+  }
+
   if (userRequirement) {
     return Math.min(
       userRequirement.numSigsRequired,
-      userRequirement.users.filter((user) =>
-        publicKeyList.includes(user.signaturePublicKey)
+      userRequirement.users.filter(
+        (user) =>
+          publicKeyList.includes(user.signaturePublicKey) &&
+          user.signaturePublicKey !== profile.signaturePublicKey
       ).length
     );
   } else if (locationRequirement) {

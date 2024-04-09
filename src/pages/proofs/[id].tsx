@@ -18,7 +18,9 @@ import { Placeholder } from "@/components/placeholders/Placeholder";
 import {
   LocationSignature,
   User,
+  getAllQuestCompleted,
   getLocationSignatures,
+  getProfile,
   getQuestCompleted,
   getUsers,
 } from "@/lib/client/localStorage";
@@ -44,11 +46,14 @@ type UserDetailProps = {
   users: UserRequirementPreview[];
   userPubKeysCollected: string[];
   numSigsRequired: number;
+  numValidSigsCollected: number;
 };
 
 export const UserDetail = ({
   users,
   userPubKeysCollected,
+  numSigsRequired,
+  numValidSigsCollected,
 }: UserDetailProps) => {
   return (
     <div className="flex flex-col gap-8">
@@ -79,6 +84,23 @@ export const UserDetail = ({
               </div>
             );
           })}
+          {Array(numSigsRequired - numValidSigsCollected)
+            .fill(null)
+            .map((_, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
+              >
+                <div className="flex items-center gap-2">
+                  <IconCircle>
+                    <Icons.Person size={12} />
+                  </IconCircle>
+                  <Card.Title className="text-sm font-sans text-iron-600 font-normal">
+                    Ask to tap a new connection’s badge!
+                  </Card.Title>
+                </div>
+              </div>
+            ))}
         </div>
       </div>
     </div>
@@ -92,19 +114,15 @@ type LocationDetailProps = {
   locations: LocationRequirementPreview[];
   locationPubKeysCollected: string[];
   numSigsRequired: number;
+  numValidSigsCollected: number;
 };
 
 export const LocationDetail = ({
   locations,
   locationPubKeysCollected,
-  completed,
+  numSigsRequired,
+  numValidSigsCollected,
 }: LocationDetailProps) => {
-  const numSigsCollected = useMemo(() => {
-    return locations.filter((location) =>
-      locationPubKeysCollected.includes(location.signaturePublicKey)
-    ).length;
-  }, [locationPubKeysCollected, locations]);
-
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
@@ -140,6 +158,23 @@ export const LocationDetail = ({
               </div>
             );
           })}
+          {Array(numSigsRequired - numValidSigsCollected)
+            .fill(null)
+            .map((_, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
+              >
+                <div className="flex items-center gap-2">
+                  <IconCircle>
+                    <Icons.Location size={12} />
+                  </IconCircle>
+                  <Card.Title className="text-sm font-sans text-iron-600 font-normal">
+                    Tap a talk card!
+                  </Card.Title>
+                </div>
+              </div>
+            ))}
         </div>
       </div>
     </div>
@@ -171,17 +206,25 @@ export default function QuestById() {
     questId as string
   );
   const [userOutboundTaps, setUserOutboundTaps] = useState<number>(0);
+  const [questCompleted, setQuestCompleted] = useState<boolean>(false);
+
+  useEffect(() => {
+    const questCompleted = getAllQuestCompleted();
+    const completedQuestIds: string[] = Object.keys(questCompleted);
+    setQuestCompleted(completedQuestIds.includes(questId as string));
+  }, [completeQuestModal, questId]);
 
   useEffect(() => {
     const users = getUsers();
     setUserOutboundTaps(
       Object.values(users).filter((user: User) => user.outTs).length
     );
-
+    const profile = getProfile();
     const locationSignatures = getLocationSignatures();
-
     const validUserPublicKeys = Object.values(users)
-      .filter((user: User) => user.sig)
+      .filter(
+        (user: User) => user.sig && user.sigPk !== profile?.signaturePublicKey
+      )
       .map((user: User) => user.sigPk!);
     setUserPublicKeys(validUserPublicKeys);
 
@@ -301,7 +344,8 @@ export default function QuestById() {
                         quest.userRequirements[0].numSigsRequired
                       }
                       title={quest.userRequirements[0].name}
-                      completed={quest?.isCompleted}
+                      completed={questCompleted}
+                      numValidSigsCollected={numRequirementsSatisfied}
                     />
                   )}
                   {quest && quest.locationRequirements.length > 0 && (
@@ -312,7 +356,8 @@ export default function QuestById() {
                         quest.locationRequirements[0].numSigsRequired
                       }
                       title={quest.locationRequirements[0].name}
-                      completed={quest?.isCompleted}
+                      completed={questCompleted}
+                      numValidSigsCollected={numRequirementsSatisfied}
                     />
                   )}
                 </div>

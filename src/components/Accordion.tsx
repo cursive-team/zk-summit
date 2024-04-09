@@ -9,7 +9,7 @@ interface AccordionProps {
 }
 
 const Accordion = ({ label, children }: AccordionProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
     <div className="flex flex-col p-3 bg-white/40" aria-expanded={isOpen}>

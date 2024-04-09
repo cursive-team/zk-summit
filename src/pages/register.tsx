@@ -40,9 +40,9 @@ enum DisplayState {
 const Title = classed.h3("font-medium text-primary text-base text-center");
 const Description = classed.div(
   Card.Base,
-  "p-2 text-base font-normal font-sans !border-none text-iron-950 !rounded-[8px]"
+  "p-2 text-[14px] font-normal font-sans !border-none text-iron-950 !rounded-[8px]"
 );
-const Underline = classed.span("text-primary inline-flex");
+const Underline = classed.span("text-primary");
 export default function Register() {
   const router = useRouter();
   const [displayState, setDisplayState] = useState<DisplayState>(
@@ -484,16 +484,16 @@ export default function Register() {
     ),
     [DisplayState.CREATING]: (
       <div className="h-full flex flex-col pt-4 pb-8 ">
-        <div className="flex flex-col my-auto gap-8 justify-center">
+        <div className="flex flex-col my-auto justify-center">
           <Title>
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center m-4 gap-2">
               {isAccountReady ? "Account created!" : "Creating account"}
               {!isAccountReady && (
                 <Spinner size={20} className="!text-primary" />
               )}
             </div>
           </Title>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 m-4">
             <Description>
               <span>
                 Look for cards to <Underline>tap into talks</Underline> to prove
@@ -509,7 +509,7 @@ export default function Register() {
             <Description>
               <span>
                 {" "}
-                Use 2PC+FHE to
+                Use 2PC+FHE to{" "}
                 <Underline> discover what you have in common</Underline> with
                 other attendees.
               </span>

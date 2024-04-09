@@ -10,10 +10,17 @@ import { Card } from "./Card";
 import { ReactNode, useEffect, useState } from "react";
 import { cn } from "@/lib/client/utils";
 import { Icons } from "../Icons";
-import { getLocationSignatures, getUsers } from "@/lib/client/localStorage";
+import {
+  getAuthToken,
+  getLocationSignatures,
+  getUsers,
+} from "@/lib/client/localStorage";
 import { Button } from "../Button";
 import Link from "next/link";
 import { logClientEvent } from "@/lib/client/metrics";
+import { toast } from "sonner";
+import { type PutBlobResult } from "@vercel/blob";
+import { upload } from "@vercel/blob/client";
 
 dayjs.extend(duration);
 const UNFOLDED_DATE = "2024-04-09 14:59:59";
@@ -106,12 +113,56 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     )}&url=${encodeURIComponent(proofLink)}`;
   };
 
+  const uploadAndSaveFoldingProof = async (data: string): Promise<string> => {
+    const token = getAuthToken();
+    if (!token || token.expiresAt < new Date()) {
+      throw new Error("Please sign in to save your proof.");
+    }
+
+    const name = "foldingProof";
+    const newBlob: PutBlobResult = await upload(name, data, {
+      access: "public",
+      handleUploadUrl: "/api/folding/upload",
+    });
+    const proofUrl = newBlob.url;
+
+    const response = await fetch("/api/folding/proof", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ authToken: token.value, proofUrl }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to save proof");
+    }
+
+    const { proofUuid } = await response.json();
+    return proofUuid;
+  };
+
   const beginProving = async () => {
     logClientEvent("foldedProvingStarted", {});
+
+    if (numAttendees === 0 && numTalks === 0 && numSpeakers === 0) {
+      toast.error("Nothing to prove! Tap some cards to get started.");
+      return;
+    }
+
     setProvingStarted(true);
   };
 
   const doneProving = async () => {
+    // try {
+    //   const proofUuid = await uploadAndSaveFoldingProof(proof);
+    //   setProofLink(`${window.location.origin}/folded/${proofUuid}`);
+    // } catch (error) {
+    //   console.error("Failed to upload proof: ", error);
+    //   toast.error("Failed to upload proof. Please try again");
+    //   return;
+    // }
+
     setProvingStarted(false);
     setProofLink("https://zksummit.cursive.team/folded/1234");
   };

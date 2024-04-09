@@ -36,6 +36,7 @@ model User {
   receivedBenchmarkMessages BenchmarkMessage[] @relation("BenchmarkMessageRecipient")
   questProofs               QuestProof[]       @relation("QuestProofUser")
   admin                     Admin?
+  foldedProofs              FoldedProof[]
 }
 
 model Admin {
@@ -68,8 +69,8 @@ model Location {
   createdAt          DateTime              @default(now())
   questRequirements  LocationRequirement[] @relation("LocationQuestRequirements")
 
-  slidesLink      String?
-  speakerSocial   String?
+  slidesLink    String?
+  speakerSocial String?
 }
 
 model SigninCode {
@@ -165,6 +166,14 @@ model QuestProof {
   locationSigNullifiers LocationSigNullifier[]
 
   @@unique([questId, userId])
+}
+
+model FoldedProof {
+  id              String   @id @default(uuid())
+  userId          Int
+  foldedProofLink String
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
 }
 
 model UserSigNullifier {

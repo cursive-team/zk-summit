@@ -10,9 +10,12 @@ import { Card } from "./Card";
 import { ReactNode, useEffect, useState } from "react";
 import { cn } from "@/lib/client/utils";
 import { Icons } from "../Icons";
+import { getLocationSignatures, getUsers } from "@/lib/client/localStorage";
+import { Button } from "../Button";
+import Link from "next/link";
 
 dayjs.extend(duration);
-const UNFOLDED_DATE = "2024-04-10 14:59:59";
+const UNFOLDED_DATE = "2024-04-09 14:59:59";
 const CountdownLabel = classed.span("text-primary font-semibold text-xs");
 
 interface FoldedItemProps {
@@ -20,7 +23,7 @@ interface FoldedItemProps {
   children?: ReactNode;
   title?: ReactNode;
   subtitle?: ReactNode;
-  description?: ReactNode;
+  description?: (param: number) => ReactNode;
 }
 
 interface FolderCardProps {
@@ -43,19 +46,48 @@ export const FOLDED_MOCKS: FolderCardProps["items"] = [
   },
   {
     subtitle: "We're so happy you joined us at ZK Summit 11!",
-    description: "Ready to review your memories?",
+    description: () => "Ready to review your memories?",
   },
   {
-    title: "ZK11 - a symposium for brilliant minds",
-    description: "You connected with 21 other attendees",
+    title: "ZK11 - a symposium for brilliant minds.",
+    description: (param: number) =>
+      `You connected with ${param} other attendees`,
   },
   {
-    title: "32 speakers filled the academy for a full day of talks",
-    description: "You attended 4 talks",
+    title: "47 speakers filled the academy for a full day of talks.",
+    description: (param: number) => `You attended ${param} talks`,
+  },
+  {
+    title: "Dialogue catalyzed the evolution of zk research.",
+    description: (param: number) => `You met ${param} speakers`,
+  },
+  {
+    title: "Knowledge blossomed through interaction.",
+    description: () => `You were 1 of 500 at ZK11.`,
   },
 ];
+
 const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [numAttendees, setNumAttendees] = useState(0);
+  const [numTalks, setNumTalks] = useState(0);
+  const [numSpeakers, setNumSpeakers] = useState(0);
+  const [provingStarted, setProvingStarted] = useState(false);
+  const [numCompletedProvingRequirements, setNumCompletedProvingRequirements] =
+    useState(0);
+  const [numTotalProvingRequirements, setNumTotalProvingRequirements] =
+    useState(0);
+  const [proofLink, setProofLink] = useState<string>();
+
+  useEffect(() => {
+    const users = getUsers();
+    const talks = getLocationSignatures();
+
+    const userSignatures = Object.values(users).filter((user) => user.sig);
+    setNumAttendees(userSignatures.filter((user) => !user.isSpeaker).length);
+    setNumSpeakers(userSignatures.filter((user) => user.isSpeaker).length);
+    setNumTalks(Object.keys(talks).length);
+  }, []);
 
   const pagination = {
     clickable: true,
@@ -63,6 +95,18 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     renderBullet: (index: number, className: string) => {
       return `<div data-index="${index}" class="my-2 folded-dot ${className}"></div>`;
     },
+  };
+
+  const getTwitterShareUrl = () => {
+    if (!proofLink) return "";
+
+    return `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      `🧺 zkSummit 11 FOLDED 🧺: I made a Nova zero knowledge proof attesting to my zkSummit Athens experience, built by @cursive_team. Go verify it yourself!`
+    )}&url=${encodeURIComponent(proofLink)}`;
+  };
+
+  const beginProving = async () => {
+    setProvingStarted(true);
   };
 
   return (
@@ -73,13 +117,6 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
         width={63}
       />
       <div className="fixed flex items-center gap-8 right-[22px] top-[47px] z-10">
-        <button
-          aria-label="pause"
-          type="button"
-          className="size-[18x] rounded-full bg-white/60 p-1"
-        >
-          <Icons.ControllerPause className="text-iron-950" />
-        </button>
         <button
           aria-label="close"
           type="button"
@@ -94,13 +131,19 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
         modules={[EffectFade, Controller, Pagination, Autoplay]}
         effect="fade"
         autoplay={{
-          delay: 3000,
+          delay: 2500,
+          disableOnInteraction: false,
+          stopOnLastSlide: true,
         }}
         className="h-screen"
         spaceBetween={0}
         slidesPerView={1}
-        onSlideChange={(el: any) => {
-          setActiveIndex(el?.activeIndex ?? 0);
+        onSlideChange={(swiper: any) => {
+          const isLastSlide = swiper.activeIndex === items.length - 1;
+          if (isLastSlide) {
+            swiper.autoplay.stop();
+          }
+          setActiveIndex(swiper?.activeIndex ?? 0);
         }}
       >
         {items?.map(
@@ -123,21 +166,80 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                     height: "100%",
                   }}
                 >
-                  {children}
-                  {title && (
-                    <h4 className="text-primary leading-[32px] font-medium font-sans text-3xl text-center">
-                      {title}
-                    </h4>
+                  {itemIndex !== items.length - 1 && (
+                    <>
+                      {children}
+                      {title && (
+                        <h4 className="text-primary leading-[32px] font-medium font-sans text-3xl text-center">
+                          {title}
+                        </h4>
+                      )}
+                      {subtitle && (
+                        <span className="text-primary font-bold font-sans text-lg text-center">
+                          {subtitle}
+                        </span>
+                      )}
+                      {description && (
+                        <span className="text-primary font-normal font-sans text-base text-center">
+                          {itemIndex === 2 && description(numAttendees)}
+                          {itemIndex === 3 && description(numTalks)}
+                          {itemIndex === 4 && description(numSpeakers)}
+                          {![2, 3, 4].includes(itemIndex) && description(0)}
+                        </span>
+                      )}
+                    </>
                   )}
-                  {subtitle && (
-                    <span className="text-primary font-bold font-sans text-lg text-center">
-                      {subtitle}
-                    </span>
-                  )}
-                  {description && (
-                    <span className="text-primary font-normal font-sans text-base text-center">
-                      {description}
-                    </span>
+                  {itemIndex === items.length - 1 && (
+                    <>
+                      {proofLink && (
+                        <>
+                          <h4 className="text-primary leading-[32px] font-medium font-sans text-3xl text-center">
+                            {"Proof is ready"}
+                          </h4>
+                          <span className="text-primary font-bold font-sans text-lg text-center">
+                            {
+                              "Allow anyone to verify your ZK Summit experience."
+                            }
+                          </span>
+                          <Link href={getTwitterShareUrl()} target="_blank">
+                            <Button
+                              onClick={logClientEvent(
+                                "foldedTwitterShareProof"
+                              )}
+                              variant="transparent"
+                              icon={<Icons.Twitter className="text-primary" />}
+                            >
+                              Share on Twitter
+                            </Button>
+                          </Link>
+                        </>
+                      )}
+                      {!provingStarted && (
+                        <>
+                          {children}
+                          {title && (
+                            <h4 className="text-primary leading-[32px] font-medium font-sans text-3xl text-center">
+                              {title}
+                            </h4>
+                          )}
+                          {subtitle && (
+                            <span className="text-primary font-bold font-sans text-lg text-center">
+                              {subtitle}
+                            </span>
+                          )}
+                          {description && (
+                            <span className="text-primary font-normal font-sans text-base text-center">
+                              {itemIndex === 2 && description(numAttendees)}
+                              {itemIndex === 3 && description(numTalks)}
+                              {itemIndex === 4 && description(numSpeakers)}
+                              {![2, 3, 4].includes(itemIndex) && description(0)}
+                            </span>
+                          )}
+                          <Button onClick={beginProving}>Prove it</Button>
+                        </>
+                      )}
+                      {}
+                    </>
                   )}
                 </div>
               </SwiperSlide>

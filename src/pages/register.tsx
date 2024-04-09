@@ -413,7 +413,7 @@ export default function Register() {
           type="text"
           id="displayName"
           label="Display name (*)"
-          placeholder="Tom Smith"
+          placeholder="Name others will see upon tap"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
         />

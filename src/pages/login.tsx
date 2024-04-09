@@ -185,7 +185,7 @@ export default function Login() {
           type="text"
           id="displayName"
           label="Display name"
-          placeholder="Tom Smith"
+          placeholder="Name you registered with"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
         />
@@ -215,7 +215,7 @@ export default function Login() {
           type="text"
           id="displayName"
           label="Display name"
-          placeholder="Tom Smith"
+          placeholder="Name you registered with"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
         />

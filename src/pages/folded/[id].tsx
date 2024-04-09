@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Icons } from '@/components/Icons';
 import { Card } from '@/components/cards/Card';
 
-export default function Folded(): JSX.Element {
+const Folded = (): JSX.Element => {
   const isLoaded = useScripts();
   const [verifying, setVerifying] = useState<number>(0);
   const [verified, setVerified] = useState<boolean>(false);
@@ -44,11 +44,11 @@ export default function Folded(): JSX.Element {
     createFlower(stage, fakePubkey, center_x, center_y, fakeSize / 4);
   }, [isLoaded]);
   return (
-    <div className='flex flex-col h-full items-center justify-between'>
+    <div className='flex flex-col items-center'>
       <div className='p-4'>
-        <Icons.Cursive />
+        <Icons.Cursive color='#4015EC' />
       </div>
-      <div className='p-16 pt-0 w-[390px]'>
+      <div className='p-16 pt-0 max-w-[390px] w-full'>
         <div className='flex flex-col items-center gap-2'>
           <canvas
             className='artwork-webgl flex p-0 m-0 rounded-[8px]'
@@ -75,38 +75,52 @@ export default function Folded(): JSX.Element {
             </div>
           ))}
         </div>
-      </div>
-      {verified ? (
-        <div>
-          <div className='flex items-center font-bold text-primary'>
-            <Icons.CheckCircle />
-            <div>Valid proof</div>
-          </div>
-          <div className='font-bold text-primary underline'>
-            How was this proof generated?
-          </div>
-          <div className='font-bold text-primary underline'>
-            View proof in plaintext
-          </div>
-        </div>
-      ) : (
-        <div>
-          {verifying > 0 ? (
-            <>
-              <div className='mb-2'>Verifying...</div>
-              <div className='relative'>
-                <Card.Progress
-                  style={{
-                    width: `${verifying}%`,
-                  }}
-                />
+        <div className='mt-4'>
+          {verified ? (
+            <div className='flex flex-col items-center gap-4'>
+              <div className='flex gap-2 items-center font-bold text-primary'>
+                <Icons.checkedCircle stroke='#4015EC' />
+                <div>Valid proof</div>
               </div>
-            </>
+              <a
+                className='font-bold text-primary underline'
+                href='https://github.com/cursive-team/zk-summit?tab=readme-ov-file#zk-summit-folded'
+              >
+                How was this proof generated?
+              </a>
+              <a
+                className='font-bold text-primary underline'
+                href='https://github.com/cursive-team/zk-summit?tab=readme-ov-file#zk-summit-folded'
+              >
+                View proof in plaintext
+              </a>
+            </div>
           ) : (
-            <Button onClick={() => handleVerify()}>Verify</Button>
+            <div>
+              {verifying > 0 ? (
+                <div className='text-center'>
+                  <div className='mb-2'>Verifying...</div>
+                  <div className='relative'>
+                    <Card.Progress
+                      style={{
+                        width: `${verifying}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <Button onClick={() => handleVerify()}>Verify</Button>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
-}
+};
+
+Folded.getInitialProps = () => {
+  return { showFooter: false, showHeader: false };
+};
+
+export default Folded;

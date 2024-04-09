@@ -1,9 +1,11 @@
 'use client';
 
 import MobileDetect from 'mobile-detect';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { APP_CONFIG } from '@/shared/constants';
 import { FullPageBanner } from '@/components/FullPageBanner';
+import { useRouter } from 'next/router';
+import path from 'path';
 
 interface OnlyMobileProps {
   children?: React.ReactNode;

@@ -27,11 +27,11 @@ const nextConfig = {
           {
             key: 'Cross-Origin-Embedder-Policy',
             value: 'require-corp',
-          }
-        ]
-      }
-    ]
-  }
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

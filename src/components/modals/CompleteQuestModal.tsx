@@ -16,6 +16,7 @@ import { loadMessages } from "@/lib/client/jubSignalClient";
 import { Card } from "../cards/Card";
 import { Icons } from "../Icons";
 import Link from "next/link";
+import { logClientEvent } from "@/lib/client/metrics";
 
 const QRCodeWrapper = classed.div("bg-white max-w-[254px]");
 
@@ -65,6 +66,7 @@ const CompleteQuestModal = ({
   }, [existingProofId, quest?.isCompleted]);
 
   const handleCompleteQuest = async () => {
+    logClientEvent("questBeginGenerateProof", {});
     const authToken = getAuthToken();
     const profile = getProfile();
     const keys = getKeys();

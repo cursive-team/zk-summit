@@ -15,6 +15,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
 import { ProfileDisplayState } from "@/types";
+import { logClientEvent } from "@/lib/client/metrics";
 
 interface ProfileProps {
   handleSignout: () => void;
@@ -43,6 +44,8 @@ const Profile = ({ handleSignout }: ProfileProps) => {
   };
 
   const updateProfile = async () => {
+    logClientEvent("profileUpdate", {});
+
     const { displayName, twitterUsername, telegramUsername, bio } =
       getState().profile;
 

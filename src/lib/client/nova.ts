@@ -1,5 +1,5 @@
 import { merkleProofFromObject } from "../shared/utils";
-import { User } from "./localStorage";
+import { LocationSignature, User } from "./localStorage";
 import {
   derDecodeSignature,
   getPublicInputsFromSignature,
@@ -8,7 +8,8 @@ import {
   getECDSAMessageHash,
   MerkleProof,
 } from "babyjubjub-ecdsa";
-import { TreeRoots } from "../server/folding";
+import { TreeRoots } from "@/pages/api/tree/root";
+import { TreeType } from "./indexDB";
 
 export type NovaWasm = typeof import("bjj_ecdsa_nova_wasm");
 
@@ -36,7 +37,7 @@ export class MembershipFolder {
     public readonly params: string,
     /** Get the roots for the tree types */
     public readonly roots: TreeRoots
-  ) {}
+  ) { }
 
   /**
    * Initializes a new instance of the membership folder class
@@ -57,10 +58,11 @@ export class MembershipFolder {
    * Initializes a new instance of the membership folder class
    */
   static async initWithIndexDB(
-    compressedParams: Blob
+    compressedParams: Blob,
+    wasm: NovaWasm
   ): Promise<MembershipFolder> {
     // get wasm
-    let wasm = await getWasm();
+    // let wasm = await getWasm();
     // get tree roots
     let roots: TreeRoots = await fetch("/api/tree/root").then(
       async (res) => await res.json()
@@ -80,36 +82,29 @@ export class MembershipFolder {
   }
 
   /**
-   * Folds in the first membership proof
-   *
-   * @param user - The user to fold membership for
-   * @param root - the root of the tree to prove membership in
-   * @returns The folding proof of membership
+   * Prove the first fold in a membership tree
+   * 
+   * @param pk - the public key of the member
+   * @param sig - the signature of the member
+   * @param msg - the message signed by the member 
+   * @param treeType - the type of tree to fold into
+   * @returns - the proof of folding for the membership circuit
    */
-  async startFold(user: User): Promise<string> {
-    // check the user is not self or has not tapped
-    if (user.pkId === "0")
-      throw new Error(
-        `Cannot fold user ${user.name}'s membership: self or untapped!`
-      );
-
-    // check the user has a signature
-    if (!user.sig || !user.sigPk || !user.msg) {
-      throw new Error(
-        `Cannot fold user ${user.name}'s membership: no signature!`
-      );
-    }
-
-    // check the user has not already been folded
+  async startFold(
+    pk: string,
+    sig: string,
+    msg: string,
+    treeType: "attendee" | "speaker" | "talk"
+  ): Promise<string> {
     // fetch merkle proof for the user
     const merkleProof = await fetch(
-      `/api/tree/proof?treeType=attendee&pubkey=${user.sigPk}`
+      `/api/tree/proof?treeType=${treeType}&pubkey=${pk}`
     )
       .then(async (res) => await res.json())
       .then(merkleProofFromObject);
 
     // generate the private inputs for the folded membership circuit
-    let inputs = await MembershipFolder.makePrivateInputs(user, merkleProof);
+    let inputs = await MembershipFolder.makePrivateInputs(sig, pk, msg, merkleProof);
 
     // prove the membership
     return await this.wasm.generate_proof(
@@ -124,38 +119,36 @@ export class MembershipFolder {
   /**
    * Fold subsequent membership proofs
    *
-   * @param user - The user to fold membership for
    * @param proof - the previous fold to increment from
    * @param numFolds - the number of memberships verified in the fold
+   * @param sig - the signature by the member
+   * @param pk - the public key of the member
+   * @param msg - the message signed by the member
+   * @param treeType - the type of tree to fold into
    * @returns The folding proof of membership
    */
   async continueFold(
-    user: User,
     proof: string,
-    numFolds: number
+    numFolds: number,
+    pk: string,
+    sig: string,
+    msg: string,
+    treeType: "attendee" | "speaker" | "talk"
   ): Promise<string> {
-    // check the user is not self or has not tapped
-    if (user.pkId === "0")
-      throw new Error(
-        `Cannot fold user ${user.name}'s membership: self or untapped!`
-      );
-
-    // check the user has a signature
-    if (!user.sig || !user.sigPk || !user.msg) {
-      throw new Error(
-        `Cannot fold user ${user.name}'s membership: no signature!`
-      );
-    }
-
     // fetch merkle proof for the user
     const merkleProof = await fetch(
-      `/api/tree/proof?treeType=attendee&pubkey=${user.sigPk}`
+      `/api/tree/proof?treeType=${treeType}&pubkey=${pk}`
     )
       .then(async (res) => await res.json())
       .then(merkleProofFromObject);
 
     // generate the private inputs for the folded membership circuit
-    let inputs = await MembershipFolder.makePrivateInputs(user, merkleProof);
+    let inputs = await MembershipFolder.makePrivateInputs(
+      sig,
+      pk,
+      msg,
+      merkleProof
+    );
 
     // build the zi_primary (output of previous fold)
     // this is predictable and getting it from verification doubles the work
@@ -218,8 +211,7 @@ export class MembershipFolder {
         Number(iterations)
       );
       console.log(
-        `Verification output of ${
-          obfuscated ? "chaffed " : ""
+        `Verification output of ${obfuscated ? "chaffed " : ""
         }proof of ${numFolds} memberships:`,
         res
       );
@@ -249,28 +241,27 @@ export class MembershipFolder {
   }
 
   /**
-   * Builds the private inputs for the folded membership circuit using a user record
-   * @notice assumes validation on user record has been performed previously
+   * Builds private inputs for a folded membership proof
    *
-   * @param user - The user record to fold
-   * @param merkleProof - the merkle inclusion proof for this user in the tree
+   * @param sig - the signature by the member
+   * @param pk - the public key of the member
+   * @param msg - the message signed by the member
+   * @param merkleProof - the merkle inclusion proof for the member in the tree
    * @returns The private inputs for the folded membership circuit
    */
   static async makePrivateInputs(
-    user: User,
+    sig: string,
+    pk: string,
+    msg: string,
     merkleProof: MerkleProof
   ): Promise<NovaPrivateInputs> {
-    if (!user.sig || !user.sigPk || !user.msg) {
-      throw new Error("User record missing required fields");
-    }
-
     // decode the user's signature
-    let sig = derDecodeSignature(user.sig);
-    let messageHash = hexToBigInt(getECDSAMessageHash(user.msg));
-    let pubkey = publicKeyFromString(user.sigPk);
-    const { T, U } = getPublicInputsFromSignature(sig, messageHash, pubkey);
+    const decodedSig = derDecodeSignature(sig);
+    const messageHash = hexToBigInt(getECDSAMessageHash(msg));
+    const pubkey = publicKeyFromString(pk);
+    const { T, U } = getPublicInputsFromSignature(decodedSig, messageHash, pubkey);
     return {
-      s: sig.s.toString(),
+      s: decodedSig.s.toString(),
       Tx: T.x.toString(),
       Ty: T.y.toString(),
       Ux: U.x.toString(),
@@ -328,6 +319,9 @@ export const getAllParamsByChunk = async (): Promise<string> => {
 export const getWasm = async (): Promise<NovaWasm> => {
   const wasm = await import("bjj_ecdsa_nova_wasm");
   await wasm.default();
-  await wasm.initThreadPool(navigator.hardwareConcurrency - 1);
+  // let concurrency = Math.floor(navigator.hardwareConcurrency / 3) * 2;
+  // if (concurrency < 1) concurrency = 1;
+  let concurrency = navigator.hardwareConcurrency - 1;
+  await wasm.initThreadPool(concurrency);
   return wasm;
 };

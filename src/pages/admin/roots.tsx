@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { getAllMerkleRoots } from "@/lib/client/folding";
+import { TreeRoots } from "@/pages/api/tree/root";
 import { toast } from "sonner";
-import { TreeRoots } from "@/lib/server/folding";
 
 const MerkleRootsPage: React.FC = () => {
   const [merkleRoots, setMerkleRoots] = useState<TreeRoots | null>(null);

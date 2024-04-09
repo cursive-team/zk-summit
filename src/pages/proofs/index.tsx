@@ -42,8 +42,8 @@ export default function QuestsPage() {
   return (
     <div className="flex flex-col gap-4 pt-4">
       <span className="text-iron-600 font-sans text-xs">
-        Prove claims about your ZK11 experience, while preserving privacy over
-        the people you met and talks you attended.
+        Post proofs about your ZK11 experience on Twitter, while preserving
+        privacy over the people you met and talks you attended.
       </span>
 
       <LoadingWrapper

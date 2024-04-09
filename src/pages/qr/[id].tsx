@@ -7,6 +7,9 @@ import { useEffect, useState } from "react";
 import { getAuthToken, getKeys } from "@/lib/client/localStorage";
 import { Spinner } from "@/components/Spinner";
 import useRequireAdmin from "@/hooks/useRequireAdmin";
+import { Icons } from "@/components/Icons";
+import { ArtworkSnapshot } from "@/components/artwork/ArtworkSnapshot";
+import Link from "next/link";
 
 enum QRPageDisplayState {
   DISPLAY,
@@ -23,7 +26,10 @@ const QRPageDisplayStateText: Record<QRPageDisplayState, string> = {
 export type QRCodeData = {
   id: string;
   questName: string;
+  questDescription: string;
   userDisplayName: string;
+  signaturePublicKey: string;
+  serializedProof: string;
 };
 
 const QRPage = () => {
@@ -35,23 +41,14 @@ const QRPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [qrCodeData, setQRCodeData] = useState<QRCodeData>();
 
-  useRequireAdmin();
-
   useEffect(() => {
     if (typeof id !== "string") {
       toast.error("Invalid QR code");
       router.push("/");
     }
 
-    const authToken = getAuthToken();
-    if (!authToken || authToken.expiresAt < new Date()) {
-      toast.error("You must be logged in to view this page");
-      router.push("/login");
-      return;
-    }
-
     const fetchQR = async () => {
-      const response = await fetch(`/api/qr?id=${id}&token=${authToken.value}`);
+      const response = await fetch(`/api/qr?id=${id}`);
       if (!response.ok) {
         toast.error("Invalid QR code");
         router.push("/");
@@ -64,6 +61,9 @@ const QRPage = () => {
         id: qrData.id,
         questName: qrData.quest.name,
         userDisplayName: qrData.user.displayName,
+        signaturePublicKey: qrData.user.signaturePublicKey,
+        questDescription: qrData.quest.description,
+        serializedProof: qrData.serializedProof,
       });
     };
     fetchQR();
@@ -114,45 +114,66 @@ const QRPage = () => {
   if (!qrCodeData) {
     return (
       <div className="my-auto mx-auto">
-        <Spinner label="QR code data is loading." />
+        <Spinner label="Proof data is loading." />
       </div>
     );
   }
 
   return (
-    <div>
-      <AppBackHeader redirectTo="/" />
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4 items-center">
-          <div className="flex flex-col gap-0.5">
-            <div className="flex flex-col text-center">
-              <span className="text-xs font-normal text-gray-900">
-                {qrCodeData.userDisplayName}
-              </span>
-              <h2 className="text-sm text-gray-12">{qrCodeData.questName}</h2>
-            </div>
+    <div className="mx-auto" style={{ maxWidth: "320px" }}>
+      <Link href="https://cursive.team">
+        <div className="flex justify-center my-4 text-primary">
+          <Icons.Cursive />
+        </div>
+      </Link>
+      <div className="mx-auto text-center">
+        <div className="mx-auto size-32 rounded-[4px] relative overflow-hidden">
+          <ArtworkSnapshot
+            width={128}
+            height={128}
+            pubKey={qrCodeData.signaturePublicKey}
+            background={""}
+            homePage={false}
+          />
+        </div>
+        <span className="text-[32px] text-primary font-normal">
+          {qrCodeData.userDisplayName}
+        </span>
+        <div className="flex flex-col gap-4 mx-4 mt-6 text-center border-[2px] border-primary p-4 bg-teritiary">
+          <span className="text-teritiary text-[18px] font-bold">
+            {qrCodeData.questName}
+          </span>
+          <span className="font-weight-400 text-[14px] font-normal">
+            {qrCodeData.questDescription}
+          </span>
+          <div className="flex flex-row gap-2 justify-center align-center text-primary">
+            <Icons.CheckCircle />
+            <span className="text-[14px] font-bold">Valid proof</span>
           </div>
-          {displayState === QRPageDisplayState.SUCCESS && (
-            <div className="flex flex-col gap-4 items-center">
-              <span className="text-lg font-normal text-gray-900">
-                {"Successfully nullified proof."}
-              </span>
-            </div>
-          )}
-          {displayState === QRPageDisplayState.FAILURE && (
-            <div className="flex flex-col gap-4 items-center">
-              <span className="text-lg font-normal text-gray-900">
-                {"Failed to nullify proof."}
-              </span>
-            </div>
-          )}
-          <Button
-            loading={loading}
-            disabled={displayState !== QRPageDisplayState.DISPLAY}
-            onClick={handleRedeem}
+        </div>
+        <div
+          className="flex flex-col gap-4 mt-6 mx-16 p-2 bg-primary rounded"
+          onClick={() => {
+            navigator.clipboard.writeText(qrCodeData.serializedProof);
+            toast.success("Proof copied to clipboard");
+          }}
+        >
+          <div className="flex flex-row gap-2 justify-center align-center">
+            <span className="text-[14px] font-bold text-white">Copy proof</span>
+          </div>
+        </div>
+        <div className="flex flex-col gap-4 mt-4 mx-16 p-2 border border-primary bg-teritiary rounded">
+          <Link
+            href="https://github.com/cursive-team/zk-summit/blob/5a97066c0c09ee7d2d388def1bec7b5547382c48/src/pages/api/quest/submit_proof.tsx#L50"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            {QRPageDisplayStateText[displayState]}
-          </Button>
+            <div className="flex flex-row gap-2 justify-center align-center">
+              <span className="text-[14px] font-normal text-primary">
+                View verification code
+              </span>
+            </div>
+          </Link>
         </div>
       </div>
     </div>

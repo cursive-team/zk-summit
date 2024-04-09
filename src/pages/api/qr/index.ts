@@ -8,11 +8,14 @@ export type QRCodeResponseType = {
   id: string;
   quest: {
     name: string;
+    description: string;
   };
   user: {
     id: number;
     displayName: string;
+    signaturePublicKey: string;
   };
+  serializedProof: string;
 };
 
 export default async function handler(
@@ -20,21 +23,12 @@ export default async function handler(
   res: NextApiResponse<QRCodeResponseType | ErrorResponse>
 ) {
   if (req.method === "GET") {
-    const { id, token } = req.query;
+    const { id } = req.query;
     if (typeof id !== "string") {
       return res.status(400).json({ error: "ID must be a string" });
     }
 
-    if (typeof token !== "string") {
-      return res.status(400).json({ error: "Token must be a string" });
-    }
-
     logServerEvent("qrCodeFetch", {});
-
-    const isAdmin = await isUserAdmin(token);
-    if (!isAdmin) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
 
     const questProof = await prisma.questProof.findUnique({
       where: { id },
@@ -42,12 +36,14 @@ export default async function handler(
         quest: {
           select: {
             name: true,
+            description: true,
           },
         },
         user: {
           select: {
             id: true,
             displayName: true,
+            signaturePublicKey: true,
           },
         },
       },

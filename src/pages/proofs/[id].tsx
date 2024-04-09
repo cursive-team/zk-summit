@@ -252,12 +252,16 @@ export default function QuestById() {
         locationRequirements: quest.locationRequirements,
         questUserTapReq: quest.userTapReq,
       });
-      let userTapRequirement = quest.userTapReq ? 1 : 0;
-      const hasMinRequirements =
-        numRequirementsSatisfied ===
-        quest.userRequirements.length +
-          quest.locationRequirements.length +
-          userTapRequirement;
+      let hasMinRequirements = false;
+      if (quest.locationRequirements.length === 1) {
+        hasMinRequirements =
+          numRequirementsSatisfied ===
+          quest.locationRequirements[0].numSigsRequired;
+      } else if (quest.userRequirements.length === 1) {
+        hasMinRequirements =
+          numRequirementsSatisfied ===
+          quest.userRequirements[0].numSigsRequired;
+      }
 
       if (hasMinRequirements) {
         setHasMinRequirements(true);

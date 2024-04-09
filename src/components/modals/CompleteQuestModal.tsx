@@ -204,7 +204,7 @@ const CompleteQuestModal = ({
   };
 
   const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-    `I completed ${quest.name} at ZKSummit!`
+    `I am a verified ${quest.name} at zkSummit11. Here's my ZK proof:`
   )}&url=${encodeURIComponent(qrCodeUrl)}`;
 
   const getModalContent = (): JSX.Element => {
@@ -267,7 +267,7 @@ const CompleteQuestModal = ({
               <Link href={twitterShareUrl} target="_blank">
                 <Button
                   variant="transparent"
-                  icon={<Icons.Twitter className="text-primary" />}
+                  icon={<Icons.Twitter className="text-primary mr-2" />}
                 >
                   Share on Twitter
                 </Button>

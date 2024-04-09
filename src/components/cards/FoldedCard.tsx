@@ -12,6 +12,7 @@ import { cn } from "@/lib/client/utils";
 import { Icons } from "../Icons";
 import {
   getAuthToken,
+  getFoldedProof,
   getKeys,
   getLocationSignatures,
   getProfile,
@@ -94,11 +95,16 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   useEffect(() => {
     const users = getUsers();
     const talks = getLocationSignatures();
+    const foldedProof = getFoldedProof();
 
     const userSignatures = Object.values(users).filter((user) => user.sig);
     setNumAttendees(userSignatures.filter((user) => !user.isSpeaker).length);
     setNumSpeakers(userSignatures.filter((user) => user.isSpeaker).length);
     setNumTalks(Object.keys(talks).length);
+
+    if (foldedProof) {
+      setProofLink(foldedProof.pfLink);
+    }
   }, []);
 
   const pagination = {

@@ -13,6 +13,7 @@ import { Icons } from "../Icons";
 import { getLocationSignatures, getUsers } from "@/lib/client/localStorage";
 import { Button } from "../Button";
 import Link from "next/link";
+import { logClientEvent } from "@/lib/client/metrics";
 
 dayjs.extend(duration);
 const UNFOLDED_DATE = "2024-04-09 14:59:59";
@@ -106,7 +107,13 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   };
 
   const beginProving = async () => {
+    logClientEvent("foldedProvingStarted", {});
     setProvingStarted(true);
+  };
+
+  const doneProving = async () => {
+    setProvingStarted(false);
+    setProofLink("https://zksummit.cursive.team/folded/1234");
   };
 
   return (
@@ -203,18 +210,30 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           </span>
                           <Link href={getTwitterShareUrl()} target="_blank">
                             <Button
-                              onClick={logClientEvent(
-                                "foldedTwitterShareProof"
-                              )}
-                              variant="transparent"
-                              icon={<Icons.Twitter className="text-primary" />}
+                              onClick={() =>
+                                logClientEvent("foldedTwitterShareProof", {})
+                              }
+                              icon={
+                                <Icons.Twitter className="text-primary bg-white mr-3" />
+                              }
                             >
-                              Share on Twitter
+                              {"Share on Twitter"}
                             </Button>
                           </Link>
                         </>
                       )}
-                      {!provingStarted && (
+                      {!proofLink && provingStarted && (
+                        <>
+                          <h4 className="text-primary leading-[32px] font-medium font-sans text-3xl text-center">
+                            {"Generating your proof..."}
+                          </h4>
+                          <span className="text-primary font-bold font-sans text-lg text-center">
+                            {"This may take a minute. Please be patient!"}
+                          </span>
+                          <Button onClick={doneProving}>Done Proving</Button>
+                        </>
+                      )}
+                      {!proofLink && !provingStarted && (
                         <>
                           {children}
                           {title && (

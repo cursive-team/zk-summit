@@ -335,7 +335,7 @@ export default function QuestById() {
                   </div>
                 }
               >
-                <div className="flex flex-col gap-6 h-full">
+                <div className="flex flex-col gap-6 mb-4">
                   {quest && quest.userRequirements.length > 0 && (
                     <UserDetail
                       users={quest.userRequirements[0].users}
@@ -375,7 +375,6 @@ export default function QuestById() {
                   </Button>
                 ) : (
                   <Button
-                    className="mt-auto"
                     disabled={
                       !canGenerateProof &&
                       !isQuestComplete &&

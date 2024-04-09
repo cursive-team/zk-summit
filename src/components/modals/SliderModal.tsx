@@ -96,7 +96,7 @@ const SliderModal = ({ isOpen, setIsOpen, size = 320 }: SliderModalProps) => {
                     >
                       <Description>
                         {isFirstElement ? (
-                          "Your personal pubkey flower"
+                          "Your signature flower"
                         ) : (
                           <>
                             {`Garden when ${
@@ -112,9 +112,8 @@ const SliderModal = ({ isOpen, setIsOpen, size = 320 }: SliderModalProps) => {
                       >
                         <Label>
                           Taps produce a unique digital signature to prove{" "}
-                          {person ? "meeting" : "attendance"}. The linked pubkey
-                          is visualized as a generative art flower for your
-                          garden.
+                          {person ? "meeting" : "attendance"}. This signature is
+                          visualized as a generative art flower for your garden.
                         </Label>
                       </div>
                     </div>

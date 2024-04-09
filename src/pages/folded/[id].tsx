@@ -11,7 +11,7 @@ const Folded = (): JSX.Element => {
   const [verified, setVerified] = useState<boolean>(false);
 
   const fakePubkey = '0x01209328159023859';
-  const fakeSize = 120;
+  const fakeSize = 128;
 
   const stats = [
     { count: '042', title: 'Talks attended' },

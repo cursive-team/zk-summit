@@ -356,7 +356,7 @@ export default function Social() {
           <div className="flex flex-col gap-5 mt-2">
             {locations.length === 0 ? (
               <NoResultContent>
-                {"Tap talk check-ins to collect slide links and talk details!"}
+                {"Tap talk posters to collect slide links and talk details!"}
               </NoResultContent>
             ) : (
               <div className="flex flex-col gap-2 w-full">

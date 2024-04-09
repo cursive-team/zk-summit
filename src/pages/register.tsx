@@ -127,7 +127,7 @@ export default function Register() {
 
     const isUsernameUnique = await checkUsernameIsUnique(displayName);
     if (!isUsernameUnique) {
-      toast.error("Username is already taken.");
+      toast.error("Display name is already taken.");
       return;
     }
 
@@ -184,7 +184,7 @@ export default function Register() {
 
     const isUsernameUnique = await checkUsernameIsUnique(displayName);
     if (!isUsernameUnique) {
-      toast.error("Username is already taken.");
+      toast.error("Display name is already taken.");
       return;
     }
 
@@ -218,7 +218,7 @@ export default function Register() {
     e.preventDefault();
 
     if (!displayName || !password) {
-      toast.error("Please enter a username and password.");
+      toast.error("Please enter a display name and password.");
       return;
     }
 
@@ -412,7 +412,7 @@ export default function Register() {
         <Input
           type="text"
           id="displayName"
-          label="Username (*)"
+          label="Display name (*)"
           placeholder="Tom Smith"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}

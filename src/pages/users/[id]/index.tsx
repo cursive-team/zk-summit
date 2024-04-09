@@ -455,6 +455,14 @@ const UserProfilePage = () => {
           </div>
         )}
 
+        {user?.isSpeaker && (
+          <div className="flex flex-col p-3 bg-secondary rounded">
+            <span className="font-sans text-sm font-semibold leading-6 text-white">
+              Speaker at ZK11
+            </span>
+          </div>
+        )}
+
         {user?.note && (
           <Accordion label="Notes">
             <span className="text-iron-600 text-[14px] mt-1 left-5">

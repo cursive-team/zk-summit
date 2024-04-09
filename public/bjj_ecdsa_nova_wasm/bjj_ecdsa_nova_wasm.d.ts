@@ -58,6 +58,21 @@ export function continue_proof(r1cs_url: string, wasm_url: string, params_string
 */
 export function obfuscate_proof(r1cs_url: string, wasm_url: string, params_string: string, proof_string: string, zi_primary: Array<any>): Promise<string>;
 /**
+* @param {string} params_string
+* @param {string} pk_string
+* @param {string} proof_string
+* @returns {Promise<string>}
+*/
+export function prove_spartan(params_string: string, pk_string: string, proof_string: string): Promise<string>;
+/**
+* @param {string} vk_string
+* @param {string} proof_string
+* @param {number} num_folds
+* @param {string} root_bigint
+* @returns {Promise<boolean>}
+*/
+export function verify_spartan(vk_string: string, proof_string: string, num_folds: number, root_bigint: string): Promise<boolean>;
+/**
 *
 * * Gzip compress a proof
 * *
@@ -135,6 +150,8 @@ export interface InitOutput {
   readonly generate_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => number;
   readonly continue_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => number;
   readonly obfuscate_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
+  readonly prove_spartan: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+  readonly verify_spartan: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
   readonly compress_proof: (a: number, b: number) => number;
   readonly decompress_proof: (a: number, b: number) => void;
   readonly random_fr: (a: number) => void;
@@ -151,11 +168,11 @@ export interface InitOutput {
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
   readonly __wbindgen_export_3: WebAssembly.Table;
-  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h7792a5b227a1963e: (a: number, b: number, c: number) => void;
+  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hc60c9e3b09e25594: (a: number, b: number, c: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_exn_store: (a: number) => void;
-  readonly wasm_bindgen__convert__closures__invoke2_mut__h743b3837663524d8: (a: number, b: number, c: number, d: number) => void;
+  readonly wasm_bindgen__convert__closures__invoke2_mut__h2cb2639cde712b77: (a: number, b: number, c: number, d: number) => void;
   readonly __wbindgen_thread_destroy: (a?: number, b?: number) => void;
   readonly __wbindgen_start: () => void;
 }

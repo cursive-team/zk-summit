@@ -1,7 +1,7 @@
 import { Button } from "@/components/Button";
 import { useEffect, useState } from "react";
 import { getUsers } from "@/lib/client/localStorage";
-import useParams from "@/hooks/useParams";
+import useArtifacts, { ArtifactType } from "@/hooks/useArtifacts";
 import { MembershipFolder } from "@/lib/client/nova";
 import { Spinner } from "@/components/Spinner";
 import { toast } from "sonner";
@@ -12,18 +12,42 @@ import useFolds, { TreeType } from "@/hooks/useFolds";
  * @param index - the chunk index to retrieve
  * @returns - the gzipped chunk
  */
-const getParamsSequential = async (index: number): Promise<Blob> => {
-  const fullUrl = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${index}.gz`;
-  const res = await fetch(fullUrl, {
+const getArtifactSequential = async (artifactType: ArtifactType, index: number): Promise<Blob> => {
+  let uri: string;
+  if (artifactType === "params")
+    uri = `/params_${index}.gz`;
+  else if (artifactType === "pk") 
+    uri = `/spartan_pk/pk_${index}.gz`;
+  else
+    uri = `/spartan_vk/vk_${index}.gz`;
+  const fullUri = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}${uri}`;
+  const res = await fetch(fullUri, {
     headers: { "Content-Type": "application/x-binary" },
   });
   return await res.blob();
 };
 
 export default function Fold() {
-  const { addChunk, getChunks, chunkCount, paramsDbInitialized } = useParams();
+  const {
+    addChunk: addParamChunk,
+    getChunks: getParamChunks,
+    chunkCount: paramsChunkCount,
+    paramsDbInitialized
+  } = useArtifacts("params");
+  const {
+    addChunk: addPkChunk,
+    getChunks: getPkChunks,
+    chunkCount: pkChunkCount
+  } = useArtifacts("pk");
+  const {
+    addChunk: addVkChunk,
+    getChunks: getVkChunks,
+    chunkCount: vkChunkCount
+  } = useArtifacts("vk")
   const { addProof, getProof, incrementFold, obfuscate, getUserToFold } =
     useFolds();
+  const [pkDownloaded, setPkDownloaded] = useState<boolean>(false);
+  const [vkDownloaded, setVkDownloaded] = useState<boolean>(false);
   const [chunksDownloaded, setChunksDownloaded] = useState<boolean>(false);
   const [membershipFolder, setMembershipFolder] =
     useState<MembershipFolder | null>(null);
@@ -37,16 +61,16 @@ export default function Fold() {
     if (!paramsDbInitialized || chunksDownloaded) return;
     (async () => {
       // handle downloading chunks
-      const startIndex = await chunkCount();
+      const startIndex = await paramsChunkCount();
       // If 10 chunks are not stored then fetch remaining
       if (startIndex !== 10) {
         const id = toast.loading("Downloading Nova Folding params file!");
         setIsLoading(id);
         console.log(`${startIndex} out of 10 param chunks stored`);
         for (let i = startIndex; i < 10; i++) {
-          const param = await getParamsSequential(i);
+          const param = await getArtifactSequential("params", i);
           // Add chunk to indexdb
-          await addChunk(i, param);
+          await addParamChunk(i, param);
           console.log(`Chunk ${i + 1} of 10 stored`);
         }
         setChunksDownloaded(true);
@@ -57,6 +81,52 @@ export default function Fold() {
   }, [paramsDbInitialized]);
 
   useEffect(() => {
+    if (!paramsDbInitialized || !chunksDownloaded || pkDownloaded) return;
+    (async () => {
+      // handle downloading chunks
+      const startIndex = await paramsChunkCount();
+      // If 10 chunks are not stored then fetch remaining
+      if (startIndex !== 10) {
+        const id = toast.loading("Downloading Nova Spartan ZKey!");
+        setIsLoading(id);
+        console.log(`${startIndex} out of 10 zkey chunks stored`);
+        for (let i = startIndex; i < 10; i++) {
+          const param = await getArtifactSequential("pk", i);
+          // Add chunk to indexdb
+          await addParamChunk(i, param);
+          console.log(`Chunk ${i + 1} of 10 stored`);
+        }
+        setPkDownloaded(true);
+      } else {
+        setPkDownloaded(true);
+      }
+    })();
+  }, [paramsDbInitialized, chunksDownloaded])
+  
+  useEffect(() => {
+    if (!paramsDbInitialized || !pkDownloaded || vkDownloaded) return;
+    (async () => {
+      // handle downloading chunks
+      const startIndex = await paramsChunkCount();
+      // If 10 chunks are not stored then fetch remaining
+      if (startIndex !== 10) {
+        const id = toast.loading("Downloading Nova Spartan VKey!");
+        setIsLoading(id);
+        console.log(`${startIndex} out of 10 vkey chunks stored`);
+        for (let i = startIndex; i < 10; i++) {
+          const param = await getArtifactSequential("vk", i);
+          // Add chunk to indexdb
+          await addParamChunk(i, param);
+          console.log(`Chunk ${i + 1} of 10 stored`);
+        }
+        setVkDownloaded(true);
+      } else {
+        setVkDownloaded(true);
+      }
+    })();
+  }, [paramsDbInitialized, chunksDownloaded])
+
+  useEffect(() => {
     // instantiate membership folder class
     if (!chunksDownloaded || membershipFolder !== null) return;
     let loadingId = isLoading;
@@ -64,7 +134,7 @@ export default function Fold() {
       loadingId = toast.loading("Downloading Nova Folding params file!");
     // begin folding users
     (async () => {
-      const compressedParams = new Blob(await getChunks());
+      const compressedParams = new Blob(await getParamChunks());
       const folding = await MembershipFolder.initWithIndexDB(compressedParams);
       setMembershipFolder(folding);
       toast.dismiss(loadingId);

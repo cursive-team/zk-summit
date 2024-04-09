@@ -28,10 +28,13 @@ body {
   padding: 0;
   height: 100%;
   @apply text-iron-950;
-  background: var(--bg-primary) !important;
+  background-image: url('/bg-gradient.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
   text-rendering: geometricPrecision;
   font-feature-settings: "calt" off;
   -webkit-overflow-scrolling: touch;
+  overflow: scroll;
 }
 
 @layer utilities {
@@ -52,4 +55,25 @@ body {
 
 .sticky > * {
   -webkit-transform: translateZ(0);
+}
+
+.h-modal {
+  height: calc(100vh - 90px);
+}
+
+.swiper-pagination {
+  top: 16px !important;
+  padding: 8px 20px !important;
+  display: grid !important;
+  gap: 8px !important;
+  height: 10px !important;
+  grid-template-columns: repeat( auto-fit, minmax(50px, 1fr) );
+}
+
+.swiper-pagination .folded-dot {
+  @apply bg-white/80 h-1 w-full rounded-none;
+}
+
+.swiper-pagination .folded-dot-active {
+  @apply !bg-white !opacity-100;
 }

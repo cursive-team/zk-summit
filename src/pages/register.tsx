@@ -26,11 +26,23 @@ import {
 } from "@/lib/shared/utils";
 import { supabase } from "@/lib/client/realtime";
 import { generatePSIKeys, psiBlobUploadClient } from "@/lib/client/psi";
+import { classed } from "@tw-classed/react";
+import { Card } from "@/components/cards/Card";
+import { Spinner } from "@/components/Spinner";
+import Link from "next/link";
 
 enum DisplayState {
   PASSKEY,
   PASSWORD,
+  CREATING,
 }
+
+const Title = classed.h3("font-medium text-primary text-base text-center");
+const Description = classed.div(
+  Card.Base,
+  "p-2 text-[14px] font-normal font-sans !border-none text-iron-950 !rounded-[8px]"
+);
+const Underline = classed.span("text-primary");
 export default function Register() {
   const router = useRouter();
   const [displayState, setDisplayState] = useState<DisplayState>(
@@ -45,6 +57,7 @@ export default function Register() {
   const [iykRef, setIykRef] = useState<string>("");
   const [mockRef, setMockRef] = useState<string>();
   const [loading, setLoading] = useState(false);
+  const [isAccountReady, setIsAccountReady] = useState(false);
 
   useEffect(() => {
     if (router.query.iykRef) {
@@ -219,6 +232,8 @@ export default function Register() {
     authPublicKey: string | undefined
   ) => {
     setLoading(true);
+    const prevDisplayState = displayState;
+    setDisplayState(DisplayState.CREATING); // Show the loading spinner
 
     const { privateKey, publicKey } = await generateEncryptionKeyPair();
     const { psiPrivateKeys, psiPublicKeys } = await generatePSIKeys();
@@ -236,6 +251,7 @@ export default function Register() {
       console.error("Error with realtime auth.", authError);
       toast.error("Error with PSI account setup.");
       setLoading(false);
+      setDisplayState(prevDisplayState);
       return;
     }
 
@@ -267,6 +283,7 @@ export default function Register() {
       console.error(`HTTP error! status: ${response.status}`);
       toast.error("Error creating account! Please try again.");
       setLoading(false);
+      setDisplayState(prevDisplayState);
       return;
     }
 
@@ -285,6 +302,7 @@ export default function Register() {
         "Error generating keys. Please talk to a member of the Cursive team."
       );
       setLoading(false);
+      setDisplayState(prevDisplayState);
       return;
     }
 
@@ -314,6 +332,7 @@ export default function Register() {
       console.error("Error creating backup!");
       toast.error("Error creating backup! Please try again.");
       setLoading(false);
+      setDisplayState(prevDisplayState);
       return;
     }
 
@@ -365,13 +384,12 @@ export default function Register() {
       return;
     }
 
-    toast.success("Account created and backed up!");
+    setIsAccountReady(true);
     setLoading(false);
-    router.push("/");
   };
 
-  if (displayState === DisplayState.PASSKEY) {
-    return (
+  const StateContent: Record<DisplayState, JSX.Element> = {
+    [DisplayState.PASSKEY]: (
       <FormStepLayout
         title="zkSummit 11 x Cursive"
         subtitle="Set up socials to share when others tap your badge. Register to maintain an encrypted backup of data you collect."
@@ -422,8 +440,8 @@ export default function Register() {
           value={bio}
           onChange={(e) => setBio(e.target.value)}
         />
-        <Button type="submit">
-          {loading ? "Creating account..." : "Register with passkey"}
+        <Button type="submit" loading={loading}>
+          Register with passkey
         </Button>
         <span
           className="text-center text-sm"
@@ -432,9 +450,8 @@ export default function Register() {
           <u>Register with password instead</u>
         </span>
       </FormStepLayout>
-    );
-  } else if (displayState === DisplayState.PASSWORD) {
-    return (
+    ),
+    [DisplayState.PASSWORD]: (
       <FormStepLayout
         title="zkSummit 11 x Cursive"
         subtitle="Choose a master password to maintain an encrypted backup of data you collect."
@@ -457,15 +474,58 @@ export default function Register() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
-        <Button type="submit">
-          {loading ? "Creating account..." : "Register"}
+        <Button type="submit" loading={loading}>
+          Register
         </Button>
         <span className="text-center text-sm" onClick={handleCreateWithPasskey}>
           <u>Register with passkey instead</u>
         </span>
       </FormStepLayout>
-    );
-  }
+    ),
+    [DisplayState.CREATING]: (
+      <div className="h-full flex flex-col pt-4 pb-8 ">
+        <div className="flex flex-col my-auto justify-center">
+          <Title>
+            <div className="flex items-center justify-center m-4 gap-2">
+              {isAccountReady ? "Account created!" : "Creating account"}
+              {!isAccountReady && (
+                <Spinner size={20} className="!text-primary" />
+              )}
+            </div>
+          </Title>
+          <div className="flex flex-col gap-2 m-4">
+            <Description>
+              <span>
+                Look for cards to <Underline>tap into talks</Underline> to prove
+                your attendance and ZK interests.
+              </span>
+            </Description>
+            <Description>
+              <span>
+                Tap your badge to a phone to easily{" "}
+                <Underline>share socials</Underline> with new connections.
+              </span>
+            </Description>
+            <Description>
+              <span>
+                {" "}
+                Use 2PC+FHE to{" "}
+                <Underline> discover what you have in common</Underline> with
+                other attendees.
+              </span>
+            </Description>
+          </div>
+        </div>
+        {isAccountReady && (
+          <Link href="/">
+            <Button className="mt-auto">Enter the app!</Button>
+          </Link>
+        )}
+      </div>
+    ),
+  };
+
+  return <>{StateContent?.[displayState]}</>;
 }
 
 Register.getInitialProps = () => {

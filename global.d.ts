@@ -20,12 +20,8 @@ declare module "little-state-machine" {
 declare global {
   interface Window {
     render: () => void;
-    signatures: Array<{ pubKey: string; timestamp: number }>;
-    artworkHeight: number;
-    artworkWidth: number;
-    params: any;
-    myPubKey: string;
-    stamp: any;
-    params: any;
+    createjs: any;
+    FlowerRnd: any;
+    Flower: any;
   }
 }

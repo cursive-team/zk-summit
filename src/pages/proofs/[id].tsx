@@ -1,15 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AppBackHeader } from "@/components/AppHeader";
 import { Icons } from "@/components/Icons";
-import { QuestRequirementCard } from "@/components/cards/QuestRequirementCard";
 import { classed } from "@tw-classed/react";
 import { useParams } from "next/navigation";
 import {
-  LocationRequirement,
   LocationRequirementPreview,
-  QuestRequirementType,
   QuestWithRequirements,
-  UserRequirement,
   UserRequirementPreview,
 } from "@/types";
 import { Button } from "@/components/Button";
@@ -22,7 +18,9 @@ import { Placeholder } from "@/components/placeholders/Placeholder";
 import {
   LocationSignature,
   User,
+  getAllQuestCompleted,
   getLocationSignatures,
+  getProfile,
   getQuestCompleted,
   getUsers,
 } from "@/lib/client/localStorage";
@@ -30,20 +28,16 @@ import {
   computeNumRequirementSignatures,
   computeNumRequirementsSatisfied,
 } from "@/lib/client/quests";
-import {
-  getPinnedQuest,
-  togglePinQuestById,
-} from "@/lib/client/localStorage/questPinned";
-import { toast } from "sonner";
 import { Card } from "@/components/cards/Card";
-import { Header } from "@/components/modals/QuestRequirementModal";
+import { IconCircle } from "@/components/IconCircle";
+import { cn } from "@/lib/client/utils";
 
 interface QuestDetailProps {
   loading?: boolean;
   quest: QuestWithRequirements | null;
 }
 
-const Label = classed.span("text-xs text-gray-10 font-normal");
+const Label = classed.span("text-xs font-sans text-iron-600 font-semibold");
 
 type UserDetailProps = {
   label?: string;
@@ -52,44 +46,61 @@ type UserDetailProps = {
   users: UserRequirementPreview[];
   userPubKeysCollected: string[];
   numSigsRequired: number;
+  numValidSigsCollected: number;
 };
 
 export const UserDetail = ({
-  title,
-  completed,
   users,
   userPubKeysCollected,
   numSigsRequired,
+  numValidSigsCollected,
 }: UserDetailProps) => {
-  const numSigsCollected = useMemo(() => {
-    return users.filter((user) =>
-      userPubKeysCollected.includes(user.signaturePublicKey)
-    ).length;
-  }, [userPubKeysCollected, users]);
-
   return (
     <div className="flex flex-col gap-8">
-      <Header title={title} label="Requirement" completed={completed} />
       <div className="flex flex-col gap-4">
-        <Label>{`${numSigsCollected} met out of ${numSigsRequired} required`}</Label>
         <div>
           {users.map(({ displayName, signaturePublicKey }, index) => {
             const collected = userPubKeysCollected.includes(signaturePublicKey);
+            if (!collected) return null; // should not render uncollected users
             return (
               <div
                 key={index}
-                className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1"
+                className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
               >
                 <div className="flex items-center gap-2">
-                  <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
-                    <Icons.person size={12} />
-                  </div>
-                  <Card.Title>{displayName}</Card.Title>
+                  <IconCircle>
+                    <Icons.Person size={12} />
+                  </IconCircle>
+                  <Card.Title
+                    className={cn("text-sm font-sans", {
+                      "text-iron-950 font-bold": collected,
+                      "text-iron-600 font-normal": !collected,
+                    })}
+                  >
+                    {displayName}
+                  </Card.Title>
                 </div>
-                {collected && <Icons.checkedCircle />}
+                {collected && <Icons.CheckCircle className="text-iron-600" />}
               </div>
             );
           })}
+          {Array(numSigsRequired - numValidSigsCollected)
+            .fill(null)
+            .map((_, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
+              >
+                <div className="flex items-center gap-2">
+                  <IconCircle>
+                    <Icons.Person size={12} />
+                  </IconCircle>
+                  <Card.Title className="text-sm font-sans text-iron-600 font-normal">
+                    Ask to tap a new connection’s badge!
+                  </Card.Title>
+                </div>
+              </div>
+            ))}
         </div>
       </div>
     </div>
@@ -103,93 +114,82 @@ type LocationDetailProps = {
   locations: LocationRequirementPreview[];
   locationPubKeysCollected: string[];
   numSigsRequired: number;
+  numValidSigsCollected: number;
 };
 
 export const LocationDetail = ({
-  title,
-  completed,
   locations,
   locationPubKeysCollected,
   numSigsRequired,
+  numValidSigsCollected,
 }: LocationDetailProps) => {
-  const numSigsCollected = useMemo(() => {
-    return locations.filter((location) =>
-      locationPubKeysCollected.includes(location.signaturePublicKey)
-    ).length;
-  }, [locationPubKeysCollected, locations]);
-
   return (
     <div className="flex flex-col gap-8">
-      <Header title={title} label="Requirement" completed={completed} />
       <div className="flex flex-col gap-4">
-        <Label>{`${numSigsCollected} attended out of ${numSigsRequired} required`}</Label>
         <div>
           {locations.map(({ name, signaturePublicKey }, index) => {
             const collected =
               locationPubKeysCollected.includes(signaturePublicKey);
+
+            if (!collected) return null; // should not render uncollected users
             return (
               <div
                 key={index}
-                className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1"
+                className="flex justify-between border-b w-full border-white gap-2 last-of-type:border-none first-of-type:pt-0 py-1"
               >
                 <div className="flex items-center gap-2">
-                  <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
-                    <Icons.person size={12} />
-                  </div>
-                  <Card.Title>{name}</Card.Title>
+                  <IconCircle>
+                    <Icons.Location size={12} />
+                  </IconCircle>
+                  <Card.Title
+                    className={cn("text-sm font-sans", {
+                      "text-iron-950 font-bold": collected,
+                      "text-iron-600 font-normal": !collected,
+                    })}
+                  >
+                    {name}
+                  </Card.Title>
                 </div>
-                {collected && <Icons.checkedCircle />}
+                {collected && (
+                  <div className="w-4">
+                    <Icons.CheckCircle />
+                  </div>
+                )}
               </div>
             );
           })}
+          {Array(numSigsRequired - numValidSigsCollected)
+            .fill(null)
+            .map((_, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
+              >
+                <div className="flex items-center gap-2">
+                  <IconCircle>
+                    <Icons.Location size={12} />
+                  </IconCircle>
+                  <Card.Title className="text-sm font-sans text-iron-600 font-normal">
+                    Tap a talk card!
+                  </Card.Title>
+                </div>
+              </div>
+            ))}
         </div>
       </div>
     </div>
   );
 };
 
-const QuestDetail = ({ quest, loading = false }: QuestDetailProps) => {
-  const pinnedQuests = useRef<Set<number>>(getPinnedQuest());
+const QuestDetail = ({ quest }: QuestDetailProps) => {
   const { name: title, description } = quest ?? {};
-  const [isQuestPinned, setIsQuestPinned] = useState(
-    pinnedQuests.current.has(quest?.id ?? 0)
-  );
-
-  const onQuestPin = () => {
-    if (!quest?.id) return;
-    const pinned = togglePinQuestById(quest.id);
-    const isPinned = pinned.has(quest.id);
-    setIsQuestPinned(isPinned);
-    toast.success(isPinned ? "Quest pinned" : "Quest unpinned", {
-      duration: 2000,
-    });
-  };
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <div className="grid grid-cols-[40px_1fr] gap-2 xs:gap-3 items-center">
-          <div className="size-10 bg-slate-200 rounded-full"></div>
-          <span className="text-lg xs:text-xl font-normal leading-6">
-            {title}
-          </span>
-        </div>
-        {/* <button
-          type="button"
-          className="flex gap-2 items-center disabled:opacity-50 outline-none focus:outline-none"
-          disabled={loading}
-          onClick={onQuestPin}
-        >
-          <span className="text-gray-11 text-xs font-normal">
-            {isQuestPinned ? "Unpin" : "Pin"}
-          </span>
-          {isQuestPinned ? <Icons.Unpin /> : <IconsP />}
-        </button> */}
-      </div>
-      <div className="flex flex-col gap-4">
-        <span className=" text-gray-11 text-xs font-normal">{description}</span>
-        <div className="flex flex-col gap-2"></div>
-      </div>
+    <div className="flex flex-col gap-6">
+      <span className="text-lg xs:text-xl text-iron-950 leading-6 font-medium">
+        {title}
+      </span>
+      <span className="text-iron-600 text-sm font-normal">{description}</span>
     </div>
   );
 };
@@ -199,23 +199,32 @@ export default function QuestById() {
   const [userPublicKeys, setUserPublicKeys] = useState<string[]>([]);
   const [locationPublicKeys, setLocationPublicKeys] = useState<string[]>([]);
   const [completeQuestModal, setCompleteQuestModal] = useState(false);
+  const [hasMinRequirements, setHasMinRequirements] = useState(false);
   const [existingProofId, setExistingProofId] = useState<string>();
   const { id: questId } = params;
   const { isLoading, data: quest = null } = useFetchQuestById(
     questId as string
   );
   const [userOutboundTaps, setUserOutboundTaps] = useState<number>(0);
+  const [questCompleted, setQuestCompleted] = useState<boolean>(false);
+
+  useEffect(() => {
+    const questCompleted = getAllQuestCompleted();
+    const completedQuestIds: string[] = Object.keys(questCompleted);
+    setQuestCompleted(completedQuestIds.includes(questId as string));
+  }, [completeQuestModal, questId]);
 
   useEffect(() => {
     const users = getUsers();
     setUserOutboundTaps(
       Object.values(users).filter((user: User) => user.outTs).length
     );
-
+    const profile = getProfile();
     const locationSignatures = getLocationSignatures();
-
     const validUserPublicKeys = Object.values(users)
-      .filter((user: User) => user.sig)
+      .filter(
+        (user: User) => user.sig && user.sigPk !== profile?.signaturePublicKey
+      )
       .map((user: User) => user.sigPk!);
     setUserPublicKeys(validUserPublicKeys);
 
@@ -240,19 +249,20 @@ export default function QuestById() {
         questUserTapReq: quest.userTapReq,
       });
       let userTapRequirement = quest.userTapReq ? 1 : 0;
-
-      if (
+      const hasMinRequirements =
         numRequirementsSatisfied ===
         quest.userRequirements.length +
           quest.locationRequirements.length +
-          userTapRequirement
-      ) {
-        setCompleteQuestModal(true);
+          userTapRequirement;
+
+      if (hasMinRequirements) {
+        setHasMinRequirements(true);
         // Check if the user has already submitted a proof for this quest
         // (i.e. the quest is already completed)
         const questCompleted = getQuestCompleted(quest.id.toString());
         if (questCompleted) {
           setExistingProofId(questCompleted.pfId);
+          setCompleteQuestModal(true);
         }
       }
     }
@@ -284,6 +294,11 @@ export default function QuestById() {
 
   const isQuestComplete = existingProofId !== undefined && !isLoading;
 
+  const canGenerateProof =
+    quest &&
+    numRequirementsSatisfied === numRequirementsTotal &&
+    !isQuestComplete;
+
   return (
     <div>
       <AppBackHeader />
@@ -309,61 +324,18 @@ export default function QuestById() {
           }
         >
           {quest ? (
-            <>
+            <div className="flex flex-col gap-6 h-modal">
               <QuestDetail quest={quest} />
               <ListWrapper
-                title="Requirements"
                 label={
                   <div className="flex gap-2 items-center">
-                    {isQuestComplete && (
-                      <Button
-                        onClick={() => {
-                          setCompleteQuestModal(true);
-                        }}
-                        size="small"
-                      >
-                        View proof
-                      </Button>
-                    )}
                     {!isQuestComplete && (
-                      <Label>{`${numRequirementsSatisfied}/${numRequirementsTotal}`}</Label>
+                      <Label className="text-gray-10 font-semibold font-sans">{`${numRequirementsSatisfied}/${numRequirementsTotal} collected`}</Label>
                     )}
-                    {quest &&
-                      numRequirementsSatisfied === numRequirementsTotal &&
-                      !isQuestComplete && (
-                        <Button
-                          onClick={() => {
-                            setCompleteQuestModal(true);
-                          }}
-                          size="small"
-                        >
-                          Generate proof
-                        </Button>
-                      )}
                   </div>
                 }
               >
-                <>
-                  {/* {quest && quest.userTapReq !== null && (
-                    <Card.Base className="text-center flex justify-center py-4">
-                      <div className="flex flex-col gap-2 items-center">
-                        <div className={cn("flex items-center justify-center")}>
-                          <CircleCard size="sm" color="white" icon="proof" />
-                        </div>
-                        <div className="flex flex-col">
-                          <Card.Title>{`Tap ${quest.userTapReq} people!`}</Card.Title>
-                          <Card.Description>
-                            {userOutboundTaps >= quest.userTapReq
-                              ? "Complete"
-                              : `${userOutboundTaps}/${quest.userTapReq}`}
-                          </Card.Description>
-                        </div>
-                      </div>
-                      {userOutboundTaps >= quest.userTapReq && (
-                        <Icons.checkedCircle className="absolute right-[6px] top-[6px]" />
-                      )}
-                    </Card.Base>
-                  )} */}
+                <div className="flex flex-col gap-6 h-full">
                   {quest && quest.userRequirements.length > 0 && (
                     <UserDetail
                       users={quest.userRequirements[0].users}
@@ -372,7 +344,8 @@ export default function QuestById() {
                         quest.userRequirements[0].numSigsRequired
                       }
                       title={quest.userRequirements[0].name}
-                      completed={false}
+                      completed={questCompleted}
+                      numValidSigsCollected={numRequirementsSatisfied}
                     />
                   )}
                   {quest && quest.locationRequirements.length > 0 && (
@@ -383,12 +356,40 @@ export default function QuestById() {
                         quest.locationRequirements[0].numSigsRequired
                       }
                       title={quest.locationRequirements[0].name}
-                      completed={false}
+                      completed={questCompleted}
+                      numValidSigsCollected={numRequirementsSatisfied}
                     />
                   )}
-                </>
+                </div>
+                {quest?.isCompleted ? (
+                  <Button
+                    variant="white"
+                    onClick={() => {
+                      setCompleteQuestModal(true);
+                    }}
+                  >
+                    <span className="w-full text-left font-normal">
+                      View proof
+                    </span>
+                    <Icons.Zoom className="ml-auto" />
+                  </Button>
+                ) : (
+                  <Button
+                    className="mt-auto"
+                    disabled={
+                      !canGenerateProof &&
+                      !isQuestComplete &&
+                      !hasMinRequirements
+                    }
+                    onClick={() => {
+                      setCompleteQuestModal(true);
+                    }}
+                  >
+                    Generate proof
+                  </Button>
+                )}
               </ListWrapper>
-            </>
+            </div>
           ) : (
             <span className="flex justify-center items-center text-center grow min-h-[80vh]">
               Unable to load this proof.
@@ -401,5 +402,5 @@ export default function QuestById() {
 }
 
 QuestById.getInitialProps = () => {
-  return { showHeader: false };
+  return { showHeader: false, showFooter: false };
 };

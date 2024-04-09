@@ -125,15 +125,11 @@ export default function LeaderBoard() {
       />
       <div className="flex flex-col gap-6 pb-6">
         <div className="flex flex-col gap-4">
-          <span className="text-gray-900 text-xs font-normal">
-            {"The leaderboard is based on the number of taps you've "}{" "}
-            <i>made.</i>{" "}
-          </span>
           <TableWrapper>
             <TableHeaderLabel className="text-center">#</TableHeaderLabel>
             <TableHeaderLabel>Display name</TableHeaderLabel>
             <TableHeaderLabel className="text-right">
-              Taps given
+              Total taps
             </TableHeaderLabel>
           </TableWrapper>
           <LoadingWrapper

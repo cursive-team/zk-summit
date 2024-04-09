@@ -27,7 +27,7 @@ const FullPageBanner = ({ description, title }: FullPageBannerProps) => {
       <div className="flex flex-col gap-2 my-auto mx-auto px-10">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-4 mx-auto">
-            <Icons.Cursive height={80} width={120} />
+            <Icons.Cursive className="text-iron-950" height={80} width={120} />
           </div>
           <span className="text-[36px] font-bold font-sans text-center">
             {APP_CONFIG.APP_NAME}

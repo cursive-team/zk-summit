@@ -46,3 +46,11 @@ export const hashPassword = async (
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 };
+
+export const handleUsername = (username?: string): string => {
+  if (!username) return "";
+  if (username.startsWith("@")) {
+    return username;
+  }
+  return `@${username}`;
+};

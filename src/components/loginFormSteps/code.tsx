@@ -144,7 +144,7 @@ const LoginStepCode = ({
       <AppBackHeader onBackClick={onBack} />
       <FormStepLayout
         title="Login"
-        description="Welcome to ETHDenver"
+        description="Welcome to ZKSummit"
         onSubmit={handleSubmit(onSubmit)}
         className="!pt-0"
       >

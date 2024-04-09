@@ -6,6 +6,7 @@ import { Card } from "@/components/cards/Card";
 import { AdminLocationInfo } from "../api/admin/locations";
 import useRequireAdmin from "@/hooks/useRequireAdmin";
 import { getAuthToken } from "@/lib/client/localStorage";
+import { IconCircle } from "@/components/IconCircle";
 
 const AdminTapLocationPage = () => {
   const router = useRouter();
@@ -53,9 +54,9 @@ const AdminTapLocationPage = () => {
                   className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
+                    <IconCircle>
                       <Icons.home size={12} />
-                    </div>
+                    </IconCircle>
                     <Card.Title>{name}</Card.Title>
                   </div>
                 </div>

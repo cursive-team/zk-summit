@@ -6,26 +6,30 @@ import {
   getLocationSignature,
 } from "@/lib/client/localStorage";
 import { classed } from "@tw-classed/react";
-import { Header } from "@/components/modals/QuestRequirementModal";
 import useSettings from "@/hooks/useSettings";
 import { AppBackHeader } from "@/components/AppHeader";
 import { toast } from "sonner";
 import { LoadingWrapper } from "@/components/wrappers/LoadingWrapper";
 import { LocationDetailPlaceholder } from "@/components/placeholders/LocationDetailPlaceholder";
-import { getNonceFromCounterMessage } from "@/lib/client/libhalo";
-import { LocationTapModal } from "@/components/modals/LocationTapModal";
-import Linkify from "react-linkify";
+import { Card } from "@/components/cards/Card";
+import Link from "next/link";
+import { Button } from "@/components/Button";
+import { Icons } from "@/components/Icons";
 
-const Label = classed.span("text-xs text-gray-10 font-normal");
-const Description = classed.span("text-gray-12 text-sm font-normal");
+const Title = classed.span("text-iron-800 text-xs font-normal font-sans");
+const Description = classed.h5("text-iron-950 font-normal text-sm");
+
+const stageMapping: Record<string, string> = {
+  main: "Mainstage",
+  side: "Sidestage",
+  breakout: "Breakout room",
+  workshop: "Workshop room",
+};
 
 const LocationDetails = () => {
-  const { pageWidth } = useSettings();
   const router = useRouter();
   const { id } = router.query;
-  const [openTapModal, setOpenTapModal] = useState<boolean>();
   const [location, setLocation] = useState<LocationWithQuests>();
-  const [signature, setSignature] = useState<LocationSignature>();
 
   useEffect(() => {
     const fetchLocation = async () => {
@@ -46,14 +50,11 @@ const LocationDetails = () => {
           router.push("/");
         }
 
-        const locationSignature = getLocationSignature(id);
-        setSignature(locationSignature);
-
         const tap = router.query.tap;
         if (tap === "true") {
-          setOpenTapModal(true);
-        } else {
-          setOpenTapModal(false);
+          toast.success("You've successfully tapped in!", {
+            position: "bottom-center",
+          });
         }
       }
     };
@@ -65,64 +66,65 @@ const LocationDetails = () => {
     <div>
       <AppBackHeader redirectTo="/" />
       <LoadingWrapper
-        isLoading={!location || openTapModal === undefined}
+        isLoading={!location}
         fallback={<LocationDetailPlaceholder />}
         className="flex flex-col gap-6"
       >
-        {location && openTapModal !== undefined && (
-          <LocationTapModal
-            location={location}
-            signature={signature}
-            isOpen={openTapModal}
-            setIsOpen={(isOpen) => setOpenTapModal(isOpen)}
-          />
-        )}
         {location && (
-          <>
-            <Header title={location.name} label="Location" />
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-4 jus">
-                <div className="flex flex-col">
-                  <Label>Description</Label>
-                  <Description>
-                    <Linkify
-                      componentDecorator={(
-                        decoratedHref,
-                        decoratedText,
-                        key
-                      ) => (
-                        <a
-                          target="_blank"
-                          href={decoratedHref}
-                          key={key}
-                          style={{ textDecoration: "underline" }}
-                        >
-                          {decoratedText}
-                        </a>
-                      )}
-                    >
-                      {location.description}
-                    </Linkify>
-                  </Description>
-                </div>
-                {signature !== undefined && (
-                  <div className="flex flex-col">
-                    <Label>Visited On</Label>
-                    <Description>{`${signature.ts}`}</Description>
-                  </div>
-                )}
-                {signature !== undefined &&
-                  getNonceFromCounterMessage(signature.msg) !== undefined && (
-                    <div className="flex flex-col">
-                      <Label>Visitor No.</Label>
-                      <Description>{`${getNonceFromCounterMessage(
-                        signature.msg
-                      )}`}</Description>
-                    </div>
-                  )}
+          <div className="flex flex-col gap-4">
+            <Card.Base
+              className="!border-primary/10 bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: "url('/bg-gradient-card.png')",
+              }}
+            >
+              <div className="flex flex-col py-4 px-3 min-h-[180px]">
+                <span className="text-primary text-xs font-semibold font-sans">
+                  {stageMapping[location.stage]}
+                </span>
+                <h5 className="mt-auto text-primary font-medium text-[21px] leading-[21px]">
+                  {location.description}
+                </h5>
               </div>
-            </div>
-          </>
+            </Card.Base>
+            {location.speaker && (
+              <div className="flex flex-col gap-1">
+                <Title>Speaker</Title>
+                <Description>{location.speaker}</Description>
+              </div>
+            )}
+            {location.description && (
+              <div className="flex flex-col gap-1">
+                <Title>Description</Title>
+                <Description>{location.description}</Description>
+              </div>
+            )}
+            {location.slidesLink && (
+              <Link href={location.slidesLink} target="_blank">
+                <Button variant="white">
+                  <div className="flex w-full items-center justify-between">
+                    <span className="text-iron-600 font-semibold text-xs">
+                      Slides link
+                    </span>
+                    <Icons.ExternalLink className="text-gray-10" />
+                  </div>
+                </Button>
+              </Link>
+            )}
+            {location.speakerSocial && (
+              <Link href={location.speakerSocial} target="_blank">
+                <Button variant="white">
+                  <div className="flex w-full items-center justify-between">
+                    <span className="text-iron-600 font-semibold text-xs">
+                      Follow the speaker
+                    </span>
+                    <Icons.ExternalLink className="text-gray-10" />
+                  </div>
+                </Button>
+              </Link>
+            )}
+            <div className=""></div>
+          </div>
         )}
       </LoadingWrapper>
     </div>

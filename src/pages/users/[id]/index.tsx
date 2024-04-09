@@ -9,7 +9,6 @@ import {
   User,
 } from "@/lib/client/localStorage";
 import { AppBackHeader } from "@/components/AppHeader";
-import { Icons } from "@/components/Icons";
 import { Card } from "@/components/cards/Card";
 import Link from "next/link";
 import { classed } from "@tw-classed/react";
@@ -24,6 +23,12 @@ import init, { round1_js, round2_js, round3_js } from "@/lib/mp_psi/mp_psi";
 import { encryptOverlapComputedMessage } from "@/lib/client/jubSignal/overlapComputed";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { CircleCard } from "@/components/cards/CircleCard";
+import { IconCircle } from "@/components/IconCircle";
+import { ProfilePicModal } from "@/components/modals/ProfilePicModal";
+import useSettings from "@/hooks/useSettings";
+import { Accordion } from "@/components/Accordion";
+import { handleUsername } from "@/lib/client/utils";
+import { Icons } from "@/components/Icons";
 
 const Label = classed.span("text-sm text-gray-12");
 
@@ -36,13 +41,11 @@ interface LinkCardProps {
 const LinkCard = ({ label, value, href }: LinkCardProps) => {
   return (
     <Link href={href} target="_blank">
-      <Card.Base className="flex items-center justify-between p-3">
-        <div className="flex items-center gap-1">
-          <Card.Title>{label}</Card.Title>
-          <Card.Description>{value ?? "N/A"}</Card.Description>
-        </div>
-        <Icons.ExternalLink size={18} />
-      </Card.Base>
+      <div className="grid items-center grid-cols-[auto_1fr_auto] gap-1">
+        <span className="text-iron-950 font-normal">{label}</span>
+        <div className="h-[1px] bg-iron-200 w-full"></div>
+        <span className="text-right">{handleUsername(value) ?? "N/A"}</span>
+      </div>
     </Link>
   );
 };
@@ -62,6 +65,9 @@ const UserProfilePage = () => {
   const { id } = router.query;
   const [user, setUser] = useState<User>();
   const alreadyConnected = router?.query?.alreadyConnected === "true";
+  const [showProfilePicModal, setShowProfilePicModal] =
+    useState<boolean>(false);
+  const { pageWidth } = useSettings();
 
   const [selfEncPk, setSelfEncPk] = useState<string>();
   const [otherEncPk, setOtherEncPk] = useState<string>();
@@ -368,32 +374,51 @@ const UserProfilePage = () => {
     return <div>User not found</div>;
   }
 
+  const isOverlapComputed = psiState === PSIState.COMPLETE;
+
   return (
     <div>
+      <ProfilePicModal
+        isOpen={showProfilePicModal}
+        setIsOpen={setShowProfilePicModal}
+        size={pageWidth - 60}
+        name={user.name}
+        pubKey={user.sigPk ?? ""}
+      />
       <AppBackHeader redirectTo="/" />
       {alreadyConnected && (
         <div className="flex items-start justify-center py-28">
-          <span className="text-xl text-gray-12">
+          <span className="text-xl text-iron-950">
             You have already connected with this user!
           </span>
         </div>
       )}
       <div className="flex flex-col gap-6">
         <div className="flex gap-4 xs:gap-5 items-center">
-          {user ? (
+          <div
+            onClick={() => {
+              setShowProfilePicModal(true);
+            }}
+            className="w-32 h-32 rounded-[4px] relative flex-shrink-0"
+          >
             <ArtworkSnapshot
               width={128}
               height={128}
               pubKey={user.sigPk ?? ""}
             />
-          ) : (
-            <ArtworkSnapshot width={128} height={128} pubKey={""} />
-          )}
+            <button type="button" className="absolute right-1 top-1 z-1">
+              <Icons.Zoom />
+            </button>
+          </div>
+
           <div className="flex flex-col gap-1">
-            <h2 className=" text-xl font-gray-12 font-normal">{user.name}</h2>
+            <h2 className="text-xl font-iron-950 font-medium">{user.name}</h2>
             <div className="flex items-center gap-1">
               {user.bio && (
-                <span className="font-gray-12 text-[14px] mt-1 left-5">
+                <span
+                  className="font-iron-950 text-[12px] font-normal mt-1 left-5"
+                  style={{ whiteSpace: "pre-wrap" }}
+                >
                   {user.bio}
                 </span>
               )}
@@ -401,61 +426,70 @@ const UserProfilePage = () => {
           </div>
         </div>
         {!user.inTs && (
-          <div className="p-3 bg-zinc-900 rounded flex-col justify-center items-start gap-1 inline-flex">
+          <div className="p-3 bg-tertiary rounded flex-col justify-center items-start gap-1 inline-flex">
             <InputWrapper
               className="flex flex-col gap-2"
               label="Details pending"
             >
-              <span className="text-gray-11 text-[14px] left-5 mt-1">
+              <span className="text-iron-600 font-sans text-[14px] left-5 mt-1">
                 If {user.name} taps you back and shares their socials, they will
                 appear here.
               </span>
             </InputWrapper>
           </div>
         )}
-        {(user.x || user.tg || user.fc) && (
-          <div className="flex flex-col gap-1">
-            {(user.x?.length ?? 0) > 1 && (
-              <LinkCard
-                label="Twitter"
-                href={`https://x.com/${removeLabelStartWith(user.x, "@")}`}
-                value={labelStartWith(user.x, "@")}
-              />
-            )}
-            {(user.tg?.length ?? 0) > 1 && (
-              <LinkCard
-                label="Telegram"
-                href={`https://t.me/${removeLabelStartWith(user.tg, "@")}`}
-                value={labelStartWith(user.tg, "@")}
-              />
-            )}
-            {(user.fc?.length ?? 0) > 1 && (
-              <LinkCard
-                label="Farcaster"
-                href={`https://warpcast.com/${removeLabelStartWith(
-                  user.fc,
-                  "@"
-                )}`}
-                value={labelStartWith(user.fc, "@")}
-              />
-            )}
-          </div>
-        )}
+
         {user?.note && (
-          <InputWrapper
-            className="flex flex-col gap-2"
-            label="Your private note"
-          >
-            <span className="text-gray-11 text-[14px] mt-1 left-5">
+          <Accordion label="Notes">
+            <span className="text-iron-600 text-[14px] mt-1 left-5">
               {user?.note}
             </span>
-          </InputWrapper>
+          </Accordion>
         )}
-        {psiState === PSIState.COMPLETE && (
-          <InputWrapper
-            label="Private overlap"
-            description="Your common taps, snapshotted at when you met!"
-          >
+
+        {(user.x || user.tg || user.fc) && (
+          <Accordion label="Socials">
+            <div className="flex flex-col gap-1">
+              {(user.x?.length ?? 0) > 1 && (
+                <LinkCard
+                  label="Twitter"
+                  href={`https://x.com/${removeLabelStartWith(user.x, "@")}`}
+                  value={labelStartWith(user.x, "@")}
+                />
+              )}
+              {(user.tg?.length ?? 0) > 1 && (
+                <LinkCard
+                  label="Telegram"
+                  href={`https://t.me/${removeLabelStartWith(user.tg, "@")}`}
+                  value={labelStartWith(user.tg, "@")}
+                />
+              )}
+              {(user.fc?.length ?? 0) > 1 && (
+                <LinkCard
+                  label="Farcaster"
+                  href={`https://warpcast.com/${removeLabelStartWith(
+                    user.fc,
+                    "@"
+                  )}`}
+                  value={labelStartWith(user.fc, "@")}
+                />
+              )}
+            </div>
+          </Accordion>
+        )}
+
+        <Card.Base className="flex flex-col p-4 gap-6 !bg-white/20 mt-4">
+          <div className="flex flex-col gap-1">
+            <span className="font-bold text-iron-950 text-sm">
+              What do you both have in common?
+            </span>
+            <span className="text-iron-600 text-xs font-bold">
+              {isOverlapComputed
+                ? "Overlap computed at the time you both opted into 2PC+FHE"
+                : "Privately compute using 2PC+FHE"}
+            </span>
+          </div>
+          {isOverlapComputed ? (
             <div className="flex flex-col mt-2 gap-1">
               {userOverlap.map(({ userId, name }, index) => {
                 return (
@@ -467,9 +501,9 @@ const UserProfilePage = () => {
                   >
                     <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
                       <div className="flex items-center gap-2">
-                        <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
+                        <IconCircle>
                           <CircleCard icon="person" />
-                        </div>
+                        </IconCircle>
                         <Card.Title>{name}</Card.Title>
                       </div>
                     </div>
@@ -481,9 +515,9 @@ const UserProfilePage = () => {
                   <Link href={`/locations/${locationId}`} key={index}>
                     <div className="flex justify-between border-b w-full border-gray-300  last-of-type:border-none first-of-type:pt-0 py-1">
                       <div className="flex items-center gap-2">
-                        <div className="flex justify-center items-center bg-[#677363] h-6 w-6 rounded-full">
+                        <IconCircle>
                           <CircleCard icon="location" />
-                        </div>
+                        </IconCircle>
                         <Card.Title>{name}</Card.Title>
                       </div>
                     </div>
@@ -491,40 +525,25 @@ const UserProfilePage = () => {
                 );
               })}
             </div>
-          </InputWrapper>
-        )}
-        {user?.psiPkLink && psiState !== PSIState.COMPLETE && (
-          <div className="flex flex-col gap-4">
-            <InputWrapper
-              size="sm"
-              label={`Connect over mutual connections and talks`}
-              className="grid grid-cols-1"
-              spacing
+          ) : (
+            <Button
+              loading={psiState !== PSIState.NOT_STARTED}
+              type="button"
+              onClick={setupChannel}
+              size="small"
+              variant="tertiary"
             >
-              <span className="text-gray-11 text-[14px] mb-4 left-5">
-                If both you and {user.name} opt-in, we will use 2PC+FHE to
-                privately compute your mutual connections and talks as a
-                conversation starter.
-              </span>
-              <Button
-                loading={psiState !== PSIState.NOT_STARTED}
-                type="button"
-                onClick={setupChannel}
-              >
-                {psiState !== PSIState.NOT_STARTED
-                  ? "Computing..."
-                  : "Discover mutuals"}
-              </Button>
-            </InputWrapper>
-          </div>
-        )}
+              Discover intersections
+            </Button>
+          )}
+        </Card.Base>
       </div>
     </div>
   );
 };
 
 UserProfilePage.getInitialProps = () => {
-  return { showHeader: false, showFooter: true };
+  return { showHeader: false, showFooter: false };
 };
 
 export default UserProfilePage;

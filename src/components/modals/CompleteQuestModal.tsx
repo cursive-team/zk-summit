@@ -1,32 +1,26 @@
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
-import { Icons } from "../Icons";
-import { PointCard } from "../cards/PointCard";
 import { Modal, ModalProps } from "./Modal";
 import { Button } from "../Button";
-import Link from "next/link";
 import { classed } from "@tw-classed/react";
 import { QuestWithRequirements } from "@/types";
 import {
   QuestProvingStateUpdate,
   generateProofForQuest,
 } from "@/lib/client/proving";
-import {
-  getAuthToken,
-  getItemRedeemed,
-  getKeys,
-  getProfile,
-} from "@/lib/client/localStorage";
+import { getAuthToken, getKeys, getProfile } from "@/lib/client/localStorage";
 import { toast } from "sonner";
 import { useRouter } from "next/router";
 import { encryptQuestCompletedMessage } from "@/lib/client/jubSignal";
 import { loadMessages } from "@/lib/client/jubSignalClient";
-import { Spinner } from "../Spinner";
+import { Card } from "../cards/Card";
+import { Icons } from "../Icons";
+import Link from "next/link";
 
 const QRCodeWrapper = classed.div("bg-white max-w-[254px]");
 
 interface CompleteQuestModalProps extends ModalProps {
-  quest: QuestWithRequirements;
+  quest: QuestWithRequirements & { isCompleted: boolean };
   existingProofId?: string;
 }
 
@@ -65,8 +59,10 @@ const CompleteQuestModal = ({
     if (existingProofId) {
       setProofId(existingProofId);
       setDisplayState(CompleteQuestDisplayState.COMPLETED);
+    } else if (quest?.isCompleted) {
+      setDisplayState(CompleteQuestDisplayState.COMPLETED);
     }
-  }, [existingProofId]);
+  }, [existingProofId, quest?.isCompleted]);
 
   const handleCompleteQuest = async () => {
     const authToken = getAuthToken();
@@ -178,55 +174,81 @@ const CompleteQuestModal = ({
     setDisplayState(CompleteQuestDisplayState.COMPLETED);
   };
 
-  const handleBackToQuests = () => {
-    setIsOpen(false);
-    router.push("/quests");
+  const ContentHeader = () => {
+    return (
+      <div className="flex flex-col gap-1 self-center">
+        <div className="flex flex-col gap-2">
+          <span className="text-iron-600 text-sm font-bold">
+            Requirements met!
+          </span>
+          <span className="text-xl font-medium text-iron-950">
+            {quest.name}
+          </span>
+        </div>
+      </div>
+    );
   };
+
+  const percentageComplete =
+    (provingState.currentRequirementNumSigsProven /
+      provingState.currentRequirementNumSigsTotal) *
+    100;
+
+  const qrCodeUrl = `${window.location.origin}/qr/${proofId}`;
+
+  const copyProofLink = async () => {
+    await navigator.clipboard.writeText(qrCodeUrl);
+    toast.success("Proof link copied to clipboard!");
+  };
+
+  const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+    `I completed ${quest.name} at ZKSummit!`
+  )}&url=${encodeURIComponent(qrCodeUrl)}`;
 
   const getModalContent = (): JSX.Element => {
     switch (displayState) {
       case CompleteQuestDisplayState.INITIAL:
         return (
-          <div className="flex flex-col w-full justify-center items-center text-center gap-5">
-            <div className="h-10 w-10 bg-slate-200 rounded-full self-center"></div>
-            <div className="flex flex-col gap-1 self-center">
-              <div className="flex flex-col gap-2">
-                <span className="text-xl text-gray-12">{quest.name}</span>
-              </div>
-            </div>
+          <div className="flex flex-col w-full justify-center items-center text-center gap-5 h-full px-16">
+            <ContentHeader />
             <div className="self-center w-full">
-              <Button onClick={handleCompleteQuest}>Generate ZK Proof</Button>
+              <Button onClick={handleCompleteQuest}>Generate Proof</Button>
             </div>
           </div>
         );
       case CompleteQuestDisplayState.PROVING:
         return (
-          <div className="flex flex-col w-full justify-center text-center gap-5">
-            <div className="h-10 w-10 bg-slate-200 rounded-full self-center"></div>
-            <div className="flex flex-col gap-1 self-center">
-              <div className="flex flex-col">
-                <span className="text-xl text-gray-12 mb-2">{quest.name}</span>
-                <Spinner
-                  label={`Generating ZK proof (${provingState.currentRequirementNumSigsProven}/${provingState.currentRequirementNumSigsTotal} reqs)`}
-                />
+          <div className="flex flex-col w-full justify-center text-center gap-5 h-full px-16">
+            <div className="flex flex-col gap-6">
+              <ContentHeader />
+              <div className="flex flex-col gap-2">
+                <span className="text-iron-950 text-xs text-center">
+                  {provingState.currentRequirementNumSigsProven ===
+                  provingState.currentRequirementNumSigsTotal
+                    ? "Submitting proof for verification..."
+                    : `Generating ZK proof (${provingState.currentRequirementNumSigsProven}/${provingState.currentRequirementNumSigsTotal} reqs)`}
+                </span>
+                <div className="relative">
+                  <Card.Progress
+                    style={{
+                      width: `${percentageComplete}%`,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="self-center w-full">
-              <Button disabled>Generating proof</Button>
             </div>
           </div>
         );
       case CompleteQuestDisplayState.COMPLETED:
         const qrCodeData = `${window.location.origin}/qr/${proofId}`;
         return (
-          <div className="flex flex-col w-full justify-center text-center gap-5">
-            <div className="h-10 w-10 bg-slate-200 rounded-full self-center"></div>
-            <div className="flex flex-col gap-1 self-center">
-              <div className="flex flex-col">
-                <span className="text-xl text-gray-12 font-bold">
-                  {"Proved:"}
+          <div className="flex flex-col w-full justify-center text-center gap-5 h-full px-16">
+            <div className="flex flex-col gap-6 self-center">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-iron-600 font-bold">Proof:</span>
+                <span className="text-[21px] font-sans text-iron-950 font-medium">
+                  {quest.name}
                 </span>
-                <span className="text-xl text-gray-12">{quest.name}</span>
               </div>
               <QRCodeWrapper>
                 <QRCode
@@ -235,13 +257,19 @@ const CompleteQuestModal = ({
                   value={qrCodeData}
                   viewBox={`0 0 156 156`}
                 />
+                <span className="block text-xs px-10 pb-3 text-iron-950 text-center leading-[16px] break-all">
+                  Anyone can scan this QR code to verify your proof
+                </span>
               </QRCodeWrapper>
-            </div>
-            <div
-              onClick={handleBackToQuests}
-              className="flex items-center gap-1 self-center"
-            >
-              <span className="text-sm text-gray-11">Back to proofs</span>
+              <Button onClick={copyProofLink}>Copy link to proof</Button>
+              <Link href={twitterShareUrl} target="_blank">
+                <Button
+                  variant="transparent"
+                  icon={<Icons.Twitter className="text-primary" />}
+                >
+                  Share on Twitter
+                </Button>
+              </Link>
             </div>
           </div>
         );

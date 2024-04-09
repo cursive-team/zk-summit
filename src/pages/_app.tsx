@@ -15,6 +15,7 @@ import { StateMachineProvider } from "little-state-machine";
 import type { AppProps } from "next/app";
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
+import { init } from "@socialgouv/matomo-next";
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -26,6 +27,9 @@ const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-dm-sans",
 });
+
+const MATOMO_URL = process.env.NEXT_PUBLIC_MATOMO_URL!;
+const MATOMO_SITE_ID = process.env.NEXT_PUBLIC_MATOMO_SITE_ID!;
 
 export default function App({ Component, pageProps }: AppProps) {
   const { isIncognito } = useSettings();
@@ -39,6 +43,10 @@ export default function App({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     setPageHeight(window?.innerHeight);
+  }, []);
+
+  useEffect(() => {
+    init({ url: MATOMO_URL, siteId: MATOMO_SITE_ID });
   }, []);
 
   const footerVisible = showFooter && !fullPage;

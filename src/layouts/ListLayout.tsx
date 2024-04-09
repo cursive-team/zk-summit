@@ -1,7 +1,7 @@
 import { classed } from "@tw-classed/react";
 import type * as Classed from "@tw-classed/react";
 
-const ListLayoutWrapper = classed.div("flex flex-col", {
+const ListLayoutWrapper = classed.div("flex flex-col grow", {
   variants: {
     spacing: {
       xs: "gap-3",

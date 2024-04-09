@@ -1,11 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { QuestWithRequirements } from "@/types";
+import { getAllQuestCompleted } from "@/lib/client/localStorage";
 
 export const useFetchQuestById = (questId: number | string) => {
+  const questCompleted = getAllQuestCompleted();
+  const completedQuestIds: string[] = Object.keys(questCompleted);
+
   return useQuery({
     enabled: !!questId,
     queryKey: ["quest", questId],
-    queryFn: async (): Promise<QuestWithRequirements | null> => {
+    queryFn: async (): Promise<
+      (QuestWithRequirements & { isCompleted: boolean }) | null
+    > => {
       try {
         const response = await fetch(`/api/quest/${questId}`);
 
@@ -14,7 +20,10 @@ export const useFetchQuestById = (questId: number | string) => {
         }
 
         const quest: QuestWithRequirements = await response.json();
-        return quest;
+        return {
+          ...quest,
+          isCompleted: completedQuestIds?.includes(quest.id.toString()),
+        };
       } catch (error) {
         console.error("Error fetching quest:", error);
         return null;

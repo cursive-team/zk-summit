@@ -4,7 +4,7 @@ import type * as Classed from "@tw-classed/react";
 
 const Label = classed.span("text-xs text-gray-10 font-normal");
 
-const ListWrapperContainer = classed.div("flex flex-col", {
+const ListWrapperContainer = classed.div("flex flex-col grow", {
   variants: {
     gap: {
       sm: "gap-2",
@@ -22,7 +22,7 @@ type ListWrapperContainerVariants = Classed.VariantProps<
 >;
 
 interface ListWrapperProps extends ListWrapperContainerVariants {
-  title: ReactNode;
+  title?: ReactNode;
   label?: ReactNode; // label or extra info for the list
   children?: React.ReactNode;
 }
@@ -31,7 +31,7 @@ const ListWrapper = ({ title, label, children, gap }: ListWrapperProps) => {
   return (
     <ListWrapperContainer gap={gap}>
       <div className="flex items-center justify-between">
-        <Label>{title}</Label>
+        {title && <Label>{title}</Label>}
         {label && (
           <div className="flex items-center gap-2">
             <Label>{label}</Label>

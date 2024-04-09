@@ -50,6 +50,8 @@ const QuestRequirementIcons = ({
                 key={index}
                 isMultiple={true}
                 icon={isPersonRequirement ? "person" : "location"}
+                color="secondary"
+                border
               />
             );
           })}
@@ -87,31 +89,35 @@ const QuestCard = ({
     <Card.Base className="flex flex-col gap-4 p-3">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <Card.Title>{title}</Card.Title>
-          {/* {isPinned ? (
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-11">Pinned</span>
-              <Icons.Pin />
-            </div>
-          ) : (
-            (isCompleted && <Icons.checkedCircle />) || null
-          )} */}
+          <div className="flex flex-col gap-2">
+            <Card.Title className="text-iron-950 text-sm font-bold">
+              {title}
+            </Card.Title>
+            <span className="text-xs font-iron-600 font-sans">
+              {description}
+            </span>
+          </div>
+          {isCompleted && <Icons.checkedCircle />}
         </div>
       </div>
       <div className="flex gap-4 items-center justify-between">
-        {/* <QuestRequirementIcons
-          userRequirements={userRequirements}
-          locationRequirements={locationRequirements}
-          userTapReqCount={userTapReqCount}
-        /> */}
+        {
+          <QuestRequirementIcons
+            userRequirements={userRequirements}
+            locationRequirements={locationRequirements}
+            userTapReqCount={userTapReqCount}
+          />
+        }
         {isCompleted ? (
-          <Card.Description>{"Proof Completed"}</Card.Description>
+          <Card.Description className="!text-primary">
+            {"Proof Completed"}
+          </Card.Description>
         ) : completedReqs === numRequirements ? (
-          <Card.Description>{`Generate proof of completion`}</Card.Description>
+          <Card.Description className="!text-primary">{`Generate proof of completion`}</Card.Description>
         ) : (
-          <Card.Description>{`${
+          <Card.Description className="!text-primary">{`${
             completedReqs || 0
-          }/${numRequirements} completed`}</Card.Description>
+          }/${numRequirements}`}</Card.Description>
         )}
       </div>
       <Card.Progress

@@ -13,11 +13,12 @@ import {
   getActivities,
   getAuthToken,
   getKeys,
+  getLocationSignatures,
   getProfile,
   getUsers,
 } from "@/lib/client/localStorage";
 import { JUB_SIGNAL_MESSAGE_TYPE } from "@/lib/client/jubSignal";
-import { SnapshotModal } from "@/components/modals/SnapshotModal";
+import { SliderModal } from "@/components/modals/SliderModal";
 import { Button } from "@/components/Button";
 import { formatDate } from "@/lib/shared/utils";
 import { loadMessages } from "@/lib/client/jubSignalClient";
@@ -27,39 +28,41 @@ import { ArtworkSnapshot } from "@/components/artwork/ArtworkSnapshot";
 import useSettings from "@/hooks/useSettings";
 import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
+import { IconCircle } from "@/components/IconCircle";
+import { NoResultContent } from "@/components/NoResultContent";
+import { classed } from "@tw-classed/react";
 
-interface ContactCardProps {
+interface LinkCardProps {
   name: string;
-  userId: string;
   date: string;
+  href: string;
+  other?: string;
 }
 
-const ContactCard = ({ name, userId, date }: ContactCardProps) => {
+const LinkCard = ({ name, date, href, other }: LinkCardProps) => {
   return (
-    <Link href={`/users/${userId}`}>
-      <Card.Base className="flex justify-between p-3">
-        <Card.Title className="leading-none">{name}</Card.Title>
-        <Card.Description>{date}</Card.Description>
-      </Card.Base>
-    </Link>
-  );
-};
+    <Link href={href}>
+      <Button className="w-full !bg-white/40" variant="white">
+        <div className="grid grid-cols-[1fr_90px] w-full">
+          {other ? (
+            <div className="flex flex-row gap-2 truncate items-end">
+              <span className="text-iron-950 font-bold text-sm text-left">
+                {name}
+              </span>
+              <span className="text-iron-600 font-medium text-xs text-left truncate">
+                {other}
+              </span>
+            </div>
+          ) : (
+            <span className="text-iron-950 font-bold text-sm text-left truncate">
+              {name}
+            </span>
+          )}
 
-const PendingContactCard = ({ name, userId, date }: ContactCardProps) => {
-  return (
-    <Card.Base className="flex items-center justify-between p-3">
-      <div className="flex items-center gap-2">
-        <Card.Title className="leading-none">{name}</Card.Title>
-        <Card.Description>{date}</Card.Description>
-      </div>
-      <div>
-        <Link href={`/users/${userId}/share`}>
-          <Button variant="tertiary" size="small">
-            Share back
-          </Button>
-        </Link>
-      </div>
-    </Card.Base>
+          <span className="text-iron-600 font-bold text-xs">{date}</span>
+        </div>
+      </Button>
+    </Link>
   );
 };
 
@@ -70,63 +73,43 @@ interface ActivityFeedProps {
   date: string;
 }
 
+const CardTitleOverride = classed.h1("text-sm leading-5 font-bold");
+
 interface FeedContentProps {
   title: React.ReactNode;
+  titleOverride?: boolean;
   description: string;
   icon: React.ReactNode;
 }
-const FeedContent = ({ title, description, icon }: FeedContentProps) => {
+const FeedContent = ({
+  title,
+  description,
+  titleOverride,
+  icon,
+}: FeedContentProps) => {
   return (
     <div className="grid grid-cols-[1fr_80px] items-center justify-between py-1 gap-4">
-      <div className="grid grid-cols-[24px_1fr] items-center gap-2">
-        <div className="flex justify-center items-center h-6 w-6 rounded-full bg-[#323232]">
-          {icon}
-        </div>
-        <Card.Title>{title}</Card.Title>
+      <div className="grid grid-cols-[24px_1fr] items-center gap-2 truncate">
+        <IconCircle>{icon}</IconCircle>
+        {titleOverride === true ? (
+          <CardTitleOverride className="truncate">{title}</CardTitleOverride>
+        ) : (
+          <Card.Title className="truncate">{title}</Card.Title>
+        )}
       </div>
       <Card.Description>{description}</Card.Description>
     </div>
   );
 };
 
-const NoResultContent = ({ children }: any) => {
-  return (
-    <div className="flex justify-center items-center h-[30vh]">
-      <span className="text-iron-600 font-bold">{children || "No result"}</span>
-    </div>
-  );
-};
-
 const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
   switch (type) {
-    case JUB_SIGNAL_MESSAGE_TYPE.REGISTERED:
-      const profile = getProfile();
-      if (
-        profile?.bio ||
-        profile?.telegramUsername ||
-        profile?.twitterUsername
-      ) {
-        return (
-          <FeedContent
-            title="Registered and set up socials!"
-            description={date}
-            icon={<CircleCard icon="proof" />}
-          />
-        );
-      }
-      return (
-        <FeedContent
-          title="Registered! Set up your socials in upper-right menu."
-          description={date}
-          icon={<CircleCard icon="proof" />}
-        />
-      );
     case JUB_SIGNAL_MESSAGE_TYPE.OUTBOUND_TAP:
       return (
         <FeedContent
           title={
             <>
-              {"Tapped by "} <u>{name}</u>
+              {"Sent socials to "} {name}
             </>
           }
           icon={<CircleCard icon="person" />}
@@ -139,10 +122,12 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                {"Overlap computed with "} <u>{name}</u>
+                <span className="text-iron-600">{"Overlapped with "}</span>
+                <span className="text-iron-750">{name}</span>
               </>
             }
-            icon={<Icons.Cursive />}
+            titleOverride={true}
+            icon={<CircleCard icon="overlap" />}
             description={date}
           />
         </Link>
@@ -153,9 +138,13 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                {"You tapped "} <u>{name}</u>
+                <span className="text-iron-600">
+                  {"Received socials from "}
+                </span>
+                <span className="text-iron-750">{name}</span>
               </>
             }
+            titleOverride={true}
             icon={<CircleCard icon="person" />}
             description={date}
           />
@@ -167,9 +156,11 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
           <FeedContent
             title={
               <>
-                {"Attended talk "} <u>{name}</u>
+                <span className="text-iron-600">{"Attended talk "}</span>
+                <span className="text-iron-750">{name}</span>
               </>
             }
+            titleOverride={true}
             icon={<CircleCard icon="location" />}
             description={date}
           />
@@ -177,14 +168,16 @@ const ActivityFeed = ({ type, name, id, date }: ActivityFeedProps) => {
       );
     case JUB_SIGNAL_MESSAGE_TYPE.QUEST_COMPLETED:
       return (
-        <Link href={`/quests/${id}`}>
+        <Link href={`/proofs/${id}`}>
           <FeedContent
             icon={<CircleCard icon="proof" />}
             title={
               <>
-                {"Made a proof "} <u>{name}</u>
+                <span className="text-iron-600">{"Made a proof "}</span>
+                <span className="text-iron-750">{name}</span>
               </>
             }
+            titleOverride={true}
             description={date}
           />
         </Link>
@@ -210,7 +203,7 @@ export default function Social() {
   const router = useRouter();
   const { getState } = useStateMachine({ updateStateFromAction });
   const { pageWidth } = useSettings();
-  const [showSnapshotModal, setShowSnapshotModal] = useState(false);
+  const [showSliderModal, setShowSliderModal] = useState(false);
   const [profile, setProfile] = useState<Profile>();
   const [numConnections, setNumConnections] = useState<number>(0);
   const [tabsItems, setTabsItems] = useState<TabsProps["items"]>();
@@ -229,6 +222,7 @@ export default function Social() {
     let currentDate: string | undefined = undefined;
     let currentDateActivities: Activity[] = [];
     activities.forEach((activity) => {
+      if (activity.type === JUB_SIGNAL_MESSAGE_TYPE.REGISTERED) return;
       const date = new Date(activity.ts).toDateString();
       if (currentDate === undefined) {
         currentDateActivities.push(activity);
@@ -248,7 +242,9 @@ export default function Social() {
       ...value,
       uuid: key,
     }));
-    const contactUsersList = usersList.filter((user) => user.outTs);
+    const contactUsersList = usersList.filter(
+      (user) => user.inTs && user.encPk !== profileData.encryptionPublicKey
+    );
     const sortedContactUsers = contactUsersList.sort((a, b) => {
       return a.name.localeCompare(b.name, "en", { sensitivity: "base" }); // Ignore case
     });
@@ -270,31 +266,34 @@ export default function Social() {
     });
     groupedContactUsers.push(currentLetterUsers);
 
-    // Sort pending contacts by timestamp
-    const pendingUsersList = usersList.filter(
-      (user) =>
-        user.inTs &&
-        !user.outTs &&
-        user.encPk !== profileData.encryptionPublicKey
-    );
-    const sortedPendingUserList = pendingUsersList.sort(
-      (a, b) => new Date(b.inTs!).getTime() - new Date(a.inTs!).getTime()
-    );
+    const locationSignatures = getLocationSignatures();
+    const locations = Object.entries(locationSignatures)
+      .map(([key, value]) => ({
+        ...value,
+        id: key,
+      }))
+      .sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime());
 
     return [
       {
         label: "Activity Feed",
         children: (
-          <div className="flex flex-col gap-4">
-            {activities.length === 0 && (
-              <NoResultContent>No activities yet</NoResultContent>
+          <div className="flex flex-col gap-4 mt-2">
+            {activities.length === 1 && (
+              <NoResultContent>
+                Get started by tapping badges and talk posters!
+              </NoResultContent>
             )}
-            {activities.length !== 0 &&
+            {activities.length > 1 &&
               groupedActivities.map((activities, index) => {
                 return (
                   <ListLayout
                     key={index}
-                    label={new Date(activities[0].ts).toDateString()}
+                    label={new Date(activities[0].ts).toLocaleDateString(
+                      "en-US",
+                      { month: "long", day: "numeric" }
+                    )}
+                    spacing="sm"
                   >
                     {activities.map((activity, index) => {
                       return (
@@ -316,9 +315,11 @@ export default function Social() {
       {
         label: "Contacts",
         children: (
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 mt-2">
             {contactUsersList.length === 0 && (
-              <NoResultContent>{"No people you've tapped"}</NoResultContent>
+              <NoResultContent>
+                Tap badges to share socials and connect with others!
+              </NoResultContent>
             )}
             {contactUsersList.length !== 0 &&
               groupedContactUsers.map((users, index) => {
@@ -328,15 +329,16 @@ export default function Social() {
                   <ListLayout key={index} label={groupLetter}>
                     <div className="flex flex-col gap-1">
                       {users.map((user, index) => {
-                        const { name, outTs } = user;
-                        const date = outTs ? formatDate(outTs) : "-";
+                        const { name, inTs, bio } = user;
+                        const date = inTs ? formatDate(inTs) : "-";
 
                         return (
-                          <ContactCard
+                          <LinkCard
                             key={index}
                             name={name}
-                            userId={user.uuid}
                             date={date}
+                            other={bio ?? ""}
+                            href={`/users/${user.uuid}`}
                           />
                         );
                       })}
@@ -348,27 +350,22 @@ export default function Social() {
         ),
       },
       {
-        label: "Pending",
-        badge: sortedPendingUserList.length > 0,
+        label: "Talks",
         children: (
-          <div className="flex flex-col gap-5">
-            {sortedPendingUserList.length === 0 && (
+          <div className="flex flex-col gap-5 mt-2">
+            {locations.length === 0 ? (
               <NoResultContent>
-                {"No people you haven't tapped back"}
+                {"Tap talk check-ins to collect slide links and talk details!"}
               </NoResultContent>
-            )}
-            {sortedPendingUserList.length !== 0 && (
-              <div className="flex flex-col gap-1">
-                {sortedPendingUserList.map((user, index) => {
-                  const { name, inTs } = user;
-                  const date = inTs ? formatDate(inTs) : "-";
-
+            ) : (
+              <div className="flex flex-col gap-2 w-full">
+                {locations.map((location, index) => {
                   return (
-                    <PendingContactCard
+                    <LinkCard
                       key={index}
-                      name={name}
-                      userId={user.uuid}
-                      date={date}
+                      name={location.name}
+                      date={formatDate(location.ts)}
+                      href={`/locations/${location.id}`}
                     />
                   );
                 })}
@@ -409,7 +406,7 @@ export default function Social() {
         const navigationEntry = navigationEntries[0];
         if (navigationEntry.type && navigationEntry.type === "reload") {
           try {
-            await loadMessages({ forceRefresh: false });
+            // await loadMessages({ forceRefresh: false });
           } catch (error) {
             console.error("Failed to load messages upon page reload:", error);
           }
@@ -420,7 +417,9 @@ export default function Social() {
       const users = getUsers();
       const activities = getActivities();
       setNumConnections(
-        Object.values(users).filter((user) => user.outTs).length
+        Object.values(users).filter(
+          (user) => user.inTs && user.encPk !== profileData.encryptionPublicKey
+        ).length
       );
       setTabsItems(computeTabsItems(profileData, users, activities));
       setLoading(false);
@@ -440,24 +439,24 @@ export default function Social() {
   if (!profile || !tabsItems) return null;
   return (
     <>
-      <SnapshotModal
-        isOpen={showSnapshotModal}
-        setIsOpen={setShowSnapshotModal}
+      <SliderModal
+        isOpen={showSliderModal}
+        setIsOpen={setShowSliderModal}
         size={pageWidth - 60}
       />
       <div className="flex flex-col pt-4">
         <div className="flex gap-6 mb-6">
           <div
             onClick={() => {
-              setShowSnapshotModal(true);
+              setShowSliderModal(true);
             }}
             className="size-32 rounded-[4px] relative overflow-hidden"
           >
             <ArtworkSnapshot
               width={128}
               height={128}
-              isVisible={!showSnapshotModal && !isMenuOpen}
               pubKey={profile.signaturePublicKey}
+              homePage={true}
             />
             <button type="button" className="absolute right-1 top-1 z-1">
               <Icons.Zoom />
@@ -472,8 +471,8 @@ export default function Social() {
                 </h2>
                 <span className="text-sm font-normal text-iron-950">
                   {numConnections === 1
-                    ? `1 tap given`
-                    : `${numConnections} taps given`}
+                    ? `1 contact`
+                    : `${numConnections} contacts`}
                 </span>
               </div>
             </div>

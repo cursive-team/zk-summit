@@ -1,4 +1,3 @@
-import { MERKLE_TREE_DEPTH } from "@/shared/constants";
 import { merkleProofFromObject } from "../shared/utils";
 import { User } from "./localStorage";
 import {
@@ -93,12 +92,15 @@ export class MembershipFolder {
       throw new Error(
         `Cannot fold user ${user.name}'s membership: self or untapped!`
       );
-    // check the user has not already been folded
-    if (user.folded === true)
-      throw new Error(
-        `User ${user.name}'s membership has already been folded!`
-      );
 
+    // check the user has a signature
+    if (!user.sig || !user.sigPk || !user.msg) {
+      throw new Error(
+        `Cannot fold user ${user.name}'s membership: no signature!`
+      );
+    }
+
+    // check the user has not already been folded
     // fetch merkle proof for the user
     const merkleProof = await fetch(
       `/api/tree/proof?treeType=attendee&pubkey=${user.sigPk}`
@@ -137,11 +139,13 @@ export class MembershipFolder {
       throw new Error(
         `Cannot fold user ${user.name}'s membership: self or untapped!`
       );
-    // check the user has not already been folded
-    if (user.folded === true)
+
+    // check the user has a signature
+    if (!user.sig || !user.sigPk || !user.msg) {
       throw new Error(
-        `User ${user.name}'s membership has already been folded!`
+        `Cannot fold user ${user.name}'s membership: no signature!`
       );
+    }
 
     // fetch merkle proof for the user
     const merkleProof = await fetch(
@@ -203,17 +207,21 @@ export class MembershipFolder {
     numFolds: number,
     obfuscated: boolean = false
   ): Promise<boolean> {
-    // get root
-
     // set num verified based on obfuscation
     let iterations = obfuscated ? numFolds + 1 : numFolds;
-
+    // let iterations = 2;
     try {
-      await this.wasm.verify_proof(
+      let res = await this.wasm.verify_proof(
         this.params,
         proof,
         hexToBigInt(this.roots.attendeeMerkleRoot).toString(),
         Number(iterations)
+      );
+      console.log(
+        `Verification output of ${
+          obfuscated ? "chaffed " : ""
+        }proof of ${numFolds} memberships:`,
+        res
       );
       return true;
     } catch (e) {
@@ -252,10 +260,14 @@ export class MembershipFolder {
     user: User,
     merkleProof: MerkleProof
   ): Promise<NovaPrivateInputs> {
+    if (!user.sig || !user.sigPk || !user.msg) {
+      throw new Error("User record missing required fields");
+    }
+
     // decode the user's signature
-    let sig = derDecodeSignature(user.sig!);
-    let messageHash = hexToBigInt(getECDSAMessageHash(user.msg!));
-    let pubkey = publicKeyFromString(user.sigPk!);
+    let sig = derDecodeSignature(user.sig);
+    let messageHash = hexToBigInt(getECDSAMessageHash(user.msg));
+    let pubkey = publicKeyFromString(user.sigPk);
     const { T, U } = getPublicInputsFromSignature(sig, messageHash, pubkey);
     return {
       s: sig.s.toString(),
@@ -275,7 +287,7 @@ export const getAllParamsByChunk = async (): Promise<string> => {
   let data: Map<Number, Blob> = new Map();
   for (let i = 0; i < 10; i++) {
     let req = async () => {
-      let full_url = `${process.env.NOVA_BUCKET_URL}/params_${i}.gz`;
+      let full_url = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${i}.gz`;
       let res = await fetch(full_url, {
         headers: { "Content-Type": "application/x-binary" },
       }).then(async (res) => await res.blob());
@@ -316,7 +328,7 @@ export const getAllParamsByChunk = async (): Promise<string> => {
 export const getWasm = async (): Promise<NovaWasm> => {
   const wasm = await import("bjj_ecdsa_nova_wasm");
   await wasm.default();
-  let concurrency = Math.floor(navigator.hardwareConcurrency / 4);
+  let concurrency = Math.floor(navigator.hardwareConcurrency / 3) * 2;
   if (concurrency < 1) concurrency = 1;
   await wasm.initThreadPool(concurrency);
   return wasm;

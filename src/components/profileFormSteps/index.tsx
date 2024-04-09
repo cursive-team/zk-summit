@@ -11,14 +11,26 @@ import router from "next/router";
 import { toast } from "sonner";
 import { useStateMachine } from "little-state-machine";
 import updateStateFromAction from "@/lib/shared/updateAction";
+import { classed } from "@tw-classed/react";
 
 export type ProfileFormProps = InferType<typeof ProfileSchema>;
 
+const Title = classed.h3("block font-sans text-iron-950", {
+  variants: {
+    size: {
+      small: "text-base leading-1 font-semibold",
+      medium: "text-[21px] leading-5 font-medium",
+    },
+  },
+  defaultVariants: {
+    size: "small",
+  },
+});
+
+const Description = classed.span("text-sm text-iron-600 leading-5");
+
 type ProfileProps = {
   onHandleSignout: () => void;
-  onHandleEdit: () => void;
-  isReadOnly: boolean; // form is read only
-  onCancelEdit?: () => void;
   onHandleSaveEdit?: (
     formValues: ProfileFormProps,
     formState: FormState<ProfileFormProps>
@@ -37,10 +49,7 @@ export const DEFAULT_PROFILE_VALUES: ProfileFormProps = {
 };
 
 const ProfileForm = ({
-  isReadOnly = true,
   onHandleSignout,
-  onCancelEdit,
-  onHandleEdit,
   onHandleSaveEdit,
   previousProfile,
   setPreviousProfile,
@@ -115,109 +124,86 @@ const ProfileForm = ({
     });
   };
 
-  const handleCancelEdit = () => {
-    if (!previousProfile) {
-      console.error(
-        "Could not connect to profile. Please refresh and try again."
-      );
-      return;
-    }
-
-    // reset the form to the previous profile state
-    reset({
-      ...previousProfile,
-      // make sure the username is always prefixed with @
-      telegramUsername: handleNickName(previousProfile.telegramUsername),
-      twitterUsername: handleNickName(previousProfile.twitterUsername),
-    });
-    clearErrors(); // clear any errors
-    onCancelEdit?.();
-  };
-
   const updateProfile = async (profile: ProfileFormProps) => {
-    onHandleSaveEdit?.(profile, formState);
+    await onHandleSaveEdit?.(profile, formState);
+    reset({
+      ...profile,
+      ...formState,
+    });
   };
 
   return (
     <FormStepLayout
       onSubmit={handleSubmit(updateProfile)}
       actions={
-        isReadOnly ? (
-          <div className="flex flex-col gap-2">
-            <Button type="button" onClick={onHandleEdit}>
-              Edit
-            </Button>
-            <Button type="button" onClick={onHandleSignout}>
-              Logout
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            <Button
-              disabled={!formState.isDirty || loading}
-              onClick={async () => {
-                const isValid = await trigger();
-                if (isValid) {
-                  handleSubmit(updateProfile)();
-                }
-              }}
-              loading={loading}
-            >
-              Save
-            </Button>
-            <Button onClick={handleCancelEdit} disabled={loading}>
-              Back
-            </Button>
-          </div>
-        )
+        <div className="flex flex-col gap-2">
+          <Button
+            disabled={!formState.isDirty || loading}
+            onClick={async () => {
+              const isValid = await trigger();
+              if (isValid) {
+                handleSubmit(updateProfile)();
+              }
+            }}
+            loading={loading}
+          >
+            Save Changes
+          </Button>
+          <Button type="button" onClick={onHandleSignout}>
+            Logout
+          </Button>
+        </div>
       }
     >
-      <div className="flex flex-col gap-7">
-        <Input
-          label="Display name"
-          disabled={true}
-          error={errors.displayName?.message}
-          {...register("displayName")}
-        />
-      </div>
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col">
-          <span className="text-black text-sm font-normal">
-            Shareable socials
-          </span>
-          <span className="text-iron-950 text-xs font-normal">
-            {`These socials will be shared with anyone who taps your NFC card.`}
-          </span>
+      <div className="flex flex-col gap-12">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1 ">
+            <Title>Your profile</Title>
+            <Description>
+              This will be visible to anyone you interact with
+            </Description>
+          </div>
+          <Input
+            label="Display name"
+            disabled={true}
+            error={errors.displayName?.message}
+            {...register("displayName")}
+          />
         </div>
-        <div className="flex flex-col gap-6">
-          <Input
-            label="Twitter"
-            disabled={isReadOnly}
-            error={errors.twitterUsername?.message}
-            {...register("twitterUsername", {
-              onChange: (e) => {
-                const value = e.target.value;
-                handleUsername("twitterUsername", value);
-              },
-            })}
-          />
-          <Input
-            label="Telegram"
-            disabled={isReadOnly}
-            error={errors.telegramUsername?.message}
-            {...register("telegramUsername", {
-              onChange: (e) => {
-                const value = e.target.value;
-                handleUsername("telegramUsername", value);
-              },
-            })}
-          />
-          <Input
-            label="Bio"
-            error={errors.bio?.message}
-            disabled={isReadOnly}
-            {...register("bio")}
-          />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1 ">
+            <Title>Social settings</Title>
+            <Description>
+              Updates are not shared with previous connections
+            </Description>
+          </div>
+          <div className="flex flex-col gap-6">
+            <Input
+              label="Twitter"
+              error={errors.twitterUsername?.message}
+              {...register("twitterUsername", {
+                onChange: (e) => {
+                  const value = e.target.value;
+                  handleUsername("twitterUsername", value);
+                },
+              })}
+            />
+            <Input
+              label="Telegram"
+              error={errors.telegramUsername?.message}
+              {...register("telegramUsername", {
+                onChange: (e) => {
+                  const value = e.target.value;
+                  handleUsername("telegramUsername", value);
+                },
+              })}
+            />
+            <Input
+              label="Bio"
+              error={errors.bio?.message}
+              {...register("bio")}
+            />
+          </div>
         </div>
       </div>
     </FormStepLayout>

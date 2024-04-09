@@ -1,4 +1,4 @@
-import { getAllMerkleRoots } from "@/lib/server/folding";
+import { TreeRoots, getAllMerkleRoots } from "@/lib/server/folding";
 import { ErrorResponse } from "@/types";
 import { NextApiRequest, NextApiResponse } from "next";
 

@@ -6,7 +6,7 @@ import { MembershipFolder } from "@/lib/client/nova";
 import { Spinner } from "@/components/Spinner";
 import { toast } from "sonner";
 import useFolds, { TreeType } from "@/hooks/useFolds";
-import { logInteraction } from "@/lib/client/metrics";
+import { logClientEvent } from "@/lib/client/metrics";
 
 /**
  * Gets a public params gzipped chunk from the server
@@ -97,11 +97,7 @@ export default function Fold() {
   }, [membershipFolder, canFinalize, canVerify]);
 
   const fold = async () => {
-    logInteraction({
-      category: "folding",
-      action: "click",
-      name: "synchronousFoldingFold",
-    });
+    logClientEvent("synchronousFoldingFold", {});
     if (!membershipFolder) return;
     setIsProving(true);
     // get users who are not speakers
@@ -152,11 +148,7 @@ export default function Fold() {
   };
 
   const finalize = async () => {
-    logInteraction({
-      category: "folding",
-      action: "click",
-      name: "synchronousFoldingFinalize",
-    });
+    logClientEvent("synchronousFoldingFinalize", {});
     if (!membershipFolder) return;
     // get proof from indexdb
     setIsProving(true);
@@ -195,11 +187,7 @@ export default function Fold() {
   };
 
   const verify = async () => {
-    logInteraction({
-      category: "folding",
-      action: "click",
-      name: "synchronousFoldingVerify",
-    });
+    logClientEvent("synchronousFoldingVerify", {});
     if (!membershipFolder) return;
     setIsProving(true);
     // get proof from indexdb

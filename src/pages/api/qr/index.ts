@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "@/lib/server/prisma";
 import { ErrorResponse } from "@/types";
 import { isUserAdmin } from "@/lib/server/admin";
+import { logServerEvent } from "@/lib/server/metrics";
 
 export type QRCodeResponseType = {
   id: string;
@@ -27,6 +28,8 @@ export default async function handler(
     if (typeof token !== "string") {
       return res.status(400).json({ error: "Token must be a string" });
     }
+
+    logServerEvent("qrCodeFetch", {});
 
     const isAdmin = await isUserAdmin(token);
     if (!isAdmin) {

@@ -1,25 +1,8 @@
 import { Html, Head, Main, NextScript } from "next/document";
-import Script from "next/script";
 
 export default function Document() {
   return (
     <Html lang="en">
-      <Script id="matomo-tracking" strategy="afterInteractive">
-        {`
-          var _paq = window._paq = window._paq || [];
-          /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-          _paq.push(['trackPageView']);
-          _paq.push(['enableLinkTracking']);
-          (function() {
-            var u="/api/proxy/"; 
-            _paq.push(['setTrackerUrl', 'https://psedev.matomo.cloud/matomo.php']);
-            _paq.push(['setSiteId', '12']);
-            var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-            g.async = true; g.src = u + 'matomo.js'; 
-            s.parentNode.insertBefore(g, s);
-          })();
-        `}
-      </Script>
       <title>ZK Summit 11</title>
       <Head>
         <meta

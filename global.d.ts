@@ -23,6 +23,6 @@ declare global {
     createjs: any;
     FlowerRnd: any;
     Flower: any;
-    _paq: any[];
+    _mtm: any[];
   }
 }

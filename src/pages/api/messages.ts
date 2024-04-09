@@ -4,6 +4,7 @@ import { verifyAuthToken } from "../../lib/server/auth";
 import { EmptyResponse, ErrorResponse } from "../../types";
 import { EncryptedMessage } from "@/lib/client/jubSignal";
 import { array, boolean, object, string } from "yup";
+import { logServerEvent } from "@/lib/server/metrics";
 
 export type MessageRequest = {
   encryptedMessage: string;
@@ -52,6 +53,8 @@ export default async function handler(
       res.status(404).json({ error: "User not found" });
       return;
     }
+
+    logServerEvent("loadMessagesServerGet", {});
 
     // Add date filters if they are valid
     // Use half open interval [startDate, endDate)
@@ -114,6 +117,8 @@ export default async function handler(
       console.error("Invalid arguments for posting message", error);
       return res.status(500).json({ error: "Internal Server Error" });
     }
+
+    logServerEvent("loadMessagesServerPost", {});
 
     const { token, messageRequests, shouldFetchMessages, startDate, endDate } =
       validatedData;

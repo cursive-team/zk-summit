@@ -9,6 +9,7 @@ import {
   getArtSignatures,
   makeGarden,
 } from "@/lib/client/flower";
+import { logClientEvent } from "@/lib/client/metrics";
 
 const Title = classed.span("text-center text-iron-950 text-[20px] font-bold");
 const Label = classed.span("text-iron-600 text-xs font-normal");
@@ -27,6 +28,7 @@ const SliderModal = ({ isOpen, setIsOpen, size = 320 }: SliderModalProps) => {
   const [rangeValue, setRangeValue] = useState<number>(1);
 
   const onRangeChange = (e: ChangeEvent<HTMLInputElement>) => {
+    logClientEvent("artRangeChange", {});
     const newValue = parseInt(e.target.value);
     setRangeValue(newValue);
   };

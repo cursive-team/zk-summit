@@ -31,6 +31,7 @@ import updateStateFromAction from "@/lib/shared/updateAction";
 import { IconCircle } from "@/components/IconCircle";
 import { NoResultContent } from "@/components/NoResultContent";
 import { classed } from "@tw-classed/react";
+import { logClientEvent } from "@/lib/client/metrics";
 
 interface LinkCardProps {
   name: string;
@@ -406,7 +407,8 @@ export default function Social() {
         const navigationEntry = navigationEntries[0];
         if (navigationEntry.type && navigationEntry.type === "reload") {
           try {
-            // await loadMessages({ forceRefresh: false });
+            logClientEvent("loadMessagesPageRefresh", {});
+            await loadMessages({ forceRefresh: false });
           } catch (error) {
             console.error("Failed to load messages upon page reload:", error);
           }
@@ -448,6 +450,7 @@ export default function Social() {
         <div className="flex gap-6 mb-6">
           <div
             onClick={() => {
+              logClientEvent("artShowSliderModal", {});
               setShowSliderModal(true);
             }}
             className="size-32 rounded-[4px] relative overflow-hidden"

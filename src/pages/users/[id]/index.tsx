@@ -29,6 +29,7 @@ import useSettings from "@/hooks/useSettings";
 import { Accordion } from "@/components/Accordion";
 import { handleUsername } from "@/lib/client/utils";
 import { Icons } from "@/components/Icons";
+import { logClientEvent } from "@/lib/client/metrics";
 
 const Label = classed.span("text-sm text-gray-12");
 
@@ -94,6 +95,8 @@ const UserProfilePage = () => {
   // set up channel for PSI
   const setupChannel = () => {
     if (!selfEncPk || !otherEncPk || !channelName) return;
+
+    logClientEvent("psiSetupChannel", {});
 
     setPsiState(PSIState.WAITING);
 
@@ -222,6 +225,7 @@ const UserProfilePage = () => {
       const { psiPrivateKeys, psiPublicKeysLink } = keys;
 
       if (psiState === PSIState.ROUND1) {
+        logClientEvent("psiRound1", {});
         const selfBitVector = generateSelfBitVector();
         const otherPsiPublicKeysLink = user?.psiPkLink;
 
@@ -256,6 +260,7 @@ const UserProfilePage = () => {
           },
         });
       } else if (psiState === PSIState.ROUND2) {
+        logClientEvent("psiRound2", {});
         await init();
         const round2Output = round2_js(
           {
@@ -287,6 +292,7 @@ const UserProfilePage = () => {
           },
         });
       } else if (psiState === PSIState.ROUND3) {
+        logClientEvent("psiRound3", {});
         await init();
         const psiOutput = round3_js(
           selfRound2Output!,
@@ -303,6 +309,7 @@ const UserProfilePage = () => {
 
         setSelfRound3Output(overlapIndices);
       } else if (psiState === PSIState.JUBSIGNAL) {
+        logClientEvent("psiRoundJubsSignal", {});
         await closeChannel();
 
         const encryptedMessage = await encryptOverlapComputedMessage(
@@ -397,6 +404,7 @@ const UserProfilePage = () => {
         <div className="flex gap-4 xs:gap-5 items-center">
           <div
             onClick={() => {
+              logClientEvent("artShowProfilePicModal", {});
               setShowProfilePicModal(true);
             }}
             className="w-32 h-32 rounded-[4px] relative flex-shrink-0"

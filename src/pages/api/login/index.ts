@@ -3,6 +3,7 @@ import prisma from "@/lib/server/prisma";
 import { ErrorResponse } from "../../../types";
 import { AuthTokenResponse, generateAuthToken } from "@/lib/server/auth";
 import { BackupResponse } from "../backup";
+import { logServerEvent } from "@/lib/server/metrics";
 
 export type LoginResponse =
   | {
@@ -32,6 +33,8 @@ export default async function handler(
   if (!username) {
     return res.status(400).json({ error: "Username is required" });
   }
+
+  logServerEvent("userLoginAttempt", { username });
 
   try {
     const user = await prisma.user.findUnique({

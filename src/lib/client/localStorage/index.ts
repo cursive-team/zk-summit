@@ -1,4 +1,5 @@
 import { deleteAllActivities } from "./activities";
+import { deleteAllFoldedProof } from "./foldedProof";
 import { deleteAllItemRedeemed } from "./itemRedeemed";
 import { deleteAllKeys } from "./keys";
 import { deleteAllLocationSignatures } from "./locationSignatures";
@@ -16,6 +17,7 @@ export * from "./locationSignatures";
 export * from "./activities";
 export * from "./questCompleted";
 export * from "./itemRedeemed";
+export * from "./foldedProof";
 
 export const saveToLocalStorage = (key: string, value: string): void => {
   localStorage.setItem(key, value);
@@ -39,4 +41,5 @@ export const deleteAccountFromLocalStorage = (): void => {
   deleteAllActivities();
   deleteAllQuestCompleted();
   deleteAllItemRedeemed();
+  deleteAllFoldedProof();
 };

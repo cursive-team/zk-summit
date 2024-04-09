@@ -6,6 +6,7 @@ export * from "./inboundTap";
 export * from "./locationTap";
 export * from "./questCompleted";
 export * from "./itemRedeemed";
+export * from "./foldedProof";
 
 export enum JUB_SIGNAL_MESSAGE_TYPE {
   REGISTERED = "R", // A message you send to yourself indicating you are registered
@@ -15,6 +16,7 @@ export enum JUB_SIGNAL_MESSAGE_TYPE {
   QUEST_COMPLETED = "QC", // A message you send to yourself indicating you completed a quest
   ITEM_REDEEMED = "IR", // A message sent to you indicating you redeemed an item
   OVERLAP_COMPUTED = "OC", // A message you send to yourself indicating PSI completion
+  FOLDED_PROOF = "FP", // A message you send to yourself indicating you made a folded proof
 }
 
 export type MessageContents = {

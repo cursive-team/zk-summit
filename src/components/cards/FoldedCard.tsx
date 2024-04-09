@@ -12,7 +12,9 @@ import { cn } from "@/lib/client/utils";
 import { Icons } from "../Icons";
 import {
   getAuthToken,
+  getKeys,
   getLocationSignatures,
+  getProfile,
   getUsers,
 } from "@/lib/client/localStorage";
 import { Button } from "../Button";
@@ -21,6 +23,8 @@ import { logClientEvent } from "@/lib/client/metrics";
 import { toast } from "sonner";
 import { type PutBlobResult } from "@vercel/blob";
 import { upload } from "@vercel/blob/client";
+import { encryptFoldedProofMessage } from "@/lib/client/jubSignal";
+import { loadMessages } from "@/lib/client/jubSignalClient";
 
 dayjs.extend(duration);
 const UNFOLDED_DATE = "2024-04-10 15:59:59";
@@ -115,7 +119,9 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
 
   const uploadAndSaveFoldingProof = async (data: string): Promise<string> => {
     const token = getAuthToken();
-    if (!token || token.expiresAt < new Date()) {
+    const keys = getKeys();
+    const profile = getProfile();
+    if (!token || token.expiresAt < new Date() || !keys || !profile) {
       throw new Error("Please sign in to save your proof.");
     }
 
@@ -139,6 +145,36 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     }
 
     const { proofUuid } = await response.json();
+
+    const senderPrivateKey = keys.encryptionPrivateKey;
+    const recipientPublicKey = profile.encryptionPublicKey;
+    const encryptedMessage = await encryptFoldedProofMessage({
+      proofId: proofUuid,
+      proofLink: proofUrl,
+      senderPrivateKey,
+      recipientPublicKey,
+    });
+
+    // Send folded proof info as encrypted jubSignal message to self
+    // Simultaneously refresh activity feed
+    try {
+      await loadMessages({
+        forceRefresh: false,
+        messageRequests: [
+          {
+            encryptedMessage,
+            recipientPublicKey,
+          },
+        ],
+      });
+    } catch (error) {
+      console.error(
+        "Error sending encrypted folded proof info to server: ",
+        error
+      );
+      toast.error("An error occured while saving the proof. Please try again.");
+    }
+
     return proofUuid;
   };
 

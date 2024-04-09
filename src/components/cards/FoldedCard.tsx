@@ -1,4 +1,3 @@
-"use client";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -6,17 +5,14 @@ import { Controller, EffectFade, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-fade";
 import "swiper/css/pagination";
-
-dayjs.extend(duration);
-
 import { classed } from "@tw-classed/react";
 import { Card } from "./Card";
 import { ReactNode, useEffect, useState } from "react";
 import { cn } from "@/lib/client/utils";
 import { Icons } from "../Icons";
 
-const UNFOLDED_DATE = "2022-04-10 14:59:59";
-
+dayjs.extend(duration);
+const UNFOLDED_DATE = "2024-04-10 14:59:59";
 const CountdownLabel = classed.span("text-primary font-semibold text-xs");
 
 interface FoldedItemProps {
@@ -215,7 +211,10 @@ export const FolderCard = ({ items }: FolderCardProps) => {
         <div className="flex flex-col gap-2 text-center pt-4 pb-4 px-6 ">
           {hasCountdown && (
             <CountdownLabel>
-              Available in: {days} days, {hours}:{minutes}:{seconds}
+              Available in: {days === 1 ? `${days} day` : `${days} days`},{" "}
+              {hours.toString().padStart(2, "0")}:
+              {minutes.toString().padStart(2, "0")}:
+              {seconds.toString().padStart(2, "0")}
             </CountdownLabel>
           )}
           <h3 className="font-bold font-sans text-[21px] text-black">

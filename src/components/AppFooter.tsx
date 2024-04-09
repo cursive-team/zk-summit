@@ -50,12 +50,6 @@ const AppFooter = () => {
       icon: Icons.Proof,
       iconSize: 14,
     },
-    {
-      label: "Fold",
-      href: "/fold",
-      icon: Icons.Proof,
-      iconSize: 14,
-    },
   ];
 
   return (
@@ -63,7 +57,7 @@ const AppFooter = () => {
       id="footer"
       className="fixed border-t border-iron-50 w-full bottom-0 mt-4 z-[50]"
     >
-      <div className="bg-white md:container grid grid-cols-3 bottom-0 py-3 xs:pt-[17px] xs:pb-[13px]">
+      <div className="bg-white md:container grid grid-cols-2 bottom-0 py-3 xs:pt-[17px] xs:pb-[13px]">
         {routerItems?.map((route, index) => {
           const pathParts = route.href.split("/").filter(Boolean);
           const isHome = pathname === "/" && route.href === "/";

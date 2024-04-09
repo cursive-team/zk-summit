@@ -12,8 +12,7 @@ interface PlaceholderPlaceholderProps {
 const PlaceholderBase = classed.div("bg-iron-600/20 animate-pulse");
 const PlaceholderCard = classed.div(
   PlaceholderBase,
-  Card.Base,
-  "min-h-[120px] bg-iron-600/20"
+  "border border-iron-300 rounded min-h-[120px] bg-iron-600/20"
 );
 
 const PlaceholderLine = classed.div(PlaceholderBase, "!bg-iron-600/20", {

@@ -23,7 +23,7 @@ import { type PutBlobResult } from "@vercel/blob";
 import { upload } from "@vercel/blob/client";
 
 dayjs.extend(duration);
-const UNFOLDED_DATE = "2024-04-09 14:59:59";
+const UNFOLDED_DATE = "2024-04-10 15:59:59";
 const CountdownLabel = classed.span("text-primary font-semibold text-xs");
 
 interface FoldedItemProps {

@@ -162,7 +162,7 @@ const ProfileForm = ({
         </div>
       }
     >
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 mt-4">
         <div className="flex flex-col gap-4">
           <Input
             label="Display name"

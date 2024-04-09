@@ -5,36 +5,15 @@ import { useRef, useState } from "react";
 export const useWorker = () => {
 
     const [folding, setFolding] = useState<boolean>(false);
+    const [completed, setCompleted] = useState<boolean>(false);
     const [downloadingChunks, setDownloadingChunks] = useState<boolean>(false);
     const [chunksDownloaded, setChunksDownloaded] = useState<boolean>(false)
     const [worker, setWorker] = useState<Worker | null>(null);
 
     const workerAPIRef = useRef<Remote<{
-        workerFold: (users: User[]) => Promise<void>,
-        workerStartFold: (user: User) => Promise<void>,
-        workerIncrementFold: (user: User) => Promise<void>,
+        work: (users: User[]) => Promise<void>,
         workerObfuscateFold: () => Promise<void>,
-        workerGetParamsChunk: () => Promise<boolean>,
     }> | null>();
-
-    const downloadParamsChunk = async () => {
-        init();
-        setDownloadingChunks(true);
-        let finished = await workerAPIRef.current?.workerGetParamsChunk();
-        if (finished) {
-            setChunksDownloaded(true);
-            setDownloadingChunks(false);
-        }
-        terminate();
-    }
-
-    const foldAll = async (users: User[]) => {
-        init();
-        setFolding(true);
-        await workerAPIRef.current?.workerFold(users);
-        setFolding(false);
-        terminate();
-    }
 
     const init = () => {
         const worker = new Worker(new URL('../lib/client/worker.ts', import.meta.url));
@@ -42,21 +21,14 @@ export const useWorker = () => {
         workerAPIRef.current = workerAPI;
         setWorker(worker);
     }
-
-    const startFold = async (user: User) => {
+ 
+    const work = async (users: User[]) => {
         init();
         setFolding(true);
-        await workerAPIRef.current?.workerStartFold(user);
+        await workerAPIRef.current?.work(users);
         setFolding(false);
+        setCompleted(true);
         terminate();
-    }
-
-    const incrementFold = async (user: User) => {
-        init();
-        setFolding(true);
-        await workerAPIRef.current?.workerIncrementFold(user);
-        setFolding(false);
-        terminate()
     }
 
     const obfuscateFold = async () => {
@@ -74,12 +46,10 @@ export const useWorker = () => {
     }
 
     return {
-        downloadParamsChunk,
-        foldAll,
-        startFold,
-        incrementFold,
+        work,
         obfuscateFold,
         folding,
+        completed,
         downloadingChunks,
         chunksDownloaded,
     }

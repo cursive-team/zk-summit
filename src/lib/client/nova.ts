@@ -328,8 +328,9 @@ export const getAllParamsByChunk = async (): Promise<string> => {
 export const getWasm = async (): Promise<NovaWasm> => {
   const wasm = await import("bjj_ecdsa_nova_wasm");
   await wasm.default();
-  let concurrency = Math.floor(navigator.hardwareConcurrency / 3) * 2;
-  if (concurrency < 1) concurrency = 1;
+  // let concurrency = Math.floor(navigator.hardwareConcurrency / 3) * 2;
+  // if (concurrency < 1) concurrency = 1;
+  let concurrency = navigator.hardwareConcurrency - 1;
   await wasm.initThreadPool(concurrency);
   return wasm;
 };

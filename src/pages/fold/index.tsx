@@ -9,7 +9,7 @@ import { TreeType } from '@/lib/client/indexDB';
 import { IndexDBWrapper } from '@/lib/client/indexDB';
 
 export default function Fold() {
-  const { downloadParamsChunk, foldAll, obfuscateFold } = useWorker();
+  const { work, obfuscateFold, folding, completed } = useWorker();
   const [canFinalize, setCanFinalize] = useState<boolean>(false);
   const [canVerify, setCanVerify] = useState<boolean>(false);
   const [chunks, setChunks] = useState<Array<Blob>>([]);
@@ -18,124 +18,108 @@ export default function Fold() {
   const [numFolded, setNumFolded] = useState<number>(0);
 
   useEffect(() => {
+    if (db) return;
     (async () => {
       // Init IndexDB
       const db = new IndexDBWrapper();
       await db.init();
-
-      // Download params
-      await downloadParamsChunk();
-      const stored = await db.getChunks();
-      setChunks(stored);
       setDB(db);
     })();
   }, []);
 
   useEffect(() => {
-    if (!chunks.length || !db) return;
+    if (completed || !db || folding) return;
     // get the proof attendee type
     (async () => {
-      const proofData = await db.getFold(TreeType.Attendee);
-      if (proofData === undefined) {
-        // if no proof found, cannot finalize or verify
-        setCanFinalize(false);
-        setCanVerify(false);
-        return;
-      } else if (proofData.obfuscated === false) {
-        // if proof found and not obfuscated, can finalize
-        setNumFolded(proofData.numFolds);
-        setCanFinalize(true);
-        setCanVerify(false);
-      } else {
-        setNumFolded(proofData.numFolds);
-        setCanFinalize(false);
-        setCanVerify(true);
-      }
+      // get all attendees
+      console.log("Is running")
+      const users = Object.values(getUsers()).filter((user) => !user.isSpeaker && user.pkId !== "0");
+      await work(users);
     })();
-  }, [canFinalize, canVerify, chunks, db]);
+  }, [db, completed]);
 
-  const finalize = async () => {
-    if (!db) return;
-    // get proof from indexdb
-    setIsProving(true);
-    const proofData = await db.getFold(TreeType.Attendee);
-    if (proofData === undefined) {
-      toast.error('No proof to finalize!');
-      setIsProving(false);
-      return;
-    } else if (proofData.obfuscated === true) {
-      toast.error('Proof has already been finalized!');
-      setIsProving(false);
-      return;
-    }
+  // const finalize = async () => {
+  //   if (!db) return;
+  //   // get proof from indexdb
+  //   setIsProving(true);
+  //   const proofData = await db.getFold(TreeType.Attendee);
+  //   if (proofData === undefined) {
+  //     toast.error('No proof to finalize!');
+  //     setIsProving(false);
+  //     return;
+  //   } else if (proofData.obfuscated === true) {
+  //     toast.error('Proof has already been finalized!');
+  //     setIsProving(false);
+  //     return;
+  //   }
 
-    // Obfuscate in web worker
-    await obfuscateFold();
-    setCanFinalize(false);
-    setCanVerify(true);
-    setIsProving(false);
-    toast.success(
-      `Finalized folded proof of ${proofData.numFolds} attendees met!`
-    );
-  };
+  //   // Obfuscate in web worker
+  //   await obfuscateFold();
+  //   setCanFinalize(false);
+  //   setCanVerify(true);
+  //   setIsProving(false);
+  //   toast.success(
+  //     `Finalized folded proof of ${proofData.numFolds} attendees met!`
+  //   );
+  // };
 
-  const fold = async () => {
-    if (!db) return;
-    setIsProving(true);
-    // get users who are not speakers
-    const users = Object.values(getUsers()).filter((user) => !user.isSpeaker);
+  // const fold = async () => {
+  //   if (!db) return;
+  //   setIsProving(true);
+  //   // get users who are not speakers
+    
 
-    // get user that can be folded in
-    let foldableUsers = await db.getUsersToFold(TreeType.Attendee, users);
-    if (foldableUsers === undefined) {
-      toast.info('No attendees to fold in!');
-      setIsProving(false);
-      return;
-    }
+  //   // get user that can be folded in
+  //   let foldableUsers = await db.getUsersToFold(TreeType.Attendee, users);
+  //   if (foldableUsers === undefined) {
+  //     toast.info('No attendees to fold in!');
+  //     setIsProving(false);
+  //     return;
+  //   }
 
-    // Get proof count
-    const proof = await db.getFold(TreeType.Attendee);
-    const proofCount = proof?.numFolds ?? 0;
+  //   // Get proof count
+  //   const proof = await db.getFold(TreeType.Attendee);
+  //   const proofCount = proof?.numFolds ?? 0;
 
-    await foldAll(foldableUsers);
-    setCanFinalize(true);
-    setIsProving(false);
-    toast.success(
-      `Folded proofs of ${proofCount + foldableUsers.length} attendees met!`
-    );
-  };
+  //   await foldAll(foldableUsers);
+  //   setCanFinalize(true);
+  //   setIsProving(false);
+  //   toast.success(
+  //     `Folded proofs of ${proofCount + foldableUsers.length} attendees met!`
+  //   );
+  // };
 
-  const verify = async () => {
-    if (!db) return;
-    setIsProving(true);
-    // get proof from indexdb
-    const proofData = await db.getFold(TreeType.Attendee);
-    if (proofData === undefined) {
-      toast.error('No proof to verify!');
-      return;
-    } else if (proofData.obfuscated === false) {
-      toast.error('Proof has not been finalized!');
-      return;
-    }
+  // const verify = async () => {
+  //   if (!db) return;
+  //   setIsProving(true);
+  //   // get proof from indexdb
+  //   const proofData = await db.getFold(TreeType.Attendee);
+  //   if (proofData === undefined) {
+  //     toast.error('No proof to verify!');
+  //     return;
+  //   } else if (proofData.obfuscated === false) {
+  //     toast.error('Proof has not been finalized!');
+  //     return;
+  //   }
 
-    const params = new Blob(chunks);
-    // Initialize membership folder
-    const membershipFolder = await MembershipFolder.initWithIndexDB(params);
+  //   const params = new Blob(chunks);
+  //   // Initialize membership folder
+  //   const membershipFolder = await MembershipFolder.initWithIndexDB(params);
 
-    // decompress proof
-    const proof = await membershipFolder.decompressProof(
-      new Uint8Array(await proofData.proof.arrayBuffer())
-    );
-    await membershipFolder.verify(proof, proofData.numFolds, true);
-    setIsProving(false);
-    toast.success(
-      `Verified folded proof of ${proofData.numFolds} attendees met!`
-    );
-  };
+  //   // decompress proof
+  //   const proof = await membershipFolder.decompressProof(
+  //     new Uint8Array(await proofData.proof.arrayBuffer())
+  //   );
+  //   await membershipFolder.verify(proof, proofData.numFolds, true);
+  //   setIsProving(false);
+  //   toast.success(
+  //     `Verified folded proof of ${proofData.numFolds} attendees met!`
+  //   );
+  // };
 
   return (
     <div>
-      {!chunks.length ? (
+      {/* {!chunks.length ? (
         <></>
       ) : (
         <>
@@ -158,7 +142,7 @@ export default function Fold() {
           )}
           {isProving && <Spinner />}
         </>
-      )}
+      )} */}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { IDBPDatabase, openDB } from "idb";
 import { User } from "@/lib/client/localStorage";
+import { INDEXDB_STORES } from "@/shared/constants";
 
 export type FoldProof = {
   proof: Blob; // the actual proof, compressed
@@ -8,6 +9,9 @@ export type FoldProof = {
   obfuscated: boolean; // whether or not the proof has been obfuscated
   included: string[]; // the public key of the user who has been folded in
 };
+
+// timeout period for a worker lock
+export const LOCK_STALE_TIME = 1000 * 15;
 
 export enum TreeType {
   Attendee = "attendee",
@@ -21,24 +25,17 @@ export enum TreeType {
 export class IndexDBWrapper {
   db: IDBPDatabase | null = null;
 
-  constructor(
-    public readonly name = "zksummit_folded",
-    public readonly paramsStore = "params",
-    public readonly foldsStore = "folds"
-  ) { }
+  constructor() { }
 
   /**
    * Initialize db and store
    */
   async init() {
-    const stores = {
-      params: this.paramsStore,
-      folds: this.foldsStore,
-    };
-    const res = await openDB(this.name, 1, {
+    const res = await openDB(process.env.NEXT_PUBLIC_NOVA_INDEXDB_NAME!, 1, {
       upgrade(db) {
-        db.createObjectStore(stores.params);
-        db.createObjectStore(stores.folds);
+        db.createObjectStore(INDEXDB_STORES.PARAMS);
+        db.createObjectStore(INDEXDB_STORES.FOLDS);
+        db.createObjectStore(INDEXDB_STORES.LOCKS);
       },
     });
     this.db = res;
@@ -63,8 +60,8 @@ export class IndexDBWrapper {
    */
   async addChunk(key: number, chunk: Blob) {
     if (this.db) {
-      const tx = this.db.transaction(this.paramsStore, "readwrite");
-      const store = tx.objectStore(this.paramsStore);
+      const tx = this.db.transaction(INDEXDB_STORES.PARAMS, "readwrite");
+      const store = tx.objectStore(INDEXDB_STORES.PARAMS);
       await store.add(chunk, key);
     } else {
       throw Error("DB not initialized");
@@ -78,8 +75,8 @@ export class IndexDBWrapper {
    */
   async countChunks(): Promise<number> {
     if (this.db) {
-      const tx = this.db.transaction(this.paramsStore, "readonly");
-      const store = tx.objectStore(this.paramsStore);
+      const tx = this.db.transaction(INDEXDB_STORES.PARAMS, "readonly");
+      const store = tx.objectStore(INDEXDB_STORES.PARAMS);
       return await store.count();
     } else {
       throw Error("DB not initialized");
@@ -93,8 +90,8 @@ export class IndexDBWrapper {
    */
   async getChunks(): Promise<Array<Blob>> {
     if (this.db) {
-      const tx = this.db.transaction(this.paramsStore, "readonly");
-      const store = tx.objectStore(this.paramsStore);
+      const tx = this.db.transaction(INDEXDB_STORES.PARAMS, "readonly");
+      const store = tx.objectStore(INDEXDB_STORES.PARAMS);
       const data = await store.getAll();
       return data;
     } else {
@@ -112,8 +109,8 @@ export class IndexDBWrapper {
    */
   async addFold(key: TreeType, proof: Blob, pubkey: string) {
     if (this.db) {
-      const tx = this.db.transaction(this.foldsStore, "readwrite");
-      const store = tx.objectStore(this.foldsStore);
+      const tx = this.db.transaction(INDEXDB_STORES.FOLDS, "readwrite");
+      const store = tx.objectStore(INDEXDB_STORES.FOLDS);
       const res = await store.get(key);
       if (res !== undefined) {
         throw new Error(`AddProof: Proof for ${key} already exists`);
@@ -135,12 +132,11 @@ export class IndexDBWrapper {
    * Given a proof type, update it with new proof and increment number of folds
    * @param key - the key of the proof type to increment
    * @param newProof - the new proof to update
-   * @returns - true if successful
    */
   async incrementFold(key: TreeType, newProof: Blob, pubkey: string) {
     if (this.db) {
-      const tx = this.db.transaction(this.foldsStore, "readwrite");
-      const store = tx.objectStore(this.foldsStore);
+      const tx = this.db.transaction(INDEXDB_STORES.FOLDS, "readwrite");
+      const store = tx.objectStore(INDEXDB_STORES.FOLDS);
       const data = await store.get(key);
       if (data === undefined) {
         throw new Error(`IncrementFold: Proof for ${key} does not exist`);
@@ -158,12 +154,11 @@ export class IndexDBWrapper {
    * Update a proof and mark it as obfuscated
    * @param key - the key of the proof type to obfuscate
    * @param newProof - the new proof to update
-   * @returns true if successful
    */
   async obfuscateFold(key: TreeType, newProof: Blob) {
     if (this.db) {
-      const tx = this.db.transaction(this.foldsStore, "readwrite");
-      const store = tx.objectStore(this.foldsStore);
+      const tx = this.db.transaction(INDEXDB_STORES.FOLDS, "readwrite");
+      const store = tx.objectStore(INDEXDB_STORES.FOLDS);
       const data = await store.get(key);
       if (data === undefined) {
         throw new Error(`ObfuscateFold: Proof for ${key} does not exist`);
@@ -183,8 +178,8 @@ export class IndexDBWrapper {
    */
   async getFold(key: TreeType): Promise<FoldProof | undefined> {
     if (this.db) {
-      const tx = this.db.transaction(this.foldsStore, "readwrite");
-      const store = tx.objectStore(this.foldsStore);
+      const tx = this.db.transaction(INDEXDB_STORES.FOLDS, "readwrite");
+      const store = tx.objectStore(INDEXDB_STORES.FOLDS);
       return await store.get(key);
     } else {
       throw Error("DB not initialized");
@@ -201,8 +196,8 @@ export class IndexDBWrapper {
   async getUsersToFold(key: TreeType, users: User[]): Promise<User[] | undefined> {
     if (this.db) {
       // get pubkeys already folded in
-      const tx = this.db.transaction(this.foldsStore, "readwrite");
-      const store = tx.objectStore(this.foldsStore);
+      const tx = this.db.transaction(INDEXDB_STORES.FOLDS, "readwrite");
+      const store = tx.objectStore(INDEXDB_STORES.FOLDS);
       const data: FoldProof = await store.get(key);
       const foldedPks = data === undefined ? [] : data.included;
 
@@ -216,6 +211,83 @@ export class IndexDBWrapper {
       });
       // return the first user that can be folded in if exists
       return validUsers.length > 0 ? validUsers : undefined;
+    } else {
+      throw Error("DB not initialized");
+    }
+  }
+
+  /**
+   * Attempt to set the db lock (from a worker)
+   * If same worker previously set the lock, pass prevLock to update the lock
+   * Otherwise supply no arguments to set a new lock
+   * 
+   * @param prevLock - the optional previous timestamp of a lock to update
+   * @returns - the current timestamp set for the lock, or undefined if locked by another worker
+   */
+  async setLock(prevLock?: number): Promise<number | undefined> {
+    if (this.db) {
+      const tx = this.db.transaction(INDEXDB_STORES.LOCKS, "readwrite");
+      const store = tx.objectStore(INDEXDB_STORES.LOCKS);
+      // look for existing locks
+      const existingLocks = await store.getAll();
+      if (existingLocks.length !== 0) {
+        // if lock set by different worker
+        if ( !prevLock || existingLocks[0] !== prevLock) {
+          // see if the lock is stale
+          if (Date.now() - existingLocks[0] < LOCK_STALE_TIME) {
+            // if lock has not timed out, return undefined
+            return undefined;
+          }
+          // delete the stale lock
+          await store.delete(1);
+        }
+        // otherwise, delete the worker's previous lock
+        await store.delete(1);
+      }
+      // add a lock at current time
+      let timestamp = Date.now();
+      await store.add(timestamp, 1);
+      return timestamp;
+    } else {
+      throw Error("DB not initialized");
+    }
+  }
+
+  /**
+   * Checks that a given lock is valid
+   * 
+   * @param number - the lock timestamp to check
+   * @returns - true if the lock is still held, and false otherwise
+   */
+  async checkLock(lock: number): Promise<boolean> {
+    if (this.db) {
+      const tx = this.db.transaction(INDEXDB_STORES.LOCKS, "readwrite");
+      const store = tx.objectStore(INDEXDB_STORES.LOCKS);
+      const existingLocks = await store.getAll();
+      return existingLocks.length !== 0 && existingLocks[0] === lock;
+    } else {
+      throw Error("DB not initialized");
+    }
+  }
+
+  /**
+   * Release the lock on the db by knowing the timestamp of the lock
+   * 
+   * @param timestamp - the timestamp of the lock to release
+   * @return - true if lock was released, false if lock was not found
+   */
+  async releaseLock(timestamp: number): Promise<boolean> {
+    if (this.db) {
+      const tx = this.db.transaction(INDEXDB_STORES.LOCKS, "readwrite");
+      const store = tx.objectStore(INDEXDB_STORES.LOCKS);
+      // look for given lock
+      const lock = await store.get(1);
+      if (lock === undefined || lock != timestamp) {
+        console.log("failed to release lock");
+        return false;
+      }
+      await store.delete(1);
+      return true;
     } else {
       throw Error("DB not initialized");
     }

@@ -4,11 +4,53 @@ import { User } from "@/lib/client/localStorage";
 import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
 
 /**
- * Starts a fold if none exists and / or increments a fold
+ * A general thread for handling all folding operations in the background
+ * 0. Checks indexdb that no valid lock is present
+ * 1. Downloads params
+ * 2. Folds all attendees
+ * 3. Folds all speakers
+ * 4. Folds all talks
  * 
- * @param user 
+ * @param users - the users to fold
  */
-async function workerFold(users: User[]) {
+async function work(users: User[]) {
+  // instantiate indexdb
+  const db = new IndexDBWrapper();
+  await db.init();
+  // attempt to set a lock on the db
+  let lock = await db.setLock();
+  // terminate the lock if it is undefined
+  if (lock === undefined)
+    return;
+  // download params
+  lock = await downloadParams(lock);
+  if (lock === undefined)
+    return;
+  // todo: sort speakers and attendees
+  
+  // prove attendee folds
+  lock = await foldAttendees(users, lock);
+  if (lock === undefined)
+    return;
+  // todo: prove speaker folds
+
+  // todo: prove talk folds
+
+  // remove the lock
+  await db.releaseLock(lock);
+}
+
+
+/**
+ * Fold all attendees given a set of users
+ * 
+ * @param users - valid users to fold into the attendee membership proof
+ * @param lock - the previously set timelock
+ * @returns the last lock set during execution, or undefined if timeout
+ */
+async function foldAttendees(users: User[], lock: number): Promise<number | undefined> {
+  let newLock: number | undefined = lock;
+
   // Initialize indexdb
   const db = new IndexDBWrapper();
   await db.init();
@@ -24,19 +66,31 @@ async function workerFold(users: User[]) {
   let previousProof = await db.getFold(TreeType.Attendee);
 
   let startIndex = previousProof ? 0 : 1;
-  // If proof data doesn't exist then start fold
+  // If no previous attendee proof, start a new fold
   if (!previousProof) {
     const proof = await membershipFolder.startFold(users[0]);
     // compress the proof
     const compressed = await membershipFolder.compressProof(proof);
     const proofBlob = new Blob([compressed]);
-    // store the compressed proof
-    await db.addFold(TreeType.Attendee, proofBlob, users[0].sigPk!);
-    console.log(`1 of ${users.length} users folded`)
+    // check that timelock has not expired
+    let res = await db.checkLock(newLock);
+    if (res === false) {
+      console.log(`Worker lock expired, terminating...`);
+      return;
+    } else {
+      await db.addFold(TreeType.Attendee, proofBlob, users[0].sigPk!);
+      console.log(`First ${users.length} attendee membership proof folded`);
+      newLock = await db.setLock(newLock);
+      if (newLock === undefined) {
+        console.log(`Worker lock expired, terminating...`);
+        return;
+      }
+    }
   }
 
+  // fold sequentially
   for (let i = startIndex; i < users.length; i++) {
-    const user = users[0];
+    const user = users[i];
     const proofData = await db.getFold(TreeType.Attendee);
     let proof = await membershipFolder.decompressProof(
       new Uint8Array(await proofData!.proof.arrayBuffer())
@@ -46,64 +100,22 @@ async function workerFold(users: User[]) {
     // compress the proof
     const compressed = await membershipFolder.compressProof(proof);
     const proofBlob = new Blob([compressed]);
-    // store the compressed proof
-    await db.incrementFold(TreeType.Attendee, proofBlob, user.sigPk!);
-    console.log(`${i} of ${users.length} users folded`)
+    // check that timelock has not expired
+    let res = await db.checkLock(newLock);
+    if (res === false) {
+      console.log(`Worker lock expired, terminating...`);
+      return;
+    } else {
+      await db.incrementFold(TreeType.Attendee, proofBlob, user.sigPk!);
+      console.log(`${i} of ${users.length} users folded`)
+      newLock = await db.setLock(newLock);
+      if (newLock === undefined) {
+        console.log(`Worker lock expired, terminating...`);
+        return;
+      }
+    }
   }
-}
-
-/**
- * Start a fold for via web worker
- *
- * @param params - gzip compressed params
- * @param user - the user to fold in a membership for
- */
-async function workerStartFold(user: User) {
-  // Initialize indexdb
-  const db = new IndexDBWrapper();
-  await db.init();
-  // get params
-  const params = new Blob(await db.getChunks());
-  // Initialize membership folder
-  const membershipFolder = await MembershipFolder.initWithIndexDB(params);
-  // create a folding proof starting with this user
-  const proof = await membershipFolder.startFold(user);
-  // compress the proof
-  const compressed = await membershipFolder.compressProof(proof);
-  const proofBlob = new Blob([compressed]);
-  // store the compressed proof
-
-  await db.addFold(TreeType.Attendee, proofBlob, user.sigPk!);
-}
-
-/**
- * Increment a fold for via web worker
- *
- * @param params - gzip compressed params
- * @param user - the user to fold in a membership for
- */
-async function workerIncrementFold(user: User) {
-  // Initialize indexdb
-  const db = new IndexDBWrapper();
-  await db.init();
-  // get params
-  const params = new Blob(await db.getChunks());
-  // Initialize membership folder
-  const membershipFolder = await MembershipFolder.initWithIndexDB(params);
-
-  // retrieve previous proof
-  const proofData = await db.getFold(TreeType.Attendee);
-  // decompress proof
-  let proof = await membershipFolder.decompressProof(
-    new Uint8Array(await proofData!.proof.arrayBuffer())
-  );
-  // fold in membership
-  proof = await membershipFolder.continueFold(user, proof, proofData!.numFolds);
-  // compress the proof
-  const compressed = await membershipFolder.compressProof(proof);
-  const proofBlob = new Blob([compressed]);
-  // store the compressed proof
-  await db.incrementFold(TreeType.Attendee, proofBlob, user.sigPk!);
+  return newLock;
 }
 
 /**
@@ -138,17 +150,21 @@ async function workerObfuscateFold() {
 }
 
 /**
- * Get the next chunk of params via worker and store it in indexdb
+ * Get chunks of public_params.json and store in indexdb
+ * 
+ * @param lock - the timestamp of the lock to start with
+ * @return - the last lock set
  */
-async function workerGetParamsChunk(): Promise<boolean> {
+async function downloadParams(lock: number): Promise<number | undefined> {
+  let newLock: number | undefined = lock;
   // instantiate indexdb
   const db = new IndexDBWrapper();
   await db.init();
   // get chunk count
   const chunkIndex = await db.countChunks();
   if (chunkIndex === 10) {
-    console.log('All chunks stored')
-    return true;
+    console.log('Chunks previously cached');
+    return lock;
   }
   // get the next chunk
   console.log(`${chunkIndex} of 10 chunks stored`)
@@ -157,19 +173,25 @@ async function workerGetParamsChunk(): Promise<boolean> {
     const chunk = await fetch(chunkURI, {
       headers: { "Content-Type": "application/x-binary" },
     }).then(async (res) => await res.blob());
-    // store the chunk in the db
-    await db.addChunk(i, chunk);
-    console.log(`Chunk ${i + 1} of 10 stored`);
+    // check the lock hasn't expired
+    let res = await db.checkLock(newLock);
+    if (res === false) {
+      return;
+    } else {
+      console.log(`Chunk ${i + 1} of 10 stored`);
+      await db.addChunk(i, chunk);
+      newLock = await db.setLock(newLock);
+      if (newLock === undefined) {
+        return;
+      }
+    }
   }
-  return true;
+  return newLock;
 }
 
 const exports = {
-  workerFold,
-  workerStartFold,
-  workerIncrementFold,
+  work,
   workerObfuscateFold,
-  workerGetParamsChunk,
 };
 
 export type FoldingWorker = typeof exports;

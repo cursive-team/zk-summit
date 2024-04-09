@@ -1,6 +1,6 @@
 import { expose } from "comlink";
-import { MembershipFolder } from "@/lib/client/nova";
-import { User } from "@/lib/client/localStorage";
+import { MembershipFolder, NovaWasm } from "@/lib/client/nova";
+import { LocationSignature, User } from "@/lib/client/localStorage";
 import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
 
 /**
@@ -11,64 +11,155 @@ import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
  * 3. Folds all speakers
  * 4. Folds all talks
  * 
- * @param users - the users to fold
+ * @param users - all users that exist in local storage
+ * @param talks - all talks that exist in local storage
  */
-async function work(users: User[]) {
+async function work(users: User[], talks: LocationSignature[]) {
   // instantiate indexdb
   const db = new IndexDBWrapper();
   await db.init();
+
+  console.log("users", users);
+
+  console.log("Filtering users and talks");
+  // sort attendees and speakers
+  let attendees = users.filter((user) => {
+    return !user.isSpeaker && user.pkId !== "0" && user.sig && user.sigPk && user.msg;
+  });
+  let speakers = users.filter((user) => {
+    return user.isSpeaker && user.pkId !== "0" && user.sig && user.sigPk && user.msg;
+  });
+
+  // filter out attendees, speakers, and talks with no talks
+  const attendeePks = await db.getUnincluded(
+    TreeType.Attendee,
+    attendees.map(user => user.sigPk!)
+  );
+  attendees = attendees.filter(user => attendeePks.includes(user.sigPk!));
+  console.log(`Found ${attendees.length} attendees to fold`);
+  const speakerPks = await db.getUnincluded(
+    TreeType.Speaker,
+    speakers.map(user => user.sigPk!)
+  );
+  speakers = speakers.filter(user => speakerPks.includes(user.sigPk!));
+  console.log(`Found ${speakers.length} speakers to fold`);
+
+  const talkPks = await db.getUnincluded(
+    TreeType.Talk,
+    talks.map(talk => talk.pk)
+  );
+  talks = talks.filter(talk => talkPks.includes(talk.pk));
+  console.log(`Found ${talks.length} talks to fold`);
+
   // attempt to set a lock on the db
   let lock = await db.setLock();
   // terminate the lock if it is undefined
   if (lock === undefined)
     return;
+
   // download params
+  console.log("Beginning params download")
   lock = await downloadParams(lock);
   if (lock === undefined)
     return;
   // todo: sort speakers and attendees
-  
-  // prove attendee folds
-  lock = await foldAttendees(users, lock);
-  if (lock === undefined)
-    return;
-  // todo: prove speaker folds
 
+  // instantiate wasm
+  const wasm = await import("bjj_ecdsa_nova_wasm");
+  await wasm.default();
+  // let concurrency = Math.floor(navigator.hardwareConcurrency / 3) * 2;
+  // if (concurrency < 1) concurrency = 1;
+  let concurrency = navigator.hardwareConcurrency - 1;
+  await wasm.initThreadPool(concurrency);
+
+  // prove attendee folds
+  if (attendees.length > 0) {
+    console.log("Beginning attendee folding");
+    lock = await fold(
+      attendees.map(attendee => attendee.sigPk!),
+      attendees.map(attendee => attendee.sig!),
+      attendees.map(attendee => attendee.msg!),
+      TreeType.Attendee,
+      lock,
+      wasm
+    );
+    if (lock === undefined)
+      return;
+  }
+
+  // prove speaker folds
+  if (speakers.length > 0) {
+    console.log("Beginning speaker folding");
+    lock = await fold(
+      speakers.map(speaker => speaker.sigPk!),
+      speakers.map(speaker => speaker.sig!),
+      speakers.map(speaker => speaker.msg!),
+      TreeType.Speaker,
+      lock,
+      wasm
+    );
+    if (lock === undefined)
+      return;
+  }
   // todo: prove talk folds
+  if (talks.length > 0) {
+    console.log("Beginning talk folding");
+    console.log("talks: ", talks);
+    lock = await fold(
+      talks.map(talk => talk.pk),
+      talks.map(talk => talk.sig),
+      talks.map(talk => talk.msg),
+      TreeType.Talk,
+      lock,
+      wasm
+    );
+    if (lock === undefined)
+      return;
+  }
 
   // remove the lock
+  console.log("Nova worker terminating successfully");
   await db.releaseLock(lock);
 }
 
 
 /**
- * Fold all attendees given a set of users
+ * Fold all { speakers | attendees } given a set of users
  * 
- * @param users - valid users to fold into the attendee membership proof
+ * @param users - valid users to fold into the membership proof
  * @param lock - the previously set timelock
  * @returns the last lock set during execution, or undefined if timeout
  */
-async function foldAttendees(users: User[], lock: number): Promise<number | undefined> {
+async function fold(
+  pks: string[],
+  sigs: string[],
+  msgs: string[],
+  treeType: TreeType,
+  lock: number,
+  wasm: NovaWasm
+): Promise<number | undefined> {
+  console.log(`${sigs.length} ${treeType}s to fold`);
+
+  // define new lock
   let newLock: number | undefined = lock;
 
   // Initialize indexdb
   const db = new IndexDBWrapper();
   await db.init();
 
-  console.log(`${users.length} users to fold`)
 
   // get params
   const params = new Blob(await db.getChunks());
   // Initialize membership folder
-  const membershipFolder = await MembershipFolder.initWithIndexDB(params);
+  const membershipFolder = await MembershipFolder.initWithIndexDB(params, wasm);
 
   // Check if fold already exists
-  let previousProof = await db.getFold(TreeType.Attendee);
+  let previousProof = await db.getFold(treeType);
 
   let startIndex = previousProof ? 0 : 1;
   // If no previous attendee proof, start a new fold
   if (!previousProof) {
-    const proof = await membershipFolder.startFold(users[0]);
+    const proof = await membershipFolder.startFold(pks[0], sigs[0], msgs[0], treeType);
     // compress the proof
     const compressed = await membershipFolder.compressProof(proof);
     const proofBlob = new Blob([compressed]);
@@ -78,8 +169,8 @@ async function foldAttendees(users: User[], lock: number): Promise<number | unde
       console.log(`Worker lock expired, terminating...`);
       return;
     } else {
-      await db.addFold(TreeType.Attendee, proofBlob, users[0].sigPk!);
-      console.log(`First ${users.length} attendee membership proof folded`);
+      await db.addFold(treeType, proofBlob, pks[0]);
+      console.log(`First ${treeType} membership proof folded`);
       newLock = await db.setLock(newLock);
       if (newLock === undefined) {
         console.log(`Worker lock expired, terminating...`);
@@ -89,14 +180,20 @@ async function foldAttendees(users: User[], lock: number): Promise<number | unde
   }
 
   // fold sequentially
-  for (let i = startIndex; i < users.length; i++) {
-    const user = users[i];
-    const proofData = await db.getFold(TreeType.Attendee);
+  for (let i = startIndex; i < sigs.length; i++) {
+    const proofData = await db.getFold(treeType);
     let proof = await membershipFolder.decompressProof(
       new Uint8Array(await proofData!.proof.arrayBuffer())
     );
     // fold in membership
-    proof = await membershipFolder.continueFold(user, proof, proofData!.numFolds);
+    proof = await membershipFolder.continueFold(
+      proof,
+      proofData!.numFolds,
+      pks[i],
+      sigs[i],
+      msgs[i],
+      treeType
+    );
     // compress the proof
     const compressed = await membershipFolder.compressProof(proof);
     const proofBlob = new Blob([compressed]);
@@ -106,8 +203,8 @@ async function foldAttendees(users: User[], lock: number): Promise<number | unde
       console.log(`Worker lock expired, terminating...`);
       return;
     } else {
-      await db.incrementFold(TreeType.Attendee, proofBlob, user.sigPk!);
-      console.log(`${i} of ${users.length} users folded`)
+      await db.incrementFold(treeType, proofBlob, pks[i]);
+      console.log(`${i} of ${sigs.length} ${treeType}s folded`)
       newLock = await db.setLock(newLock);
       if (newLock === undefined) {
         console.log(`Worker lock expired, terminating...`);
@@ -129,8 +226,17 @@ async function workerObfuscateFold() {
   await db.init();
   // get params
   const params = new Blob(await db.getChunks());
+
+  // instantiate wasm
+  const wasm = await import("bjj_ecdsa_nova_wasm");
+  await wasm.default();
+  // let concurrency = Math.floor(navigator.hardwareConcurrency / 3) * 2;
+  // if (concurrency < 1) concurrency = 1;
+  let concurrency = navigator.hardwareConcurrency - 1;
+  await wasm.initThreadPool(concurrency);
+
   // Initialize membership folder
-  const membershipFolder = await MembershipFolder.initWithIndexDB(params);
+  const membershipFolder = await MembershipFolder.initWithIndexDB(params, wasm);
 
   const proofData = await db.getFold(TreeType.Attendee);
   // decompress proof

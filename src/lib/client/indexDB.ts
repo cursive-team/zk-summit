@@ -11,7 +11,7 @@ export type FoldProof = {
 };
 
 // timeout period for a worker lock
-export const LOCK_STALE_TIME = 1000 * 15;
+export const LOCK_STALE_TIME = 1000 * 25;
 
 export enum TreeType {
   Attendee = "attendee",
@@ -187,13 +187,14 @@ export class IndexDBWrapper {
   }
 
   /**
-   * Filters out all users that are not available to be folded in returns them
+   * Filters out all members of a given tree type that have not yet been folded in
+   * @notice expects other checks on users to have been performed already
    * @param key - the type of proof to fold
-   * @param users - the users to filter
+   * @param memberPk - the member to filter
    * @
-   * @returns - users that can be folded into the membership proof for this type
+   * @returns - members that can be folded into the membership proof for this type
    */
-  async getUsersToFold(key: TreeType, users: User[]): Promise<User[] | undefined> {
+  async getUnincluded(key: TreeType, memberPk: string[]): Promise<string[]> {
     if (this.db) {
       // get pubkeys already folded in
       const tx = this.db.transaction(INDEXDB_STORES.FOLDS, "readwrite");
@@ -202,15 +203,9 @@ export class IndexDBWrapper {
       const foldedPks = data === undefined ? [] : data.included;
 
       // filter out users that are not available to be folded in
-      let validUsers = users.filter((user) => {
-        return (
-          user.pkId !== "0" &&
-          user.sigPk !== undefined &&
-          !foldedPks.includes(user.sigPk)
-        );
+      return memberPk.filter((member) => {
+        return (!foldedPks.includes(member));
       });
-      // return the first user that can be folded in if exists
-      return validUsers.length > 0 ? validUsers : undefined;
     } else {
       throw Error("DB not initialized");
     }
@@ -232,7 +227,7 @@ export class IndexDBWrapper {
       const existingLocks = await store.getAll();
       if (existingLocks.length !== 0) {
         // if lock set by different worker
-        if ( !prevLock || existingLocks[0] !== prevLock) {
+        if (!prevLock || existingLocks[0] !== prevLock) {
           // see if the lock is stale
           if (Date.now() - existingLocks[0] < LOCK_STALE_TIME) {
             // if lock has not timed out, return undefined

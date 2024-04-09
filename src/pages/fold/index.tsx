@@ -1,6 +1,6 @@
 import { Button } from '@/components/Button';
 import { useEffect, useState } from 'react';
-import { getUsers } from '@/lib/client/localStorage';
+import { getLocationSignatures, getUsers } from '@/lib/client/localStorage';
 import { MembershipFolder } from '@/lib/client/nova';
 import { Spinner } from '@/components/Spinner';
 import { toast } from 'sonner';
@@ -32,9 +32,9 @@ export default function Fold() {
     // get the proof attendee type
     (async () => {
       // get all attendees
-      console.log("Is running")
-      const users = Object.values(getUsers()).filter((user) => !user.isSpeaker && user.pkId !== "0");
-      await work(users);
+      const users = Object.values(getUsers());
+      const talks = Object.values(getLocationSignatures());
+      await work(users, talks);
     })();
   }, [db, completed]);
 

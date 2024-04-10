@@ -10,7 +10,7 @@ import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
  * 2. Folds all attendees
  * 3. Folds all speakers
  * 4. Folds all talks
- * 
+ *
  * @param users - all users that exist in local storage
  * @param talks - all talks that exist in local storage
  */
@@ -22,44 +22,46 @@ async function work(users: User[], talks: LocationSignature[]) {
   console.log("Filtering users and talks");
   // sort attendees and speakers
   let attendees = users.filter((user) => {
-    return !user.isSpeaker && user.pkId !== "0" && user.sig && user.sigPk && user.msg;
+    return (
+      !user.isSpeaker && user.pkId !== "0" && user.sig && user.sigPk && user.msg
+    );
   });
   let speakers = users.filter((user) => {
-    return user.isSpeaker && user.pkId !== "0" && user.sig && user.sigPk && user.msg;
+    return (
+      user.isSpeaker && user.pkId !== "0" && user.sig && user.sigPk && user.msg
+    );
   });
 
   // filter out attendees, speakers, and talks with no talks
   const attendeePks = await db.getUnincluded(
     TreeType.Attendee,
-    attendees.map(user => user.sigPk!)
+    attendees.map((user) => user.sigPk!)
   );
-  attendees = attendees.filter(user => attendeePks.includes(user.sigPk!));
+  attendees = attendees.filter((user) => attendeePks.includes(user.sigPk!));
   console.log(`Found ${attendees.length} attendees to fold`);
   const speakerPks = await db.getUnincluded(
     TreeType.Speaker,
-    speakers.map(user => user.sigPk!)
+    speakers.map((user) => user.sigPk!)
   );
-  speakers = speakers.filter(user => speakerPks.includes(user.sigPk!));
+  speakers = speakers.filter((user) => speakerPks.includes(user.sigPk!));
   console.log(`Found ${speakers.length} speakers to fold`);
 
   const talkPks = await db.getUnincluded(
     TreeType.Talk,
-    talks.map(talk => talk.pk)
+    talks.map((talk) => talk.pk)
   );
-  talks = talks.filter(talk => talkPks.includes(talk.pk));
+  talks = talks.filter((talk) => talkPks.includes(talk.pk));
   console.log(`Found ${talks.length} talks to fold`);
 
   // attempt to set a lock on the db
   let lock = await db.setLock();
   // terminate the lock if it is undefined
-  if (lock === undefined)
-    return;
+  if (lock === undefined) return;
 
   // download params
-  console.log("Beginning params download")
+  console.log("Beginning params download");
   lock = await downloadParams(lock);
-  if (lock === undefined)
-    return;
+  if (lock === undefined) return;
   // todo: sort speakers and attendees
 
   // instantiate wasm
@@ -74,45 +76,42 @@ async function work(users: User[], talks: LocationSignature[]) {
   if (attendees.length > 0) {
     console.log("Beginning attendee folding");
     lock = await fold(
-      attendees.map(attendee => attendee.sigPk!),
-      attendees.map(attendee => attendee.sig!),
-      attendees.map(attendee => attendee.msg!),
+      attendees.map((attendee) => attendee.sigPk!),
+      attendees.map((attendee) => attendee.sig!),
+      attendees.map((attendee) => attendee.msg!),
       TreeType.Attendee,
       lock,
       wasm
     );
-    if (lock === undefined)
-      return;
+    if (lock === undefined) return;
   }
 
   // prove speaker folds
   if (speakers.length > 0) {
     console.log("Beginning speaker folding");
     lock = await fold(
-      speakers.map(speaker => speaker.sigPk!),
-      speakers.map(speaker => speaker.sig!),
-      speakers.map(speaker => speaker.msg!),
+      speakers.map((speaker) => speaker.sigPk!),
+      speakers.map((speaker) => speaker.sig!),
+      speakers.map((speaker) => speaker.msg!),
       TreeType.Speaker,
       lock,
       wasm
     );
-    if (lock === undefined)
-      return;
+    if (lock === undefined) return;
   }
   // todo: prove talk folds
   if (talks.length > 0) {
     console.log("Beginning talk folding");
     console.log("talks: ", talks);
     lock = await fold(
-      talks.map(talk => talk.pk),
-      talks.map(talk => talk.sig),
-      talks.map(talk => talk.msg),
+      talks.map((talk) => talk.pk),
+      talks.map((talk) => talk.sig),
+      talks.map((talk) => talk.msg),
       TreeType.Talk,
       lock,
       wasm
     );
-    if (lock === undefined)
-      return;
+    if (lock === undefined) return;
   }
 
   // remove the lock
@@ -120,10 +119,9 @@ async function work(users: User[], talks: LocationSignature[]) {
   await db.releaseLock(lock);
 }
 
-
 /**
  * Fold all { speakers | attendees } given a set of users
- * 
+ *
  * @param users - valid users to fold into the membership proof
  * @param lock - the previously set timelock
  * @returns the last lock set during execution, or undefined if timeout
@@ -145,7 +143,6 @@ async function fold(
   const db = new IndexDBWrapper();
   await db.init();
 
-
   // get params
   const params = new Blob(await db.getChunks());
   // Initialize membership folder
@@ -157,7 +154,12 @@ async function fold(
   let startIndex = previousProof ? 0 : 1;
   // If no previous attendee proof, start a new fold
   if (!previousProof) {
-    const proof = await membershipFolder.startFold(pks[0], sigs[0], msgs[0], treeType);
+    const proof = await membershipFolder.startFold(
+      pks[0],
+      sigs[0],
+      msgs[0],
+      treeType
+    );
     // compress the proof
     const compressed = await membershipFolder.compressProof(proof);
     const proofBlob = new Blob([compressed]);
@@ -202,7 +204,7 @@ async function fold(
       return;
     } else {
       await db.incrementFold(treeType, proofBlob, pks[i]);
-      console.log(`${i} of ${sigs.length} ${treeType}s folded`)
+      console.log(`${i} of ${sigs.length} ${treeType}s folded`);
       newLock = await db.setLock(newLock);
       if (newLock === undefined) {
         console.log(`Worker lock expired, terminating...`);
@@ -300,7 +302,7 @@ async function verify(proofBlob: Blob, numFolded: number): Promise<boolean> {
 
 /**
  * Get chunks of public_params.json and store in indexdb
- * 
+ *
  * @param lock - the timestamp of the lock to start with
  * @return - the last lock set
  */
@@ -312,11 +314,11 @@ async function downloadParams(lock: number): Promise<number | undefined> {
   // get chunk count
   const chunkIndex = await db.countChunks();
   if (chunkIndex === 10) {
-    console.log('Chunks previously cached');
+    console.log("Chunks previously cached");
     return lock;
   }
   // get the next chunk
-  console.log(`${chunkIndex} of 10 chunks stored`)
+  console.log(`${chunkIndex} of 10 chunks stored`);
   for (let i = chunkIndex; i < 10; i++) {
     const chunkURI = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${i}.gz`;
     const chunk = await fetch(chunkURI, {

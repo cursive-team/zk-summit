@@ -28,6 +28,7 @@ import { encryptFoldedProofMessage } from "@/lib/client/jubSignal";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { useWorker } from "@/hooks/useWorker";
 import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
+import { Spinner } from "../Spinner";
 
 dayjs.extend(duration);
 const UNFOLDED_DATE = "2024-03-10 15:59:59";
@@ -49,13 +50,13 @@ interface FolderCardProps {
 export type ProofData = {
   uri: string;
   numFolded: number;
-}
+};
 
 export type ProofPost = {
   attendees: ProofData | undefined;
   speakers: ProofData | undefined;
   talks: ProofData | undefined;
-}
+};
 
 export const FOLDED_MOCKS: FolderCardProps["items"] = [
   {
@@ -104,7 +105,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
 
   const [numTotalProvingRequirements, setNumTotalProvingRequirements] =
     useState(0);
-  const [proofLink, setProofLink] = useState<string>();
+  const [proofId, setProofId] = useState<string>();
 
   useEffect(() => {
     const users = getUsers();
@@ -117,7 +118,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     setNumTalks(Object.keys(talks).length);
 
     if (foldedProof) {
-      setProofLink(foldedProof.pfLink);
+      setProofId(foldedProof.pfId);
     }
   }, []);
 
@@ -130,28 +131,33 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   };
 
   const getTwitterShareUrl = () => {
-    if (!proofLink) return "";
+    if (!proofId) return "";
 
     return `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       `🧺 zkSummit 11 FOLDED 🧺: I made a Nova folding proof attesting to my zkSummit Athens experience, built by @cursive_team and @mach34_. Go verify it yourself!`
-    )}&url=${encodeURIComponent(proofLink)}`;
+    )}&url=${encodeURIComponent(
+      `https://zksummit.cursive.team/folded/${proofId}`
+    )}`;
   };
 
   /**
    * Upload a proof blob and return the url to the blob
-   * 
+   *
    * @param proof - the compressed obfuscated proof
    * @param treeType - the type of tree the proof is for
    * @returns the url to the uploaded proof
    */
-  const uploadProof = async (proof: Blob, treeType: TreeType): Promise<string> => {
+  const uploadProof = async (
+    proof: Blob,
+    treeType: TreeType
+  ): Promise<string> => {
     const name = `${treeType}Proof`;
     const newBlob: PutBlobResult = await upload(name, proof, {
       access: "public",
       handleUploadUrl: "/api/folding/upload",
     });
     return newBlob.url;
-  }
+  };
 
   const saveFinalizedProofs = async (data: ProofPost): Promise<string> => {
     const token = getAuthToken();
@@ -174,38 +180,37 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     }
 
     const { proofUuid } = await response.json();
-    return "";
 
-    // const senderPrivateKey = keys.encryptionPrivateKey;
-    // const recipientPublicKey = profile.encryptionPublicKey;
-    // const encryptedMessage = await encryptFoldedProofMessage({
-    //   proofId: proofUuid,
-    //   proofData: P,
-    //   senderPrivateKey,
-    //   recipientPublicKey,
-    // });
+    const senderPrivateKey = keys.encryptionPrivateKey;
+    const recipientPublicKey = profile.encryptionPublicKey;
+    const encryptedMessage = await encryptFoldedProofMessage({
+      proofId: proofUuid,
+      proofLink: proofUuid,
+      senderPrivateKey,
+      recipientPublicKey,
+    });
 
-    // // Send folded proof info as encrypted jubSignal message to self
-    // // Simultaneously refresh activity feed
-    // try {
-    //   await loadMessages({
-    //     forceRefresh: false,
-    //     messageRequests: [
-    //       {
-    //         encryptedMessage,
-    //         recipientPublicKey,
-    //       },
-    //     ],
-    //   });
-    // } catch (error) {
-    //   console.error(
-    //     "Error sending encrypted folded proof info to server: ",
-    //     error
-    //   );
-    //   toast.error("An error occured while saving the proof. Please try again.");
-    // }
+    // Send folded proof info as encrypted jubSignal message to self
+    // Simultaneously refresh activity feed
+    try {
+      await loadMessages({
+        forceRefresh: false,
+        messageRequests: [
+          {
+            encryptedMessage,
+            recipientPublicKey,
+          },
+        ],
+      });
+    } catch (error) {
+      console.error(
+        "Error sending encrypted folded proof info to server: ",
+        error
+      );
+      toast.error("An error occured while saving the proof. Please try again.");
+    }
 
-    // return proofUuid;
+    return proofUuid;
   };
 
   const beginProving = async () => {
@@ -217,7 +222,10 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     }
 
     // ensure all proofs are folded
-    await work(Object.values(getUsers()), Object.values(getLocationSignatures()));
+    await work(
+      Object.values(getUsers()),
+      Object.values(getLocationSignatures())
+    );
 
     const db = new IndexDBWrapper();
     await db.init();
@@ -244,41 +252,26 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
         // track the proof and numFolded for each tree
         proofUris.set(treeType, {
           uri: proofBlobUri,
-          numFolded: proofData!.numFolds
+          numFolded: proofData!.numFolds,
         });
       }
-
-    }
+    };
     await Promise.all([
       finalizeProof(TreeType.Attendee),
       finalizeProof(TreeType.Speaker),
-      finalizeProof(TreeType.Talk)
+      finalizeProof(TreeType.Talk),
     ]);
 
     // post the results to the server
     const proofPost = {
       attendees: proofUris.get(TreeType.Attendee),
       speakers: proofUris.get(TreeType.Speaker),
-      talks: proofUris.get(TreeType.Talk)
-    }
+      talks: proofUris.get(TreeType.Talk),
+    };
 
-    await saveFinalizedProofs(proofPost);
-
+    const proofUuid = await saveFinalizedProofs(proofPost);
+    setProofId(proofUuid);
     setProvingStarted(false);
-  };
-
-  const doneProving = async () => {
-    // try {
-    //   const proofUuid = await uploadAndSaveFoldingProof(proof);
-    //   setProofLink(`${window.location.origin}/folded/${proofUuid}`);
-    // } catch (error) {
-    //   console.error("Failed to upload proof: ", error);
-    //   toast.error("Failed to upload proof. Please try again");
-    //   return;
-    // }
-
-    setProvingStarted(false);
-    setProofLink("https://zksummit.cursive.team/folded/1234");
   };
 
   return (
@@ -363,7 +356,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                   )}
                   {itemIndex === items.length - 1 && (
                     <>
-                      {proofLink && (
+                      {proofId && (
                         <>
                           <h4 className="text-primary leading-[32px] font-medium font-sans text-3xl text-center">
                             {"Proof is ready"}
@@ -387,7 +380,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           </Link>
                         </>
                       )}
-                      {!proofLink && provingStarted && (
+                      {!proofId && provingStarted && (
                         <>
                           <h4 className="text-primary leading-[32px] font-medium font-sans text-3xl text-center">
                             {"Generating your proof..."}
@@ -395,10 +388,10 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           <span className="text-primary font-bold font-sans text-lg text-center">
                             {"This may take a minute. Please be patient!"}
                           </span>
-                          <Button onClick={doneProving}>Done Proving</Button>
+                          <Spinner />
                         </>
                       )}
-                      {!proofLink && !provingStarted && (
+                      {!proofId && !provingStarted && (
                         <>
                           {children}
                           {title && (

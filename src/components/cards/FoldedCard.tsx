@@ -27,7 +27,7 @@ import { upload } from "@vercel/blob/client";
 import { encryptFoldedProofMessage } from "@/lib/client/jubSignal";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { useWorker } from "@/hooks/useWorker";
-import { TreeType } from "@/lib/client/indexDB";
+import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
 
 dayjs.extend(duration);
 const UNFOLDED_DATE = "2024-03-10 15:59:59";
@@ -44,6 +44,17 @@ interface FoldedItemProps {
 interface FolderCardProps {
   items: FoldedItemProps[];
   onClose?: () => void;
+}
+
+export type ProofData = {
+  uri: string;
+  numFolded: number;
+}
+
+export type ProofPost = {
+  attendees: ProofData | undefined;
+  speakers: ProofData | undefined;
+  talks: ProofData | undefined;
 }
 
 export const FOLDED_MOCKS: FolderCardProps["items"] = [
@@ -126,27 +137,36 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     )}&url=${encodeURIComponent(proofLink)}`;
   };
 
-  const uploadAndSaveFoldingProof = async (data: string): Promise<string> => {
+  /**
+   * Upload a proof blob and return the url to the blob
+   * 
+   * @param proof - the compressed obfuscated proof
+   * @param treeType - the type of tree the proof is for
+   * @returns the url to the uploaded proof
+   */
+  const uploadProof = async (proof: Blob, treeType: TreeType): Promise<string> => {
+    const name = `${treeType}Proof`;
+    const newBlob: PutBlobResult = await upload(name, proof, {
+      access: "public",
+      handleUploadUrl: "/api/folding/upload",
+    });
+    return newBlob.url;
+  }
+
+  const saveFinalizedProofs = async (data: ProofPost): Promise<string> => {
     const token = getAuthToken();
     const keys = getKeys();
     const profile = getProfile();
     if (!token || token.expiresAt < new Date() || !keys || !profile) {
       throw new Error("Please sign in to save your proof.");
-    } 
-    
-    const name = "foldingProof";
-    const newBlob: PutBlobResult = await upload(name, x, {
-      access: "public",
-      handleUploadUrl: "/api/folding/upload",
-    });
-    const proofUrl = newBlob.url;
+    }
 
     const response = await fetch("/api/folding/proof", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ authToken: token.value, proofUrl }),
+      body: JSON.stringify({ authToken: token.value, data }),
     });
 
     if (!response.ok) {
@@ -154,37 +174,38 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     }
 
     const { proofUuid } = await response.json();
+    return "";
 
-    const senderPrivateKey = keys.encryptionPrivateKey;
-    const recipientPublicKey = profile.encryptionPublicKey;
-    const encryptedMessage = await encryptFoldedProofMessage({
-      proofId: proofUuid,
-      proofLink: proofUrl,
-      senderPrivateKey,
-      recipientPublicKey,
-    });
+    // const senderPrivateKey = keys.encryptionPrivateKey;
+    // const recipientPublicKey = profile.encryptionPublicKey;
+    // const encryptedMessage = await encryptFoldedProofMessage({
+    //   proofId: proofUuid,
+    //   proofData: P,
+    //   senderPrivateKey,
+    //   recipientPublicKey,
+    // });
 
-    // Send folded proof info as encrypted jubSignal message to self
-    // Simultaneously refresh activity feed
-    try {
-      await loadMessages({
-        forceRefresh: false,
-        messageRequests: [
-          {
-            encryptedMessage,
-            recipientPublicKey,
-          },
-        ],
-      });
-    } catch (error) {
-      console.error(
-        "Error sending encrypted folded proof info to server: ",
-        error
-      );
-      toast.error("An error occured while saving the proof. Please try again.");
-    }
+    // // Send folded proof info as encrypted jubSignal message to self
+    // // Simultaneously refresh activity feed
+    // try {
+    //   await loadMessages({
+    //     forceRefresh: false,
+    //     messageRequests: [
+    //       {
+    //         encryptedMessage,
+    //         recipientPublicKey,
+    //       },
+    //     ],
+    //   });
+    // } catch (error) {
+    //   console.error(
+    //     "Error sending encrypted folded proof info to server: ",
+    //     error
+    //   );
+    //   toast.error("An error occured while saving the proof. Please try again.");
+    // }
 
-    return proofUuid;
+    // return proofUuid;
   };
 
   const beginProving = async () => {
@@ -198,11 +219,30 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     // ensure all proofs are folded
     await work(Object.values(getUsers()), Object.values(getLocationSignatures()));
 
+    const db = new IndexDBWrapper();
+    await db.init();
+
     setProvingStarted(true);
+    let proofUris: Map<TreeType, ProofData> = new Map();
     const finalizeProof = async (treeType: TreeType) => {
+      // obfuscate the proof
       await finalize(treeType);
       setFinalizedProgress((prev) => prev + 1);
       console.log("Finalized proof for treeType: ", treeType);
+      // get the proof from the db
+      const proofData = await db.getFold(treeType);
+      if (proofData === undefined) {
+        console.log(`No proof data found for ${treeType} tree`);
+      } else {
+        // post the proof to blob store
+        let proofBlobUri = await uploadProof(proofData!.proof, treeType);
+        console.log(`Posted ${treeType} proof to ${proofBlobUri}`);
+        // track the proof and numFolded for each tree
+        proofUris.set(treeType, {
+          uri: proofBlobUri,
+          numFolded: proofData!.numFolds
+        });
+      }
 
     }
     await Promise.all([
@@ -210,6 +250,16 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
       finalizeProof(TreeType.Speaker),
       finalizeProof(TreeType.Talk)
     ]);
+
+    // post the results to the server
+    const proofPost = {
+      attendees: proofUris.get(TreeType.Attendee),
+      speakers: proofUris.get(TreeType.Speaker),
+      talks: proofUris.get(TreeType.Talk)
+    }
+
+    await saveFinalizedProofs(proofPost);
+
     setProvingStarted(false);
   };
 

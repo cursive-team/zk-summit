@@ -31,7 +31,7 @@ import { IndexDBWrapper, TreeType } from '@/lib/client/indexDB';
 import { Spinner } from '../Spinner';
 
 dayjs.extend(duration);
-const UNFOLDED_DATE = '2024-03-10 15:59:59';
+const UNFOLDED_DATE = '2024-04-10 11:00:00';
 const CountdownLabel = classed.span('text-primary font-semibold text-xs');
 
 interface FoldedItemProps {
@@ -291,7 +291,10 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
           <Icons.ControllerClose className='text-iron-950' />
         </button>
       </div>
-      <Swiper
+      <div className='flex flex-col items-center justify-center h-screen'>
+        Test swiper sizing issue
+      </div>
+      {/* <Swiper
         pagination={pagination}
         modules={[EffectFade, Controller, Pagination, Autoplay]}
         effect='fade'
@@ -418,7 +421,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
             );
           }
         )}
-      </Swiper>
+      </Swiper> */}
     </main>
   );
 };

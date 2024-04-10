@@ -19,8 +19,6 @@ async function work(users: User[], talks: LocationSignature[]) {
   const db = new IndexDBWrapper();
   await db.init();
 
-  console.log("users", users);
-
   console.log("Filtering users and talks");
   // sort attendees and speakers
   let attendees = users.filter((user) => {
@@ -215,12 +213,14 @@ async function fold(
   return newLock;
 }
 
+
+
 /**
  * Obfuscate a fold for via web worker
  *
  * @param params - gzip compressed params
  */
-async function workerObfuscateFold() {
+async function finalize(type: TreeType) {
   // Initialize indexdb
   const db = new IndexDBWrapper();
   await db.init();
@@ -232,13 +232,13 @@ async function workerObfuscateFold() {
   await wasm.default();
   // let concurrency = Math.floor(navigator.hardwareConcurrency / 3) * 2;
   // if (concurrency < 1) concurrency = 1;
-  let concurrency = navigator.hardwareConcurrency - 1;
+  let concurrency = Math.floor(navigator.hardwareConcurrency) / 3;
   await wasm.initThreadPool(concurrency);
 
   // Initialize membership folder
   const membershipFolder = await MembershipFolder.initWithIndexDB(params, wasm);
 
-  const proofData = await db.getFold(TreeType.Attendee);
+  const proofData = await db.getFold(type);
   // decompress proof
   let proof = await membershipFolder.decompressProof(
     new Uint8Array(await proofData!.proof.arrayBuffer())
@@ -297,7 +297,7 @@ async function downloadParams(lock: number): Promise<number | undefined> {
 
 const exports = {
   work,
-  workerObfuscateFold,
+  finalize,
 };
 
 export type FoldingWorker = typeof exports;

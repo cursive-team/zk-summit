@@ -26,9 +26,11 @@ import { type PutBlobResult } from "@vercel/blob";
 import { upload } from "@vercel/blob/client";
 import { encryptFoldedProofMessage } from "@/lib/client/jubSignal";
 import { loadMessages } from "@/lib/client/jubSignalClient";
+import { useWorker } from "@/hooks/useWorker";
+import { TreeType } from "@/lib/client/indexDB";
 
 dayjs.extend(duration);
-const UNFOLDED_DATE = "2024-04-10 15:59:59";
+const UNFOLDED_DATE = "2024-03-10 15:59:59";
 const CountdownLabel = classed.span("text-primary font-semibold text-xs");
 
 interface FoldedItemProps {
@@ -81,13 +83,14 @@ export const FOLDED_MOCKS: FolderCardProps["items"] = [
 ];
 
 const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
+  const { work, finalize, folding, obfuscating } = useWorker();
+  const [finalizedProgress, setFinalizedProgress] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [numAttendees, setNumAttendees] = useState(0);
   const [numTalks, setNumTalks] = useState(0);
   const [numSpeakers, setNumSpeakers] = useState(0);
   const [provingStarted, setProvingStarted] = useState(false);
-  const [numCompletedProvingRequirements, setNumCompletedProvingRequirements] =
-    useState(0);
+
   const [numTotalProvingRequirements, setNumTotalProvingRequirements] =
     useState(0);
   const [proofLink, setProofLink] = useState<string>();
@@ -192,7 +195,21 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
       return;
     }
 
+    // ensure all proofs are folded
+    await work(Object.values(getUsers()), Object.values(getLocationSignatures()));
+
     setProvingStarted(true);
+    const finalizeProof = async (treeType: TreeType) => {
+      await finalize(treeType);
+      setFinalizedProgress((prev) => prev + 1);
+      console.log("Finalized proof for treeType: ", treeType);
+    }
+    await Promise.all([
+      finalizeProof(TreeType.Attendee),
+      finalizeProof(TreeType.Speaker),
+      finalizeProof(TreeType.Talk)
+    ]);
+    setProvingStarted(false);
   };
 
   const doneProving = async () => {
@@ -350,7 +367,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           <Button onClick={beginProving}>Prove it</Button>
                         </>
                       )}
-                      {}
+                      { }
                     </>
                   )}
                 </div>

@@ -49,13 +49,13 @@ interface FolderCardProps {
 export type ProofData = {
   uri: string;
   numFolded: number;
-}
+};
 
 export type ProofPost = {
   attendees: ProofData | undefined;
   speakers: ProofData | undefined;
   talks: ProofData | undefined;
-}
+};
 
 export const FOLDED_MOCKS: FolderCardProps["items"] = [
   {
@@ -139,19 +139,22 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
 
   /**
    * Upload a proof blob and return the url to the blob
-   * 
+   *
    * @param proof - the compressed obfuscated proof
    * @param treeType - the type of tree the proof is for
    * @returns the url to the uploaded proof
    */
-  const uploadProof = async (proof: Blob, treeType: TreeType): Promise<string> => {
+  const uploadProof = async (
+    proof: Blob,
+    treeType: TreeType
+  ): Promise<string> => {
     const name = `${treeType}Proof`;
     const newBlob: PutBlobResult = await upload(name, proof, {
       access: "public",
       handleUploadUrl: "/api/folding/upload",
     });
     return newBlob.url;
-  }
+  };
 
   const saveFinalizedProofs = async (data: ProofPost): Promise<string> => {
     const token = getAuthToken();
@@ -217,7 +220,10 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     }
 
     // ensure all proofs are folded
-    await work(Object.values(getUsers()), Object.values(getLocationSignatures()));
+    await work(
+      Object.values(getUsers()),
+      Object.values(getLocationSignatures())
+    );
 
     const db = new IndexDBWrapper();
     await db.init();
@@ -226,7 +232,11 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     let proofUris: Map<TreeType, ProofData> = new Map();
     const finalizeProof = async (treeType: TreeType) => {
       // obfuscate the proof
-      await finalize(treeType);
+      let success = await finalize(treeType);
+      if (!success) {
+        console.log(`No membership proof of type ${treeType} was ever made`);
+        return;
+      }
       setFinalizedProgress((prev) => prev + 1);
       console.log("Finalized proof for treeType: ", treeType);
       // get the proof from the db
@@ -240,23 +250,22 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
         // track the proof and numFolded for each tree
         proofUris.set(treeType, {
           uri: proofBlobUri,
-          numFolded: proofData!.numFolds
+          numFolded: proofData!.numFolds,
         });
       }
-
-    }
+    };
     await Promise.all([
       finalizeProof(TreeType.Attendee),
       finalizeProof(TreeType.Speaker),
-      finalizeProof(TreeType.Talk)
+      finalizeProof(TreeType.Talk),
     ]);
 
     // post the results to the server
     const proofPost = {
       attendees: proofUris.get(TreeType.Attendee),
       speakers: proofUris.get(TreeType.Speaker),
-      talks: proofUris.get(TreeType.Talk)
-    }
+      talks: proofUris.get(TreeType.Talk),
+    };
 
     await saveFinalizedProofs(proofPost);
 
@@ -418,7 +427,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           <Button onClick={beginProving}>Prove it</Button>
                         </>
                       )}
-                      { }
+                      {}
                     </>
                   )}
                 </div>

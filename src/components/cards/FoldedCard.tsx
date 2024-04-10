@@ -31,8 +31,8 @@ import { IndexDBWrapper, TreeType } from '@/lib/client/indexDB';
 import { Spinner } from '../Spinner';
 
 dayjs.extend(duration);
-const UNFOLDED_DATE = '2024-04-10 15:59:59';
-const CountdownLabel = classed.span('text-primary font-semibold text-xs');
+const UNFOLDED_DATE = "2024-04-10 15:59:59";
+const CountdownLabel = classed.span("text-primary font-semibold text-xs");
 
 interface FoldedItemProps {
   image?: string;
@@ -220,6 +220,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
       toast.error('Nothing to prove! Tap some cards to get started.');
       return;
     }
+    setProvingStarted(true);
 
     // ensure all proofs are folded
     await work(
@@ -230,9 +231,14 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     const db = new IndexDBWrapper();
     await db.init();
 
-    setProvingStarted(true);
     let proofUris: Map<TreeType, ProofData> = new Map();
     const finalizeProof = async (treeType: TreeType) => {
+      // check that the proof is not already finalized
+      const storedProofData = await db.getFold(treeType);
+      if (storedProofData && storedProofData.obfuscated) {
+        console.log(`Not obfuscating ${treeType} proof: already obfuscated`);
+        return;
+      }
       // obfuscate the proof
       let success = await finalize(treeType);
       if (!success) {

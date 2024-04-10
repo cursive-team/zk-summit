@@ -14,6 +14,7 @@ export const useWorker = () => {
   const workerAPIRef = useRef<Remote<{
     work: (users: User[], talks: LocationSignature[]) => Promise<void>;
     finalize: (treeType: TreeType) => Promise<boolean>;
+    verify: (proof: Blob, numFolded: number, treeType: TreeType) => Promise<boolean>;
   }> | null>();
 
   const init = () => {
@@ -44,6 +45,13 @@ export const useWorker = () => {
     return success!;
   };
 
+  const verify = async (proof: Blob, numFolded: number, treeType: TreeType): Promise<boolean> => {
+    init();
+    const success = await workerAPIRef.current?.verify(proof, numFolded, treeType);
+    terminate();
+    return success!;
+  };
+
   const terminate = () => {
     if (!worker) return;
     worker.terminate();
@@ -53,6 +61,7 @@ export const useWorker = () => {
   return {
     work,
     finalize,
+    verify,
     obfuscating,
     folding,
     completed,

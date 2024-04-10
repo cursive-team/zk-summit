@@ -101,8 +101,6 @@ async function work(users: User[], talks: LocationSignature[]) {
   }
   // todo: prove talk folds
   if (talks.length > 0) {
-    console.log("Beginning talk folding");
-    console.log("talks: ", talks);
     lock = await fold(
       talks.map((talk) => talk.pk),
       talks.map((talk) => talk.sig),
@@ -215,12 +213,14 @@ async function fold(
   return newLock;
 }
 
+
+
 /**
  * Obfuscate a fold for via web worker
  *
  * @param params - gzip compressed params
  */
-async function finalize(type: TreeType): Promise<boolean> {
+async function finalize(treeType: TreeType): Promise<boolean> {
   // Initialize indexdb
   const db = new IndexDBWrapper();
   await db.init();
@@ -238,10 +238,11 @@ async function finalize(type: TreeType): Promise<boolean> {
   // Initialize membership folder
   const membershipFolder = await MembershipFolder.initWithIndexDB(params, wasm);
 
-  const proofData = await db.getFold(type);
+  const proofData = await db.getFold(treeType);
   if (proofData === undefined) {
     return false;
   }
+
   // decompress proof
   let proof = await membershipFolder.decompressProof(
     new Uint8Array(await proofData!.proof.arrayBuffer())
@@ -249,14 +250,54 @@ async function finalize(type: TreeType): Promise<boolean> {
   // obfuscate proof
   let obfuscatedProof = await membershipFolder.obfuscate(
     proof,
-    proofData!.numFolds
+    proofData!.numFolds,
+    treeType
   );
   // compress the proof
   const compressed = await membershipFolder.compressProof(obfuscatedProof);
   const proofBlob = new Blob([compressed]);
   // store the compressed proof
-  await db.obfuscateFold(TreeType.Attendee, proofBlob);
+  await db.obfuscateFold(treeType, proofBlob);
   return true;
+}
+
+/**
+ * Verify that a proof is valid
+ *
+ * @param params - gzip compressed params
+ */
+async function verify(proofBlob: Blob, numFolded: number, treeType: TreeType): Promise<boolean> {
+  // Initialize indexdb
+  const db = new IndexDBWrapper();
+  await db.init();
+  // get params
+  const params = new Blob(await db.getChunks());
+
+  // instantiate wasm
+  const wasm = await import("bjj_ecdsa_nova_wasm");
+  await wasm.default();
+  // let concurrency = Math.floor(navigator.hardwareConcurrency / 3) * 2;
+  // if (concurrency < 1) concurrency = 1;
+  let concurrency = Math.floor(navigator.hardwareConcurrency) / 3;
+  await wasm.initThreadPool(concurrency);
+
+  // Initialize membership folder
+  const membershipFolder = await MembershipFolder.initWithIndexDB(params, wasm);
+
+  // decompress proof
+  let proof = await membershipFolder.decompressProof(
+    new Uint8Array(await proofBlob.arrayBuffer())
+  );
+  
+  // verify proof
+  try {
+    await membershipFolder.verify(proof, numFolded, treeType, true);
+    console.log("Verified proof");
+    return true;
+  } catch (e) {
+    console.error("Failed to verify proof");
+    return false;
+  }
 }
 
 /**
@@ -302,6 +343,7 @@ async function downloadParams(lock: number): Promise<number | undefined> {
 const exports = {
   work,
   finalize,
+  verify
 };
 
 export type FoldingWorker = typeof exports;

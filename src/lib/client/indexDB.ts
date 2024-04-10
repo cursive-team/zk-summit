@@ -11,7 +11,7 @@ export type FoldProof = {
 };
 
 // timeout period for a worker lock
-export const LOCK_STALE_TIME = 1000 * 25;
+export const LOCK_STALE_TIME = 1000 * 5;
 
 export enum TreeType {
   Attendee = "attendee",
@@ -285,6 +285,23 @@ export class IndexDBWrapper {
       return true;
     } else {
       throw Error("DB not initialized");
+    }
+    
+  }
+
+  async logoutIndexDB() {
+    if (this.db) {
+      const tx = this.db.transaction(
+        [
+          INDEXDB_STORES.FOLDS,
+          INDEXDB_STORES.LOCKS,
+        ],
+        "readwrite"
+      );
+      const foldsStore = tx.objectStore(INDEXDB_STORES.FOLDS);
+      const locksStore = tx.objectStore(INDEXDB_STORES.LOCKS);
+      await foldsStore.clear();
+      await locksStore.clear();
     }
   }
 }

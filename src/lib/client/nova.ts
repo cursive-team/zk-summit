@@ -7,6 +7,7 @@ import {
   hexToBigInt,
   getECDSAMessageHash,
   MerkleProof,
+  bigIntToHex,
 } from "babyjubjub-ecdsa";
 import { TreeRoots } from "@/pages/api/tree/root";
 import { TreeType } from "./indexDB";
@@ -94,7 +95,7 @@ export class MembershipFolder {
     pk: string,
     sig: string,
     msg: string,
-    treeType: "attendee" | "speaker" | "talk"
+    treeType: TreeType
   ): Promise<string> {
     // fetch merkle proof for the user
     const merkleProof = await fetch(
@@ -102,7 +103,7 @@ export class MembershipFolder {
     )
       .then(async (res) => await res.json())
       .then(merkleProofFromObject);
-
+      
     // generate the private inputs for the folded membership circuit
     let inputs = await MembershipFolder.makePrivateInputs(sig, pk, msg, merkleProof);
 
@@ -172,10 +173,17 @@ export class MembershipFolder {
    * @param root - the root of the tree to prove membership in
    * @returns the obfuscated "final" proof
    */
-  async obfuscate(proof: string, numFolds: number): Promise<string> {
+  async obfuscate(proof: string, numFolds: number, treeType: TreeType): Promise<string> {
     // build the zi_primary (output of previous fold)
+    let root;
+    if (treeType === TreeType.Attendee)
+      root = this.roots.attendeeMerkleRoot;
+    else if (treeType === TreeType.Speaker)
+      root = this.roots.speakerMerkleRoot;
+    else 
+      root = this.roots.talksMerkleRoot;
     let zi_primary = [
-      hexToBigInt(this.roots.attendeeMerkleRoot).toString(),
+      hexToBigInt(root).toString(),
       BigInt(numFolds).toString(),
     ];
 
@@ -198,16 +206,24 @@ export class MembershipFolder {
   async verify(
     proof: string,
     numFolds: number,
+    treeType: TreeType,
     obfuscated: boolean = false
   ): Promise<boolean> {
     // set num verified based on obfuscation
-    let iterations = obfuscated ? numFolds + 1 : numFolds;
+    const iterations = obfuscated ? numFolds + 1 : numFolds;
     // let iterations = 2;
+    let root;
+    if (treeType === TreeType.Attendee)
+      root = this.roots.attendeeMerkleRoot;
+    else if (treeType === TreeType.Speaker)
+      root = this.roots.speakerMerkleRoot;
+    else 
+      root = this.roots.talksMerkleRoot;
     try {
       let res = await this.wasm.verify_proof(
         this.params,
         proof,
-        hexToBigInt(this.roots.attendeeMerkleRoot).toString(),
+        hexToBigInt(root).toString(),
         Number(iterations)
       );
       console.log(

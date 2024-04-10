@@ -67,7 +67,7 @@ const PSIStateMapping: Record<PSIState, string> = {
   [PSIState.ROUND1]: "Creating collective encryption pubkey with 2PC...",
   [PSIState.ROUND2]: "Performing PSI with FHE...",
   [PSIState.ROUND3]: "Decrypting encrypted results with 2PC...",
-  [PSIState.JUBSIGNAL]: "Saving output on server...",
+  [PSIState.JUBSIGNAL]: "Creating encrypted backup of overlap...",
   [PSIState.COMPLETE]: "Complete",
 };
 

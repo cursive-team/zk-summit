@@ -31,10 +31,37 @@ export default function Fold() {
     if (completed || !db || folding) return;
     // get the proof attendee type
     (async () => {
+      // get params
+      const params = new Blob(await db.getChunks());
+
+      // instantiate wasm
+      const wasm = await import("bjj_ecdsa_nova_wasm");
+      await wasm.default();
+      // let concurrency = Math.floor(navigator.hardwareConcurrency / 3) * 2;
+      // if (concurrency < 1) concurrency = 1;
+      // let concurrency = Math.floor(navigator.hardwareConcurrency) / 3;
+      // await wasm.initThreadPool(concurrency);
+      let membershipFolder = await MembershipFolder.initWithIndexDB(params, wasm);
       // get all attendees
-      const users = Object.values(getUsers());
-      const talks = Object.values(getLocationSignatures());
-      await work(users, talks);
+      const talkProof = await db.getFold(TreeType.Talk);
+
+      const speakerProof = await db.getFold(TreeType.Speaker);
+      const attendeeProof = await db.getFold(TreeType.Attendee);
+      if (talkProof) {
+        let decompressed = await membershipFolder.decompressProof(new Uint8Array(await talkProof.proof.arrayBuffer()));
+        let res = await membershipFolder.verify(decompressed, talkProof.numFolds, TreeType.Talk, false);
+        console.log("Res: ", res)
+      }
+      if (speakerProof) {
+        let decompressed = await membershipFolder.decompressProof(new Uint8Array(await speakerProof.proof.arrayBuffer()));
+        let res = await membershipFolder.verify(decompressed, speakerProof.numFolds, TreeType.Speaker, false);
+        console.log("Res: ", res)
+      }
+      if (attendeeProof) {
+        let decompressed = await membershipFolder.decompressProof(new Uint8Array(await attendeeProof.proof.arrayBuffer()));
+        let res = await membershipFolder.verify(decompressed, attendeeProof.numFolds, TreeType.Attendee, false);
+        console.log("Res: ", res)
+      }
     })();
   }, [db, completed]);
 
@@ -67,7 +94,7 @@ export default function Fold() {
   //   if (!db) return;
   //   setIsProving(true);
   //   // get users who are not speakers
-    
+
 
   //   // get user that can be folded in
   //   let foldableUsers = await db.getUsersToFold(TreeType.Attendee, users);

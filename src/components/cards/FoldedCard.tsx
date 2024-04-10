@@ -317,7 +317,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
               <SwiperSlide
                 key={itemIndex}
                 className={cn(
-                  "items-center justify-center h-screen flex",
+                  "items-center justify-center h-screen flex my-auto",
                   !!image ? "bg-cover bg-center" : "bg-main"
                 )}
                 style={{
@@ -461,7 +461,7 @@ export const FolderCard = ({ items }: FolderCardProps) => {
   const { days, hours, minutes, seconds } = countdown;
 
   return (
-    <div>
+    <div className="h-full">
       <div
         className={cn(
           "fixed inset-0 bg-main duration-300",

@@ -59,48 +59,52 @@ export const UserDetail = ({
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
         <div>
-          {users.map(({ displayName, signaturePublicKey }, index) => {
-            const collected = userPubKeysCollected.includes(signaturePublicKey);
-            if (!collected) return null; // should not render uncollected users
-            return (
-              <div
-                key={index}
-                className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
-              >
-                <div className="flex items-center gap-2">
-                  <IconCircle>
-                    <Icons.Person size={12} />
-                  </IconCircle>
-                  <Card.Title
-                    className={cn("text-sm font-sans", {
-                      "text-iron-950 font-bold": collected,
-                      "text-iron-600 font-normal": !collected,
-                    })}
-                  >
-                    {displayName}
-                  </Card.Title>
+          {users
+            .filter((item) =>
+              userPubKeysCollected.includes(item.signaturePublicKey)
+            )
+            .slice(0, numSigsRequired)
+            .map(({ displayName }, index) => {
+              return (
+                <div
+                  key={index}
+                  className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
+                >
+                  <div className="flex items-center gap-2">
+                    <IconCircle>
+                      <Icons.Person size={12} />
+                    </IconCircle>
+                    <Card.Title
+                      className={"text-sm font-sans text-iron-950 font-bold"}
+                    >
+                      {displayName}
+                    </Card.Title>
+                  </div>
+                  <Icons.CheckCircle className="text-iron-600" />
                 </div>
-                {collected && <Icons.CheckCircle className="text-iron-600" />}
-              </div>
-            );
-          })}
-          {Array(numSigsRequired - numValidSigsCollected)
-            .fill(null)
-            .map((_, index) => (
-              <div
-                key={index}
-                className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
-              >
-                <div className="flex items-center gap-2">
-                  <IconCircle>
-                    <Icons.Person size={12} />
-                  </IconCircle>
-                  <Card.Title className="text-sm font-sans text-iron-600 font-normal">
-                    Ask to tap a new connection’s badge!
-                  </Card.Title>
+              );
+            })}
+          {numSigsRequired > numValidSigsCollected ? (
+            Array(numSigsRequired - numValidSigsCollected)
+              .fill(null)
+              .map((_, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
+                >
+                  <div className="flex items-center gap-2">
+                    <IconCircle>
+                      <Icons.Person size={12} />
+                    </IconCircle>
+                    <Card.Title className="text-sm font-sans text-iron-600 font-normal">
+                      Ask to tap a new connection’s badge!
+                    </Card.Title>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+          ) : (
+            <></>
+          )}
         </div>
       </div>
     </div>
@@ -127,54 +131,54 @@ export const LocationDetail = ({
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4">
         <div>
-          {locations.map(({ name, signaturePublicKey }, index) => {
-            const collected =
-              locationPubKeysCollected.includes(signaturePublicKey);
-
-            if (!collected) return null; // should not render uncollected users
-            return (
-              <div
-                key={index}
-                className="flex justify-between border-b w-full border-white gap-2 last-of-type:border-none first-of-type:pt-0 py-1"
-              >
-                <div className="flex items-center gap-2">
-                  <IconCircle>
-                    <Icons.Location size={12} />
-                  </IconCircle>
-                  <Card.Title
-                    className={cn("text-sm font-sans", {
-                      "text-iron-950 font-bold": collected,
-                      "text-iron-600 font-normal": !collected,
-                    })}
-                  >
-                    {name}
-                  </Card.Title>
-                </div>
-                {collected && (
+          {locations
+            .filter((item) =>
+              locationPubKeysCollected.includes(item.signaturePublicKey)
+            )
+            .slice(0, numSigsRequired)
+            .map(({ name }, index) => {
+              return (
+                <div
+                  key={index}
+                  className="flex justify-between border-b w-full border-white gap-2 last-of-type:border-none first-of-type:pt-0 py-1"
+                >
+                  <div className="flex items-center gap-2">
+                    <IconCircle>
+                      <Icons.Location size={12} />
+                    </IconCircle>
+                    <Card.Title
+                      className={"text-sm font-sans text-iron-950 font-bold"}
+                    >
+                      {name}
+                    </Card.Title>
+                  </div>
                   <div className="w-4">
                     <Icons.CheckCircle />
                   </div>
-                )}
-              </div>
-            );
-          })}
-          {Array(numSigsRequired - numValidSigsCollected)
-            .fill(null)
-            .map((_, index) => (
-              <div
-                key={index}
-                className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
-              >
-                <div className="flex items-center gap-2">
-                  <IconCircle>
-                    <Icons.Location size={12} />
-                  </IconCircle>
-                  <Card.Title className="text-sm font-sans text-iron-600 font-normal">
-                    Tap a talk card!
-                  </Card.Title>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+          {numSigsRequired > numValidSigsCollected ? (
+            Array(numSigsRequired - numValidSigsCollected)
+              .fill(null)
+              .map((_, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center border-b w-full border-white/40  last-of-type:border-none first-of-type:pt-0 py-1"
+                >
+                  <div className="flex items-center gap-2">
+                    <IconCircle>
+                      <Icons.Location size={12} />
+                    </IconCircle>
+                    <Card.Title className="text-sm font-sans text-iron-600 font-normal">
+                      Tap a talk card!
+                    </Card.Title>
+                  </div>
+                </div>
+              ))
+          ) : (
+            <></>
+          )}
         </div>
       </div>
     </div>
@@ -248,12 +252,16 @@ export default function QuestById() {
         locationRequirements: quest.locationRequirements,
         questUserTapReq: quest.userTapReq,
       });
-      let userTapRequirement = quest.userTapReq ? 1 : 0;
-      const hasMinRequirements =
-        numRequirementsSatisfied ===
-        quest.userRequirements.length +
-          quest.locationRequirements.length +
-          userTapRequirement;
+      let hasMinRequirements = false;
+      if (quest.locationRequirements.length === 1) {
+        hasMinRequirements =
+          numRequirementsSatisfied ===
+          quest.locationRequirements[0].numSigsRequired;
+      } else if (quest.userRequirements.length === 1) {
+        hasMinRequirements =
+          numRequirementsSatisfied ===
+          quest.userRequirements[0].numSigsRequired;
+      }
 
       if (hasMinRequirements) {
         setHasMinRequirements(true);
@@ -335,7 +343,7 @@ export default function QuestById() {
                   </div>
                 }
               >
-                <div className="flex flex-col gap-6 h-full">
+                <div className="flex flex-col gap-6 mb-4">
                   {quest && quest.userRequirements.length > 0 && (
                     <UserDetail
                       users={quest.userRequirements[0].users}
@@ -375,7 +383,6 @@ export default function QuestById() {
                   </Button>
                 ) : (
                   <Button
-                    className="mt-auto"
                     disabled={
                       !canGenerateProof &&
                       !isQuestComplete &&

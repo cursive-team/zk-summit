@@ -131,7 +131,8 @@ const AppHeaderContent = ({
               </a>{" "}
               is a team building applications of signed data. We want to build
               experiences where people own their data and use it in powerful
-              ways. If this is something you're interested in, please reach out!
+              ways. If this is something you are interested in, please reach
+              out!
             </Description>
             <Description>
               <Link href={LINKS.GITHUB} target="_blank">

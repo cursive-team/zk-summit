@@ -61,6 +61,16 @@ enum PSIState {
   COMPLETE,
 }
 
+const PSIStateMapping: Record<PSIState, string> = {
+  [PSIState.NOT_STARTED]: "Not started",
+  [PSIState.WAITING]: "Waiting for other user to connect...",
+  [PSIState.ROUND1]: "Creating collective encryption pubkey with 2PC...",
+  [PSIState.ROUND2]: "Performing PSI with FHE...",
+  [PSIState.ROUND3]: "Decrypting encrypted results with 2PC...",
+  [PSIState.JUBSIGNAL]: "Saving output on server...",
+  [PSIState.COMPLETE]: "Complete",
+};
+
 const UserProfilePage = () => {
   const router = useRouter();
   const { id } = router.query;
@@ -120,7 +130,6 @@ const UserProfilePage = () => {
       })
       .on("presence", { event: "leave" }, async ({ key }) => {
         if (key === otherEncPk) {
-          toast.error(`${user?.name} left before computation finished.`);
           setPsiState(PSIState.NOT_STARTED);
           await closeChannel();
         }
@@ -363,15 +372,14 @@ const UserProfilePage = () => {
       setUser(fetchedUser);
 
       if (fetchedUser) {
+        setOtherEncPk(fetchedUser.encPk);
+        setSelfEncPk(profile.encryptionPublicKey);
+        setChannelName(
+          [fetchedUser.encPk, profile.encryptionPublicKey].sort().join("")
+        );
         if (fetchedUser.oI) {
           processOverlap(JSON.parse(fetchedUser.oI));
           setPsiState(PSIState.COMPLETE);
-        } else {
-          setOtherEncPk(fetchedUser.encPk);
-          setSelfEncPk(profile.encryptionPublicKey);
-          setChannelName(
-            [fetchedUser.encPk, profile.encryptionPublicKey].sort().join("")
-          );
         }
       }
     }
@@ -447,6 +455,14 @@ const UserProfilePage = () => {
           </div>
         )}
 
+        {user?.isSpeaker && (
+          <div className="flex flex-col p-3 bg-secondary rounded">
+            <span className="font-sans text-sm font-semibold leading-6 text-white">
+              Speaker at ZK11
+            </span>
+          </div>
+        )}
+
         {user?.note && (
           <Accordion label="Notes">
             <span className="text-iron-600 text-[14px] mt-1 left-5">
@@ -486,19 +502,32 @@ const UserProfilePage = () => {
           </Accordion>
         )}
 
-        <Card.Base className="flex flex-col p-4 gap-6 !bg-white/20 mt-4">
+        <Card.Base className="flex flex-col p-4 gap-6 !bg-white/20 mt-4 mb-8">
           <div className="flex flex-col gap-1">
             <span className="font-bold text-iron-950 text-sm">
-              What do you both have in common?
+              Which contacts and talks do you have in common?
             </span>
-            <span className="text-iron-600 text-xs font-bold">
-              {isOverlapComputed
-                ? "Overlap computed at the time you both opted into 2PC+FHE"
-                : "Privately compute using 2PC+FHE"}
+            <span className="text-iron-600 text-xs font-normal">
+              {isOverlapComputed ? (
+                "Overlap computed at the time you both opted into "
+              ) : (
+                <>
+                  If you both tap Discover <b>at the same time</b> we will
+                  privately compute any overlap using
+                </>
+              )}
+              <a
+                href="https://github.com/cursive-team/2P-PSI/tree/vivek/wasm-2p-psi"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {" "}
+                <u>2PC + FHE</u>.
+              </a>
             </span>
           </div>
           {isOverlapComputed ? (
-            <div className="flex flex-col mt-2 gap-1">
+            <div className="flex flex-col gap-1">
               {userOverlap.map(({ userId, name }, index) => {
                 return (
                   <div
@@ -532,17 +561,40 @@ const UserProfilePage = () => {
                   </Link>
                 );
               })}
+              <Button
+                type="button"
+                onClick={setupChannel}
+                size="small"
+                variant="tertiary"
+                style={{
+                  marginTop: "16px",
+                }}
+              >
+                Update
+              </Button>
             </div>
-          ) : (
+          ) : psiState === PSIState.NOT_STARTED ? (
             <Button
-              loading={psiState !== PSIState.NOT_STARTED}
               type="button"
               onClick={setupChannel}
               size="small"
               variant="tertiary"
             >
-              Discover intersections
+              Discover
             </Button>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <span className="text-iron-950 text-xs text-center">
+                {PSIStateMapping[psiState]}
+              </span>
+              <div className="relative">
+                <Card.Progress
+                  style={{
+                    width: `${(100 * psiState) / PSIState.COMPLETE}%`,
+                  }}
+                />
+              </div>
+            </div>
           )}
         </Card.Base>
       </div>

@@ -487,7 +487,7 @@ export const FolderCard = ({ items }: FolderCardProps) => {
         aria-label="Folded Card"
         onClick={() => setIsOpened(!isOpened)}
         className={cn({
-          "opacity-60 pointer-events-none": hasCountdown,
+          "pointer-events-none": hasCountdown,
           "py-4": !hasCountdown,
         })}
         style={{
@@ -497,7 +497,12 @@ export const FolderCard = ({ items }: FolderCardProps) => {
         <div className="flex flex-col gap-2 text-center pt-4 pb-4 px-6 ">
           {hasCountdown && (
             <CountdownLabel>
-              Available in: {days === 1 ? `${days} day` : `${days} days`},{" "}
+              Available in:{" "}
+              {days === 1
+                ? `${days} day, `
+                : days === 0
+                ? ""
+                : `${days} days, `}
               {hours.toString().padStart(2, "0")}:
               {minutes.toString().padStart(2, "0")}:
               {seconds.toString().padStart(2, "0")}

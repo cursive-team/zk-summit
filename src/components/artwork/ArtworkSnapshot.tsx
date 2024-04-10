@@ -15,6 +15,7 @@ export interface ArtworkSnapshotProps
   pubKey?: string;
   title?: string;
   homePage?: boolean;
+  background?: string;
 }
 
 const ArtworkSnapshot = ({
@@ -23,6 +24,7 @@ const ArtworkSnapshot = ({
   pubKey,
   title,
   homePage = false,
+  background = "bg-white/40",
   ...props
 }: ArtworkSnapshotProps) => {
   const isLoaded = useScripts();
@@ -53,7 +55,7 @@ const ArtworkSnapshot = ({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 bg-white/40 rounded-[8px]">
+      <div className={`flex flex-col gap-2 ${background} rounded-[8px]`}>
         <canvas
           className="artwork-webgl flex p-0 m-0 rounded-[8px]"
           id="profile-pic"

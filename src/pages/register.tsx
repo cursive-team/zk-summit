@@ -130,7 +130,7 @@ export default function Register() {
 
     const isUsernameUnique = await checkUsernameIsUnique(displayName);
     if (!isUsernameUnique) {
-      toast.error("Username is already taken.");
+      toast.error("Display name is already taken.");
       return;
     }
 
@@ -187,7 +187,7 @@ export default function Register() {
 
     const isUsernameUnique = await checkUsernameIsUnique(displayName);
     if (!isUsernameUnique) {
-      toast.error("Username is already taken.");
+      toast.error("Display name is already taken.");
       return;
     }
 
@@ -221,7 +221,7 @@ export default function Register() {
     e.preventDefault();
 
     if (!displayName || !password) {
-      toast.error("Please enter a username and password.");
+      toast.error("Please enter a display name and password.");
       return;
     }
 
@@ -418,8 +418,8 @@ export default function Register() {
         <Input
           type="text"
           id="displayName"
-          label="Username (*)"
-          placeholder="Tom Smith"
+          label="Display name (*)"
+          placeholder="Name others will see upon tap"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
         />
@@ -515,14 +515,22 @@ export default function Register() {
           <div className="flex flex-col gap-2 m-4">
             <Description>
               <span>
-                Look for cards to <Underline>tap into talks</Underline> to prove
-                your attendance and ZK interests.
+                Tap other badges to <Underline>receive socials</Underline>. Tap
+                talk posters to get{" "}
+                <Underline>slides and decriptions.</Underline>
               </span>
             </Description>
             <Description>
               <span>
-                Tap your badge to a phone to easily{" "}
-                <Underline>share socials</Underline> with new connections.
+                Each tap produces a <Underline>unique signature</Underline>,
+                privately digitizing an in-person interaction.
+              </span>
+            </Description>
+            <Description>
+              <span>
+                Make <Underline>ZK proofs</Underline> about your ZK11 experience
+                to <Underline>share on Twitter</Underline> using your collected
+                sigs.
               </span>
             </Description>
             <Description>

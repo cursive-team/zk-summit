@@ -52,13 +52,13 @@ const ProfilePicModal = ({
               <div className='relative flex flex-col gap-4'>
                 <div className={'absolute inset-0 flex flex-col gap-2 w-full'}>
                   <Description>
-                    {`Flower representation of `} <b>{name}</b>
-                    {`'s pubkey`}
+                    <b>{name}</b>
+                    {`'s signature flower`}
                   </Description>
                   <div className='text-center px-5' style={{ lineHeight: 1 }}>
                     <Label>
                       {`Upon tapping ${name}'s card, you received a unique digital signature 
-                      as a private, verifiable proof of meeting. ${name}'s pubkey is
+                      as a private, verifiable proof of meeting. This signature is
                       visualized as a generative art flower for your garden.`}
                     </Label>
                   </div>

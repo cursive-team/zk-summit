@@ -44,7 +44,7 @@ export default function Login() {
     e.preventDefault();
 
     if (!displayName) {
-      toast.error("Please enter your username.");
+      toast.error("Please enter your display name.");
       return;
     }
 
@@ -184,8 +184,8 @@ export default function Login() {
         <Input
           type="text"
           id="displayName"
-          label="Username"
-          placeholder="Tom Smith"
+          label="Display name"
+          placeholder="Name you registered with"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
         />
@@ -214,8 +214,8 @@ export default function Login() {
         <Input
           type="text"
           id="displayName"
-          label="Username"
-          placeholder="Tom Smith"
+          label="Display name"
+          placeholder="Name you registered with"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
         />

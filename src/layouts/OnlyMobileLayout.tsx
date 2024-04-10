@@ -19,7 +19,11 @@ export default function OnlyMobileLayout({ children }: OnlyMobileProps) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       md.current = new MobileDetect(window?.navigator?.userAgent);
-      setIsMobile(md.current?.mobile() !== null);
+      if (!window.location.pathname.includes("/qr")) {
+        setIsMobile(md.current?.mobile() !== null);
+      } else {
+        setIsMobile(true);
+      }
       setIsLoaded(true);
     }
   }, []);

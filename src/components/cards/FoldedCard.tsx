@@ -281,7 +281,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
         height={19}
         width={63}
       />
-      <div className='flex items-center gap-8 z-10'>
+      <div className='fixed flex items-center gap-8 right-[22px] top-[47px] z-10'>
         <button
           aria-label='close'
           type='button'
@@ -300,7 +300,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
           disableOnInteraction: false,
           stopOnLastSlide: true,
         }}
-        className='h-screen'
+        style={{ height: '100vh' }}
         spaceBetween={0}
         slidesPerView={1}
         onSlideChange={(swiper: any) => {

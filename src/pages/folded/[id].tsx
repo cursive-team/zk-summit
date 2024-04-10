@@ -1,19 +1,14 @@
-import { Button } from "@/components/Button";
-import { createFlower } from "@/lib/client/flower";
-import { useScripts } from "@/hooks/useScripts";
-import { useEffect, useState } from "react";
-import { Icons } from "@/components/Icons";
-import { Card } from "@/components/cards/Card";
-import { useParams } from "next/navigation";
-import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
-import { GetFoldingProofResponse } from "../api/folding/proof";
-import { Spinner } from "@/components/Spinner";
-import { useWorker } from "@/hooks/useWorker";
-
-type UserDisplay = {
-  pubkey: string;
-  username: string;
-};
+import { Button } from '@/components/Button';
+import { createFlower } from '@/lib/client/flower';
+import { useScripts } from '@/hooks/useScripts';
+import { useEffect, useMemo, useState } from 'react';
+import { Icons } from '@/components/Icons';
+import { Card } from '@/components/cards/Card';
+import { useParams } from 'next/navigation';
+import { IndexDBWrapper, TreeType } from '@/lib/client/indexDB';
+import { GetFoldingProofResponse } from '../api/folding/proof';
+import { Spinner } from '@/components/Spinner';
+import { useWorker } from '@/hooks/useWorker';
 
 type UserProofs = {
   attendee?: {
@@ -35,20 +30,14 @@ const Folded = (): JSX.Element => {
   const { verify } = useWorker();
   const isLoaded = useScripts();
   const [dowloadingParams, setDownloadingParams] = useState<number>(0);
-  const [fetchingProof, setFetchingProof] = useState<boolean>(true);
-  const [user, setUser] = useState<UserDisplay | null>();
-  const [verifying, setVerifying] = useState<number>(0);
+  const [fetchingProof, setFetchingProof] = useState<boolean>(false);
   const [numToVerify, setNumToVerify] = useState<number>(0);
   const [verified, setVerified] = useState<boolean>(false);
+  const [verifying, setVerifying] = useState<number>(0);
+  const [user, setUser] = useState<GetFoldingProofResponse | null>(null);
   const [userProofs, setUserProofs] = useState<UserProofs>({});
 
   const flowerSize = 128;
-
-  const stats = [
-    { count: "042", title: "Talks attended" },
-    { count: "500", title: "Connections made" },
-    { count: "042", title: "Speakers met" },
-  ];
 
   const downloadParams = async () => {
     // Check how many params are stored
@@ -58,12 +47,12 @@ const Folded = (): JSX.Element => {
     const chunkIndex = await db.countChunks();
 
     if (chunkIndex !== 10) {
-      setDownloadingParams(chunkIndex * 10);
+      setDownloadingParams(chunkIndex * 10 + 0.0001);
 
       for (let i = chunkIndex; i < 10; i++) {
         const chunkURI = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${i}.gz`;
         const chunk = await fetch(chunkURI, {
-          headers: { "Content-Type": "application/x-binary" },
+          headers: { 'Content-Type': 'application/x-binary' },
         }).then(async (res) => await res.blob());
         await db.addChunk(i, chunk);
         setDownloadingParams((prev) => prev + 10);
@@ -104,14 +93,29 @@ const Folded = (): JSX.Element => {
     setVerified(true);
   };
 
+  const stats = useMemo(() => {
+    if (!user) return [];
+    const attendeeCount = user.attendeeProofCount ?? 0;
+    const attendeeText = `Connection${attendeeCount === 1 ? '' : 's'} made`;
+    const speakerCount = user.speakerProofCount ?? 0;
+    const speakerText = `Speaker${speakerCount === 1 ? '' : 's'} met`;
+    const talkCount = user.talkProofCount ?? 0;
+    const talkText = `Talk${talkCount === 1 ? '' : 's'} attended`;
+    return [
+      { count: talkCount, title: talkText },
+      { count: attendeeCount, title: attendeeText },
+      { count: speakerCount ?? 0, title: speakerText },
+    ];
+  }, [user]);
+
   useEffect(() => {
     if (!isLoaded || !user) return;
     const stage = new window.createjs.Stage(
-      document.getElementById("propic-modal")
+      document.getElementById('propic-modal')
     );
     const center_x = stage.canvas.width / 2;
     const center_y = stage.canvas.height / 2;
-    createFlower(stage, user.pubkey, center_x, center_y, flowerSize / 4);
+    createFlower(stage, user.userPublicKey, center_x, center_y, flowerSize / 4);
   }, [isLoaded, user]);
 
   useEffect(() => {
@@ -166,13 +170,10 @@ const Folded = (): JSX.Element => {
         }
         setUserProofs(data);
 
-        setUser({
-          pubkey: foldingData.userPublicKey,
-          username: foldingData.userName,
-        });
+        setUser(foldingData);
       } else {
         const { error } = await response.json();
-        if (error === "Proof not found") {
+        if (error === 'Proof not found') {
           // TODO: User not found
         }
       }
@@ -182,112 +183,114 @@ const Folded = (): JSX.Element => {
 
   if (fetchingProof) {
     return (
-      <div className="flex flex-col h-full items-center">
-        <div className="p-4">
-          <Icons.Cursive color="#4015EC" />
+      <div className='flex flex-col h-full items-center'>
+        <div className='p-4'>
+          <Icons.Cursive color='#4015EC' />
         </div>
-        <div className="flex items-center h-full">
-          <Spinner label="Fetching proof data..." />
+        <div className='flex items-center h-full'>
+          <Spinner label='Fetching proof data...' />
         </div>
       </div>
     );
-  }
-
-  if (!fetchingProof && !user) {
+  } else if (!user) {
     return (
-      <div className="flex flex-col h-full items-center">
-        <div className="p-4">
-          <Icons.Cursive color="#4015EC" />
+      <div className='flex flex-col h-full items-center'>
+        <div className='p-4'>
+          <Icons.Cursive color='#4015EC' />
         </div>
-        <div className="flex items-center h-full p-4">
+        <div className='flex items-center h-full p-4'>
           No proof found with id: {id}
         </div>
       </div>
     );
-  }
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className="p-4">
-        <Icons.Cursive color="#4015EC" />
-      </div>
-      <div className="p-16 pt-0 max-w-[390px] w-full">
-        <div className="flex flex-col items-center gap-2">
-          <canvas
-            className="artwork-webgl flex p-0 m-0 rounded-[8px]"
-            id="propic-modal"
-            height={flowerSize}
-            width={flowerSize}
-          />
+  } else {
+    return (
+      <div className='flex flex-col items-center'>
+        <div className='p-4'>
+          <Icons.Cursive color='#4015EC' />
         </div>
-        <div className="text-center">
-          <div className="text-primary text-3xl">{user?.username}</div>
-          <div className="mt-2 text-primary text-2xl">went to ZK Summit 11</div>
-        </div>
-        <div className="mt-4">
-          {stats.map((stat, index) => (
-            <div
-              key={index}
-              className={`border ${
-                index ? "border-t-0" : "border-t"
-              }  border-primary flex gap-4 items-center p-4 text-primary`}
-            >
-              <div className="bg-white border border-primary px-1.5 py-0.5">
-                {stat.count}
-              </div>
-              <div className="font-bold">{stat.title}</div>
+        <div className='p-16 pt-0 max-w-[390px] w-full'>
+          <div className='flex flex-col items-center gap-2'>
+            <canvas
+              className='artwork-webgl flex p-0 m-0 rounded-[8px]'
+              id='propic-modal'
+              height={flowerSize}
+              width={flowerSize}
+            />
+          </div>
+          <div className='text-center'>
+            <div className='text-primary text-3xl'>{user?.userName}</div>
+            <div className='mt-2 text-primary text-2xl'>
+              went to ZK Summit 11
             </div>
-          ))}
-        </div>
-        <div className="mt-4">
-          {dowloadingParams ? (
-            <div className="text-center">
-              <div className="mb-2">
-                Downloading params {dowloadingParams / 10} of 10
-              </div>
-              <div className="relative">
-                <Card.Progress
-                  style={{
-                    width: `${dowloadingParams}%`,
-                  }}
-                />
-              </div>
-            </div>
-          ) : verified ? (
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex gap-2 items-center font-bold text-primary">
-                <Icons.checkedCircle stroke="#4015EC" />
-                <div>Valid proof</div>
-              </div>
-              <a
-                className="font-bold text-primary underline"
-                href="https://github.com/cursive-team/zk-summit?tab=readme-ov-file#zk-summit-folded"
+          </div>
+          <div className='mt-4'>
+            {stats.map((stat, index) => (
+              <div
+                key={index}
+                className={`border ${
+                  index ? 'border-t-0' : 'border-t'
+                }  border-primary flex gap-4 items-center p-4 text-primary`}
               >
-                How was this proof generated?
-              </a>
-            </div>
-          ) : (
-            <div>
-              {verifying > 0 ? (
-                <div className="text-center">
-                  <div className="mb-2">Verifying...</div>
-                  <div className="relative">
-                    <Card.Progress
-                      style={{
-                        width: `${verifying}%`,
-                      }}
-                    />
-                  </div>
+                <div className='bg-white border border-primary px-1.5 py-0.5'>
+                  {stat.count}
                 </div>
-              ) : (
-                <Button onClick={() => handleVerify()}>Verify</Button>
-              )}
-            </div>
-          )}
+                <div className='font-bold'>{stat.title}</div>
+              </div>
+            ))}
+          </div>
+          <div className='mt-4'>
+            {dowloadingParams ? (
+              <div className='text-center'>
+                <div className='mb-2'>
+                  Downloading params {Math.floor(dowloadingParams) / 10} of 10
+                </div>
+                <div className='relative'>
+                  <Card.Progress
+                    style={{
+                      width: `${dowloadingParams}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ) : verified ? (
+              <div className='flex flex-col items-center gap-4'>
+                <div className='flex gap-2 items-center font-bold text-primary'>
+                  <Icons.checkedCircle stroke='#4015EC' />
+                  <div>Valid proof</div>
+                </div>
+                <a
+                  className='font-bold text-primary underline'
+                  href='https://github.com/cursive-team/zk-summit?tab=readme-ov-file#zk-summit-folded'
+                >
+                  How was this proof generated?
+                </a>
+              </div>
+            ) : (
+              <div>
+                {numToVerify > 0 ? (
+                  <div className='text-center'>
+                    <div className='mb-2'>
+                      Verifying: {verifying} of {numToVerify} proofs verified
+                    </div>
+                    <div className='relative'>
+                      <Card.Progress
+                        style={{
+                          width: `${verifying / numToVerify}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <Button onClick={() => handleVerify()}>Verify</Button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 };
 
 Folded.getInitialProps = () => {

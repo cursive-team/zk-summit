@@ -1,15 +1,15 @@
-import { Placeholder } from "@/components/placeholders/Placeholder";
-import { QuestCard } from "@/components/cards/QuestCard";
-import { LoadingWrapper } from "@/components/wrappers/LoadingWrapper";
-import { useFetchQuests } from "@/hooks/useFetchQuests";
+import { Placeholder } from '@/components/placeholders/Placeholder';
+import { QuestCard } from '@/components/cards/QuestCard';
+import { LoadingWrapper } from '@/components/wrappers/LoadingWrapper';
+import { useFetchQuests } from '@/hooks/useFetchQuests';
 
-import Link from "next/link";
-import React, { useMemo, useRef, useState } from "react";
+import Link from 'next/link';
+import React, { useMemo, useRef, useState } from 'react';
 
-import { QuestWithCompletion } from "@/types";
-import { getPinnedQuest } from "@/lib/client/localStorage/questPinned";
-import { useQuestRequirements } from "@/hooks/useQuestRequirements";
-import { FOLDED_MOCKS, FolderCard } from "@/components/cards/FoldedCard";
+import { QuestWithCompletion } from '@/types';
+import { getPinnedQuest } from '@/lib/client/localStorage/questPinned';
+import { useQuestRequirements } from '@/hooks/useQuestRequirements';
+import { FOLDED_MOCKS, FolderCard } from '@/components/cards/FoldedCard';
 
 export default function QuestsPage() {
   const pinnedQuests = useRef<Set<number>>(getPinnedQuest());
@@ -40,17 +40,17 @@ export default function QuestsPage() {
   const { numRequirementsSatisfied } = useQuestRequirements(displayQuests);
 
   return (
-    <div className="flex flex-col gap-4 pt-4">
-      <span className="text-iron-600 font-sans text-xs">
+    <div className='flex flex-col gap-4 pt-4'>
+      <span className='text-iron-600 font-sans text-xs'>
         Post proofs about your ZK11 experience on Twitter, while preserving
         privacy over the people you met and talks you attended.
       </span>
 
       <LoadingWrapper
-        className="flex flex-col gap-4"
+        className='flex flex-col gap-4'
         isLoading={isLoading}
         fallback={<Placeholder.List items={3} />}
-        noResultsLabel="No proofs found"
+        noResultsLabel='No proofs found'
       >
         <>
           <FolderCard items={FOLDED_MOCKS} />

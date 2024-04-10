@@ -291,10 +291,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
           <Icons.ControllerClose className='text-iron-950' />
         </button>
       </div>
-      <div className='flex flex-col items-center justify-center h-screen'>
-        Test swiper sizing issue
-      </div>
-      {/* <Swiper
+      <Swiper
         pagination={pagination}
         modules={[EffectFade, Controller, Pagination, Autoplay]}
         effect='fade'
@@ -303,7 +300,8 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
           disableOnInteraction: false,
           stopOnLastSlide: true,
         }}
-        className='h-screen'
+        // className='h-screen'
+        style={{ height: '100vh' }}
         spaceBetween={0}
         slidesPerView={1}
         onSlideChange={(swiper: any) => {
@@ -319,16 +317,13 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
             return (
               <SwiperSlide
                 key={itemIndex}
-                className={cn(
-                  'items-center justify-center h-screen flex',
-                  !!image ? 'bg-cover bg-center' : 'bg-main'
-                )}
+                className={cn(!!image ? 'bg-cover bg-center' : 'bg-main')}
                 style={{
                   backgroundImage: image ? `url('${image}')` : undefined,
                   backgroundSize: image ? 'cover' : undefined,
                 }}
               >
-                <div className='flex flex-col gap-6 h-full items-center justify-center px-10'>
+                <div className='flex flex-col gap-6 h-screen items-center justify-center px-10'>
                   {itemIndex !== items.length - 1 && (
                     <>
                       {children}
@@ -421,7 +416,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
             );
           }
         )}
-      </Swiper> */}
+      </Swiper>
     </main>
   );
 };

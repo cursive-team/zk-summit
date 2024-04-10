@@ -300,7 +300,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
           disableOnInteraction: false,
           stopOnLastSlide: true,
         }}
-        style={{ height: '100vh' }}
+        className='h-screen'
         spaceBetween={0}
         slidesPerView={1}
         onSlideChange={(swiper: any) => {
@@ -325,12 +325,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                   backgroundSize: image ? 'cover' : undefined,
                 }}
               >
-                <div
-                  className='flex flex-col gap-6 grow items-center justify-center px-10'
-                  style={{
-                    height: '100%',
-                  }}
-                >
+                <div className='flex flex-col gap-6 h-full items-center justify-center px-10'>
                   {itemIndex !== items.length - 1 && (
                     <>
                       {children}

@@ -7,6 +7,7 @@ import {
   hexToBigInt,
   getECDSAMessageHash,
   MerkleProof,
+  bigIntToHex,
 } from "babyjubjub-ecdsa";
 import { TreeRoots } from "@/pages/api/tree/root";
 import { TreeType } from "./indexDB";
@@ -102,7 +103,7 @@ export class MembershipFolder {
     )
       .then(async (res) => await res.json())
       .then(merkleProofFromObject);
-
+      
     // generate the private inputs for the folded membership circuit
     let inputs = await MembershipFolder.makePrivateInputs(sig, pk, msg, merkleProof);
 
@@ -198,16 +199,26 @@ export class MembershipFolder {
   async verify(
     proof: string,
     numFolds: number,
+    treeType: TreeType,
     obfuscated: boolean = false
   ): Promise<boolean> {
     // set num verified based on obfuscation
-    let iterations = obfuscated ? numFolds + 1 : numFolds;
+    const iterations = obfuscated ? numFolds + 1 : numFolds;
     // let iterations = 2;
+    let root;
+    if (treeType === TreeType.Attendee)
+      root = this.roots.attendeeMerkleRoot;
+    else if (treeType === TreeType.Speaker)
+      root = this.roots.speakerMerkleRoot;
+    else 
+      root = this.roots.talksMerkleRoot;
+    console.log("Root", root);
+    console.log("Tree", treeType);
     try {
       let res = await this.wasm.verify_proof(
         this.params,
         proof,
-        hexToBigInt(this.roots.attendeeMerkleRoot).toString(),
+        hexToBigInt(root).toString(),
         Number(iterations)
       );
       console.log(

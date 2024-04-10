@@ -79,25 +79,25 @@ const Folded = (): JSX.Element => {
     // spawn worker if proof exists for type
     let requests = [];
 
-    const verifyProof = async (proof: Blob, numVerified: number) => {
-      const success = await verify(proof, numVerified);
+    const verifyProof = async (proof: Blob, numVerified: number, treeType: TreeType) => {
+      const success = await verify(proof, numVerified, treeType);
       if (success) setVerifying((prev) => prev + 1);
     };
 
     if (userProofs.attendee) {
       requests.push(
-        verifyProof(userProofs.attendee.proof, userProofs.attendee.count)
+        verifyProof(userProofs.attendee.proof, userProofs.attendee.count, TreeType.Attendee)
       );
       setNumToVerify((prev) => prev + 1);
     }
     if (userProofs.speaker) {
       requests.push(
-        verifyProof(userProofs.speaker.proof, userProofs.speaker.count)
+        verifyProof(userProofs.speaker.proof, userProofs.speaker.count, TreeType.Speaker)
       );
       setNumToVerify((prev) => prev + 1);
     }
     if (userProofs.talk) {
-      requests.push(verifyProof(userProofs.talk.proof, userProofs.talk.count));
+      requests.push(verifyProof(userProofs.talk.proof, userProofs.talk.count, TreeType.Talk));
       setNumToVerify((prev) => prev + 1);
     }
     await Promise.all(requests);
@@ -121,7 +121,7 @@ const Folded = (): JSX.Element => {
       if (response.ok) {
         // get proof data for the user
         const foldingData: GetFoldingProofResponse = await response.json();
-
+        console.log("foldingData: ", foldingData);
         // get blobs for each proof type
         const proofBlobs: Map<TreeType, Blob> = new Map();
         const getProof = async (uri: string, treeType: TreeType) => {

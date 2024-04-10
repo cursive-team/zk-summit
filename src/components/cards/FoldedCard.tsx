@@ -269,6 +269,8 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
       talks: proofUris.get(TreeType.Talk),
     };
 
+    console.log("pp", proofPost);
+
     const proofUuid = await saveFinalizedProofs(proofPost);
     setProofId(proofUuid);
     setProvingStarted(false);

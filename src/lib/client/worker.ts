@@ -267,7 +267,7 @@ async function finalize(type: TreeType): Promise<boolean> {
  *
  * @param params - gzip compressed params
  */
-async function verify(proofBlob: Blob, numFolded: number): Promise<boolean> {
+async function verify(proofBlob: Blob, numFolded: number, treeType: TreeType): Promise<boolean> {
   // Initialize indexdb
   const db = new IndexDBWrapper();
   await db.init();
@@ -292,7 +292,7 @@ async function verify(proofBlob: Blob, numFolded: number): Promise<boolean> {
   
   // verify proof
   try {
-    await membershipFolder.verify(proof, numFolded, true);
+    await membershipFolder.verify(proof, numFolded, treeType, true);
     console.log("Verified proof");
     return true;
   } catch (e) {

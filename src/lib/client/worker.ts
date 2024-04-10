@@ -220,7 +220,7 @@ async function fold(
  *
  * @param params - gzip compressed params
  */
-async function finalize(type: TreeType) {
+async function finalize(type: TreeType): Promise<boolean> {
   // Initialize indexdb
   const db = new IndexDBWrapper();
   await db.init();
@@ -239,6 +239,9 @@ async function finalize(type: TreeType) {
   const membershipFolder = await MembershipFolder.initWithIndexDB(params, wasm);
 
   const proofData = await db.getFold(type);
+  if (proofData === undefined) {
+    return false;
+  }
   // decompress proof
   let proof = await membershipFolder.decompressProof(
     new Uint8Array(await proofData!.proof.arrayBuffer())
@@ -253,6 +256,7 @@ async function finalize(type: TreeType) {
   const proofBlob = new Blob([compressed]);
   // store the compressed proof
   await db.obfuscateFold(TreeType.Attendee, proofBlob);
+  return true;
 }
 
 /**

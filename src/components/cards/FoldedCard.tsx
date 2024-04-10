@@ -226,7 +226,11 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     let proofUris: Map<TreeType, ProofData> = new Map();
     const finalizeProof = async (treeType: TreeType) => {
       // obfuscate the proof
-      await finalize(treeType);
+      let success = await finalize(treeType);
+      if (!success) {
+        console.log(`No membership proof of type ${treeType} was ever made`);
+        return;
+      }
       setFinalizedProgress((prev) => prev + 1);
       console.log("Finalized proof for treeType: ", treeType);
       // get the proof from the db

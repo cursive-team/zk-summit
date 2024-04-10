@@ -9,7 +9,7 @@ import { TreeType } from '@/lib/client/indexDB';
 import { IndexDBWrapper } from '@/lib/client/indexDB';
 
 export default function Fold() {
-  const { work, obfuscateFold, folding, completed } = useWorker();
+  const { work, finalize, folding, completed } = useWorker();
   const [canFinalize, setCanFinalize] = useState<boolean>(false);
   const [canVerify, setCanVerify] = useState<boolean>(false);
   const [chunks, setChunks] = useState<Array<Blob>>([]);

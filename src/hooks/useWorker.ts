@@ -14,7 +14,7 @@ export const useWorker = () => {
 
     const workerAPIRef = useRef<Remote<{
         work: (users: User[], talks: LocationSignature[]) => Promise<void>,
-        finalize: (treeType: TreeType) => Promise<void>,
+        finalize: (treeType: TreeType) => Promise<boolean>,
     }> | null>();
 
     const init = () => {
@@ -33,12 +33,13 @@ export const useWorker = () => {
         terminate();
     }
 
-    const finalize = async (treeType: TreeType) => {
+    const finalize = async (treeType: TreeType): Promise<boolean> => {
         init();
         setObfuscating(true);
-        await workerAPIRef.current?.finalize(treeType);
+        const success = await workerAPIRef.current?.finalize(treeType);
         setObfuscating(false);
-        terminate()
+        terminate();
+        return success!;
     }
 
     const terminate = () => {

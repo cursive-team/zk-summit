@@ -196,7 +196,7 @@ const CompleteQuestModal = ({
       provingState.currentRequirementNumSigsTotal) *
     100;
 
-  const qrCodeUrl = `${window.location.origin}/qr/${proofId}`;
+  const qrCodeUrl = `${window.location.origin}/verify/${proofId}`;
 
   const copyProofLink = async () => {
     await navigator.clipboard.writeText(qrCodeUrl);
@@ -242,7 +242,7 @@ const CompleteQuestModal = ({
           </div>
         );
       case CompleteQuestDisplayState.COMPLETED:
-        const qrCodeData = `${window.location.origin}/qr/${proofId}`;
+        const qrCodeData = `${window.location.origin}/verify/${proofId}`;
         return (
           <div className="flex flex-col w-full justify-center text-center gap-5 h-full px-16">
             <div className="flex flex-col gap-6 self-center">

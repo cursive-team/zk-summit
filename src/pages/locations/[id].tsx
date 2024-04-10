@@ -83,7 +83,7 @@ const LocationDetails = () => {
                   {stageMapping[location.stage]}
                 </span>
                 <h5 className="mt-auto text-primary font-medium text-[21px] leading-[21px]">
-                  {location.description}
+                  {location.name}
                 </h5>
               </div>
             </Card.Base>

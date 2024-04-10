@@ -5,23 +5,42 @@ import { useEffect, useState } from 'react';
 import { Icons } from '@/components/Icons';
 import { Card } from '@/components/cards/Card';
 import { useParams } from 'next/navigation';
-import { IndexDBWrapper } from '@/lib/client/indexDB';
+import { IndexDBWrapper, TreeType } from '@/lib/client/indexDB';
 import { GetFoldingProofResponse } from '../api/folding/proof';
 import { Spinner } from '@/components/Spinner';
+import { useWorker } from '@/hooks/useWorker';
 
 type UserDisplay = {
   pubkey: string;
   username: string;
 };
 
+type UserProofs = {
+  attendee?: {
+    proof: Blob;
+    count: number;
+  };
+  speaker?: {
+    proof: Blob;
+    count: number;
+  };
+  talk?: {
+    proof: Blob;
+    count: number;
+  };
+}
+
 const Folded = (): JSX.Element => {
   const { id } = useParams();
+  const { verify } = useWorker();
   const isLoaded = useScripts();
   const [dowloadingParams, setDownloadingParams] = useState<number>(0);
   const [fetchingProof, setFetchingProof] = useState<boolean>(true);
   const [user, setUser] = useState<UserDisplay | null>();
   const [verifying, setVerifying] = useState<number>(0);
+  const [numToVerify, setNumToVerify] = useState<number>(0);
   const [verified, setVerified] = useState<boolean>(false);
+  const [userProofs, setUserProofs] = useState<UserProofs>({});
 
   const fakePubkey = '0x01209328159023859';
   const fakeSize = 128;
@@ -58,17 +77,29 @@ const Folded = (): JSX.Element => {
 
   const handleVerify = async () => {
     await downloadParams();
+    // spawn worker if proof exists for type
+    let requests = [];
 
-    const interval = setInterval(() => {
-      setVerifying((prev) => {
-        if (prev === 100) {
-          clearInterval(interval);
-          setVerified(true);
-          return 0;
-        }
-        return prev + 10;
-      });
-    }, 200);
+    const verifyProof = async (proof: Blob, numVerified: number) => {
+      const success = await verify(proof, numVerified);
+      if (success)
+        setVerifying((prev) => prev + 1);
+    }
+
+    if (userProofs.attendee) {
+      requests.push(verifyProof(userProofs.attendee.proof, userProofs.attendee.count));
+      setNumToVerify((prev) => prev + 1);
+    }
+    if (userProofs.speaker) {
+      requests.push(verifyProof(userProofs.speaker.proof, userProofs.speaker.count));
+      setNumToVerify((prev) => prev + 1);
+    }
+    if (userProofs.talk) {
+      requests.push(verifyProof(userProofs.talk.proof, userProofs.talk.count));
+      setNumToVerify((prev) => prev + 1);
+    }
+    await Promise.all(requests);
+    setVerified(true);
   };
 
   useEffect(() => {
@@ -86,8 +117,50 @@ const Folded = (): JSX.Element => {
       // Check if proof id exists or not
       const response = await fetch(`/api/folding/proof?proofUuid=${id}`);
       if (response.ok) {
+        // get proof data for the user
         const foldingData: GetFoldingProofResponse = await response.json();
-        // setU
+
+        // get blobs for each proof type
+        const proofBlobs: Map<TreeType, Blob> = new Map();
+        const getProof = async (uri: string, treeType: TreeType) => {
+          const proof = await fetch(uri, {
+            headers: { 'Content-Type': 'application/x-binary' },
+          }).then(async (res) => await res.blob());
+          proofBlobs.set(treeType, proof);
+        }
+        let requests = [];
+        if (foldingData.attendeeProofCount && foldingData.attendeeProofUrl)
+          requests.push(getProof(foldingData.attendeeProofUrl, TreeType.Attendee));
+        if (foldingData.speakerProofCount && foldingData.speakerProofUrl)
+          requests.push(getProof(foldingData.speakerProofUrl, TreeType.Speaker));
+        if (foldingData.talkProofCount && foldingData.talkProofUrl)
+          requests.push(getProof(foldingData.talkProofUrl, TreeType.Talk));
+        await Promise.all(requests);
+
+        // set the user data
+        const data: UserProofs = {};
+        const attendeeBlob = proofBlobs.get(TreeType.Attendee);
+        if (attendeeBlob) {
+          data.attendee = {
+            proof: attendeeBlob,
+            count: foldingData.attendeeProofCount!,
+          };
+        }
+        const speakerBlob = proofBlobs.get(TreeType.Speaker);
+        if (speakerBlob) {
+          data.speaker = {
+            proof: speakerBlob,
+            count: foldingData.speakerProofCount!,
+          };
+        }
+        const talkBlob = proofBlobs.get(TreeType.Talk);
+        if (talkBlob) {
+          data.talk = {
+            proof: talkBlob,
+            count: foldingData.talkProofCount!,
+          };
+        }
+        setUserProofs(data);
       } else {
         const { error } = await response.json();
         if (error === 'Proof not found') {
@@ -145,9 +218,8 @@ const Folded = (): JSX.Element => {
         <div className='mt-4'>
           {stats.map((stat, index) => (
             <div
-              className={`border ${
-                index ? 'border-t-0' : 'border-t'
-              }  border-primary flex gap-4 items-center p-4 text-primary`}
+              className={`border ${index ? 'border-t-0' : 'border-t'
+                }  border-primary flex gap-4 items-center p-4 text-primary`}
             >
               <div className='bg-white border border-primary px-1.5 py-0.5'>
                 {stat.count}

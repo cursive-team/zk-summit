@@ -6,7 +6,12 @@ import { ErrorResponse } from "@/types";
 export type GetFoldingProofResponse = {
   id: string;
   userName: string;
-  foldingProofLink: string;
+  attendeeProofUrl?: string;
+  attendeeProofCount?: number;
+  speakerProofUrl?: string;
+  speakerProofCount?: number;
+  talkProofUrl?: string;
+  talkProofCount?: number;
 };
 
 // GET request handler

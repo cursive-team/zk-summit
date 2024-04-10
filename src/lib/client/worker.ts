@@ -260,6 +260,45 @@ async function finalize(type: TreeType): Promise<boolean> {
 }
 
 /**
+ * Verify that a proof is valid
+ *
+ * @param params - gzip compressed params
+ */
+async function verify(proofBlob: Blob, numFolded: number): Promise<boolean> {
+  // Initialize indexdb
+  const db = new IndexDBWrapper();
+  await db.init();
+  // get params
+  const params = new Blob(await db.getChunks());
+
+  // instantiate wasm
+  const wasm = await import("bjj_ecdsa_nova_wasm");
+  await wasm.default();
+  // let concurrency = Math.floor(navigator.hardwareConcurrency / 3) * 2;
+  // if (concurrency < 1) concurrency = 1;
+  let concurrency = Math.floor(navigator.hardwareConcurrency) / 3;
+  await wasm.initThreadPool(concurrency);
+
+  // Initialize membership folder
+  const membershipFolder = await MembershipFolder.initWithIndexDB(params, wasm);
+
+  // decompress proof
+  let proof = await membershipFolder.decompressProof(
+    new Uint8Array(await proofBlob.arrayBuffer())
+  );
+  
+  // verify proof
+  try {
+    await membershipFolder.verify(proof, numFolded, true);
+    console.log("Verified proof");
+    return true;
+  } catch (e) {
+    console.error("Failed to verify proof");
+    return false;
+  }
+}
+
+/**
  * Get chunks of public_params.json and store in indexdb
  * 
  * @param lock - the timestamp of the lock to start with
@@ -302,6 +341,7 @@ async function downloadParams(lock: number): Promise<number | undefined> {
 const exports = {
   work,
   finalize,
+  verify
 };
 
 export type FoldingWorker = typeof exports;

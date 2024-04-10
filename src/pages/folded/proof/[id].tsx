@@ -25,10 +25,10 @@ const ProofDownload = (): JSX.Element => {
     })();
   }, [id]);
 
-  if (fetchingProof) {
+  if (!fetchingProof) {
     return (
-      <div className='flex flex-col min-h-screen items-center'>
-        <div className='p-4'>
+      <div className='flex flex-col h-screen items-center overflow-hidden'>
+        <div className='px-4 my-4'>
           <Icons.Cursive color='#4015EC' />
         </div>
         <div className='flex flex-grow items-center'>
@@ -40,10 +40,10 @@ const ProofDownload = (): JSX.Element => {
 
   return (
     <div className='flex flex-col items-center min-h-screen'>
-      <div className='px-4'>
+      <div className='px-4 my-4'>
         <Icons.Cursive color='#4015EC' />
       </div>
-      <div className='flex flex-col flex-grow gap-2 items-center justify-center p-4'>
+      <div className='flex flex-col flex-grow gap-2 items-center justify-center px-4'>
         {foldingResponse?.attendeeProofUrl && (
           <Button
             onClick={() =>

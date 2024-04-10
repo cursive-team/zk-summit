@@ -334,7 +334,8 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                 <div
                   className="flex flex-col gap-6 grow items-center justify-center px-10"
                   style={{
-                    height: "100%",
+                    minHeight:
+                      "calc(100vh - var(--mobile-browser-ui-height, 0px))", // Adjust for mobile browser UI
                   }}
                 >
                   {itemIndex !== items.length - 1 && (

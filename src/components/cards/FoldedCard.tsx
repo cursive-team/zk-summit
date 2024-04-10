@@ -31,7 +31,7 @@ import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
 import { Spinner } from "../Spinner";
 
 dayjs.extend(duration);
-const UNFOLDED_DATE = "2024-04-10 15:59:59";
+const UNFOLDED_DATE = "2024-04-10 10:59:59";
 const CountdownLabel = classed.span("text-primary font-semibold text-xs");
 
 interface FoldedItemProps {
@@ -281,7 +281,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   };
 
   return (
-    <main className="relative">
+    <main className="flex h-screen items-center justify-center">
       <Icons.Cursive
         className="fixed top-[47px] left-[22px] text-primary z-10"
         height={19}
@@ -306,7 +306,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
           disableOnInteraction: false,
           stopOnLastSlide: true,
         }}
-        className="h-screen"
+        className="min-h-screen md:h-screen"
         spaceBetween={0}
         slidesPerView={1}
         onSlideChange={(swiper: any) => {
@@ -323,7 +323,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
               <SwiperSlide
                 key={itemIndex}
                 className={cn(
-                  "items-center justify-center h-screen flex",
+                  "flex flex-col items-center justify-center min-h-screen",
                   !!image ? "bg-cover bg-center" : "bg-main"
                 )}
                 style={{
@@ -334,7 +334,8 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                 <div
                   className="flex flex-col gap-6 grow items-center justify-center px-10"
                   style={{
-                    height: "100%",
+                    minHeight:
+                      "calc(100vh - var(--mobile-browser-ui-height, 0px))", // Adjust for mobile browser UI
                   }}
                 >
                   {itemIndex !== items.length - 1 && (

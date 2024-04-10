@@ -126,7 +126,7 @@ const Folded = (): JSX.Element => {
         const proofBlobs: Map<TreeType, Blob> = new Map();
         const getProof = async (uri: string, treeType: TreeType) => {
           const proof = await fetch(uri, {
-            headers: { "Content-Type": "application/x-binary" },
+            headers: { "Content-Type": "application/octet-stream" },
           }).then(async (res) => await res.blob());
           proofBlobs.set(treeType, proof);
         };

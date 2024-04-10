@@ -9,6 +9,7 @@ import { IndexDBWrapper, TreeType } from '@/lib/client/indexDB';
 import { GetFoldingProofResponse } from '../api/folding/proof';
 import { Spinner } from '@/components/Spinner';
 import { useWorker } from '@/hooks/useWorker';
+import Link from 'next/link';
 
 type UserProofs = {
   attendee?: {
@@ -264,13 +265,19 @@ const Folded = (): JSX.Element => {
                 >
                   How was this proof generated?
                 </a>
+                <Link
+                  className='font-bold text-primary underline'
+                  href={`/folded/proof/${id}`}
+                >
+                  View proof
+                </Link>
               </div>
             ) : (
               <div>
                 {numToVerify > 0 ? (
                   <div className='text-center'>
                     <div className='mb-2'>
-                      Verifying: {verifying} of {numToVerify} proofs verified
+                      {verifying} of {numToVerify} proofs verified
                     </div>
                     <div className='relative'>
                       <Card.Progress

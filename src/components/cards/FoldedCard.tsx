@@ -122,7 +122,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     if (!proofLink) return "";
 
     return `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-      `🧺 zkSummit 11 FOLDED 🧺: I made a Nova zero knowledge proof attesting to my zkSummit Athens experience, built by @cursive_team. Go verify it yourself!`
+      `🧺 zkSummit 11 FOLDED 🧺: I made a Nova folding proof attesting to my zkSummit Athens experience, built by @cursive_team and @mach34_. Go verify it yourself!`
     )}&url=${encodeURIComponent(proofLink)}`;
   };
 
@@ -132,10 +132,10 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     const profile = getProfile();
     if (!token || token.expiresAt < new Date() || !keys || !profile) {
       throw new Error("Please sign in to save your proof.");
-    }
-
+    } 
+    
     const name = "foldingProof";
-    const newBlob: PutBlobResult = await upload(name, data, {
+    const newBlob: PutBlobResult = await upload(name, x, {
       access: "public",
       handleUploadUrl: "/api/folding/upload",
     });
@@ -203,6 +203,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
       await finalize(treeType);
       setFinalizedProgress((prev) => prev + 1);
       console.log("Finalized proof for treeType: ", treeType);
+
     }
     await Promise.all([
       finalizeProof(TreeType.Attendee),

@@ -31,7 +31,7 @@ import { IndexDBWrapper, TreeType } from '@/lib/client/indexDB';
 import { Spinner } from '../Spinner';
 
 dayjs.extend(duration);
-const UNFOLDED_DATE = '2024-04-10 15:59:59';
+const UNFOLDED_DATE = '2024-04-10 8:59:59';
 const CountdownLabel = classed.span('text-primary font-semibold text-xs');
 
 interface FoldedItemProps {

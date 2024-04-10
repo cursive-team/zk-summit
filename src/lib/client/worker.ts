@@ -244,6 +244,7 @@ async function finalize(type: TreeType): Promise<boolean> {
   if (proofData === undefined) {
     return false;
   }
+
   // decompress proof
   let proof = await membershipFolder.decompressProof(
     new Uint8Array(await proofData!.proof.arrayBuffer())
@@ -257,7 +258,7 @@ async function finalize(type: TreeType): Promise<boolean> {
   const compressed = await membershipFolder.compressProof(obfuscatedProof);
   const proofBlob = new Blob([compressed]);
   // store the compressed proof
-  await db.obfuscateFold(TreeType.Attendee, proofBlob);
+  await db.obfuscateFold(type, proofBlob);
   return true;
 }
 

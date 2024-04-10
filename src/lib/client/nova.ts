@@ -95,7 +95,7 @@ export class MembershipFolder {
     pk: string,
     sig: string,
     msg: string,
-    treeType: "attendee" | "speaker" | "talk"
+    treeType: TreeType
   ): Promise<string> {
     // fetch merkle proof for the user
     const merkleProof = await fetch(
@@ -173,10 +173,17 @@ export class MembershipFolder {
    * @param root - the root of the tree to prove membership in
    * @returns the obfuscated "final" proof
    */
-  async obfuscate(proof: string, numFolds: number): Promise<string> {
+  async obfuscate(proof: string, numFolds: number, treeType: TreeType): Promise<string> {
     // build the zi_primary (output of previous fold)
+    let root;
+    if (treeType === TreeType.Attendee)
+      root = this.roots.attendeeMerkleRoot;
+    else if (treeType === TreeType.Speaker)
+      root = this.roots.speakerMerkleRoot;
+    else 
+      root = this.roots.talksMerkleRoot;
     let zi_primary = [
-      hexToBigInt(this.roots.attendeeMerkleRoot).toString(),
+      hexToBigInt(root).toString(),
       BigInt(numFolds).toString(),
     ];
 
@@ -212,8 +219,6 @@ export class MembershipFolder {
       root = this.roots.speakerMerkleRoot;
     else 
       root = this.roots.talksMerkleRoot;
-    console.log("Root", root);
-    console.log("Tree", treeType);
     try {
       let res = await this.wasm.verify_proof(
         this.params,

@@ -101,8 +101,6 @@ async function work(users: User[], talks: LocationSignature[]) {
   }
   // todo: prove talk folds
   if (talks.length > 0) {
-    console.log("Beginning talk folding");
-    console.log("talks: ", talks);
     lock = await fold(
       talks.map((talk) => talk.pk),
       talks.map((talk) => talk.sig),
@@ -222,7 +220,7 @@ async function fold(
  *
  * @param params - gzip compressed params
  */
-async function finalize(type: TreeType): Promise<boolean> {
+async function finalize(treeType: TreeType): Promise<boolean> {
   // Initialize indexdb
   const db = new IndexDBWrapper();
   await db.init();
@@ -240,7 +238,7 @@ async function finalize(type: TreeType): Promise<boolean> {
   // Initialize membership folder
   const membershipFolder = await MembershipFolder.initWithIndexDB(params, wasm);
 
-  const proofData = await db.getFold(type);
+  const proofData = await db.getFold(treeType);
   if (proofData === undefined) {
     return false;
   }
@@ -252,13 +250,14 @@ async function finalize(type: TreeType): Promise<boolean> {
   // obfuscate proof
   let obfuscatedProof = await membershipFolder.obfuscate(
     proof,
-    proofData!.numFolds
+    proofData!.numFolds,
+    treeType
   );
   // compress the proof
   const compressed = await membershipFolder.compressProof(obfuscatedProof);
   const proofBlob = new Blob([compressed]);
   // store the compressed proof
-  await db.obfuscateFold(type, proofBlob);
+  await db.obfuscateFold(treeType, proofBlob);
   return true;
 }
 

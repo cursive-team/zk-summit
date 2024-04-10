@@ -125,7 +125,6 @@ const Folded = (): JSX.Element => {
       if (response.ok) {
         // get proof data for the user
         const foldingData: GetFoldingProofResponse = await response.json();
-        console.log("foldingData: ", foldingData);
         // get blobs for each proof type
         const proofBlobs: Map<TreeType, Blob> = new Map();
         const getProof = async (uri: string, treeType: TreeType) => {

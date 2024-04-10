@@ -76,7 +76,7 @@ export const FOLDED_MOCKS: FolderCardProps["items"] = [
   },
   {
     title: "Knowledge blossomed through interaction.",
-    description: () => `You were 1 of 500 at ZK11.`,
+    description: () => `You were 1 of 500 at ZK11!`,
   },
 ];
 

@@ -323,7 +323,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
               <SwiperSlide
                 key={itemIndex}
                 className={cn(
-                  "items-center justify-center h-screen flex",
+                  "flex flex-col items-center justify-center min-h-screen",
                   !!image ? "bg-cover bg-center" : "bg-main"
                 )}
                 style={{

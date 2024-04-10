@@ -306,7 +306,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
           disableOnInteraction: false,
           stopOnLastSlide: true,
         }}
-        className="h-screen"
+        className="min-h-screen md:h-screen"
         spaceBetween={0}
         slidesPerView={1}
         onSlideChange={(swiper: any) => {

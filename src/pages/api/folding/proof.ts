@@ -15,7 +15,6 @@ async function handleGetRequest(
   res: NextApiResponse<GetFoldingProofResponse | ErrorResponse>
 ) {
   const { proofUuid } = req.query;
-
   if (typeof proofUuid !== "string") {
     return res.status(400).json({ error: "Invalid proofUuid parameter" });
   }
@@ -43,6 +42,7 @@ async function handleGetRequest(
       foldingProofLink: foldingProof.foldedProofLink,
     });
   } catch (error) {
+    console.log('Error: ', error);
     return res.status(500).json({ error: "Internal server error" });
   }
 }

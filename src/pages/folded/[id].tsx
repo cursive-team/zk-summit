@@ -28,7 +28,7 @@ type UserProofs = {
     proof: Blob;
     count: number;
   };
-}
+};
 
 const Folded = (): JSX.Element => {
   const { id } = useParams();
@@ -42,7 +42,6 @@ const Folded = (): JSX.Element => {
   const [verified, setVerified] = useState<boolean>(false);
   const [userProofs, setUserProofs] = useState<UserProofs>({});
 
-  const fakePubkey = '0x01209328159023859';
   const fakeSize = 128;
 
   const stats = [
@@ -82,16 +81,19 @@ const Folded = (): JSX.Element => {
 
     const verifyProof = async (proof: Blob, numVerified: number) => {
       const success = await verify(proof, numVerified);
-      if (success)
-        setVerifying((prev) => prev + 1);
-    }
+      if (success) setVerifying((prev) => prev + 1);
+    };
 
     if (userProofs.attendee) {
-      requests.push(verifyProof(userProofs.attendee.proof, userProofs.attendee.count));
+      requests.push(
+        verifyProof(userProofs.attendee.proof, userProofs.attendee.count)
+      );
       setNumToVerify((prev) => prev + 1);
     }
     if (userProofs.speaker) {
-      requests.push(verifyProof(userProofs.speaker.proof, userProofs.speaker.count));
+      requests.push(
+        verifyProof(userProofs.speaker.proof, userProofs.speaker.count)
+      );
       setNumToVerify((prev) => prev + 1);
     }
     if (userProofs.talk) {
@@ -127,12 +129,16 @@ const Folded = (): JSX.Element => {
             headers: { 'Content-Type': 'application/x-binary' },
           }).then(async (res) => await res.blob());
           proofBlobs.set(treeType, proof);
-        }
+        };
         let requests = [];
         if (foldingData.attendeeProofCount && foldingData.attendeeProofUrl)
-          requests.push(getProof(foldingData.attendeeProofUrl, TreeType.Attendee));
+          requests.push(
+            getProof(foldingData.attendeeProofUrl, TreeType.Attendee)
+          );
         if (foldingData.speakerProofCount && foldingData.speakerProofUrl)
-          requests.push(getProof(foldingData.speakerProofUrl, TreeType.Speaker));
+          requests.push(
+            getProof(foldingData.speakerProofUrl, TreeType.Speaker)
+          );
         if (foldingData.talkProofCount && foldingData.talkProofUrl)
           requests.push(getProof(foldingData.talkProofUrl, TreeType.Talk));
         await Promise.all(requests);
@@ -218,8 +224,9 @@ const Folded = (): JSX.Element => {
         <div className='mt-4'>
           {stats.map((stat, index) => (
             <div
-              className={`border ${index ? 'border-t-0' : 'border-t'
-                }  border-primary flex gap-4 items-center p-4 text-primary`}
+              className={`border ${
+                index ? 'border-t-0' : 'border-t'
+              }  border-primary flex gap-4 items-center p-4 text-primary`}
             >
               <div className='bg-white border border-primary px-1.5 py-0.5'>
                 {stat.count}
@@ -265,11 +272,13 @@ const Folded = (): JSX.Element => {
             <div>
               {verifying > 0 ? (
                 <div className='text-center'>
-                  <div className='mb-2'>Verifying...</div>
+                  <div className='mb-2'>
+                    Verifying: {verifying} of {numToVerify} proofs verifying
+                  </div>
                   <div className='relative'>
                     <Card.Progress
                       style={{
-                        width: `${verifying}%`,
+                        width: `${verifying / numToVerify}%`,
                       }}
                     />
                   </div>

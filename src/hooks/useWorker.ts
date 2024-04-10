@@ -14,6 +14,7 @@ export const useWorker = () => {
   const workerAPIRef = useRef<Remote<{
     work: (users: User[], talks: LocationSignature[]) => Promise<void>;
     finalize: (treeType: TreeType) => Promise<boolean>;
+    verify: (proof: Blob, numFolded: number) => Promise<boolean>;
   }> | null>();
 
   const init = () => {
@@ -35,21 +36,21 @@ export const useWorker = () => {
     terminate();
   };
 
-    const finalize = async (treeType: TreeType): Promise<boolean> => {
-        init();
-        setObfuscating(true);
-        const success = await workerAPIRef.current?.finalize(treeType);
-        setObfuscating(false);
-        terminate();
-        return success!;
-    }
+  const finalize = async (treeType: TreeType): Promise<boolean> => {
+    init();
+    setObfuscating(true);
+    const success = await workerAPIRef.current?.finalize(treeType);
+    setObfuscating(false);
+    terminate();
+    return success!;
+  };
 
-    const verify = async (proof: Blob, numFolded: number): Promise<boolean> => {
-        init();
-        const success = await workerAPIRef.current?.verify(proof, numFolded);
-        terminate();
-        return success!;
-    }
+  const verify = async (proof: Blob, numFolded: number): Promise<boolean> => {
+    init();
+    const success = await workerAPIRef.current?.verify(proof, numFolded);
+    terminate();
+    return success!;
+  };
 
   const terminate = () => {
     if (!worker) return;
@@ -57,14 +58,14 @@ export const useWorker = () => {
     workerAPIRef.current = null;
   };
 
-    return {
-        work,
-        finalize,
-        verify,
-        obfuscating,
-        folding,
-        completed,
-        downloadingChunks,
-        chunksDownloaded,
-    }
-}
+  return {
+    work,
+    finalize,
+    verify,
+    obfuscating,
+    folding,
+    completed,
+    downloadingChunks,
+    chunksDownloaded,
+  };
+};

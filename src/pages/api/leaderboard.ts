@@ -28,6 +28,7 @@ export default async function handler(
           select: {
             id: true,
             displayName: true,
+            isRegistered: true,
             sentMessages: {
               select: {
                 senderId: true,
@@ -37,14 +38,17 @@ export default async function handler(
             },
           },
         })
+
         .then((users) =>
-          users.map((user) => ({
-            name: user.displayName,
-            connections: user.sentMessages.filter(
-              (message) => message.senderId !== message.recipientId
-            ).length,
-            isCurrentUser: user.id === userId,
-          }))
+          users
+            .filter((user) => user.isRegistered)
+            .map((user) => ({
+              name: user.displayName,
+              connections: user.sentMessages.filter(
+                (message) => message.senderId !== message.recipientId
+              ).length,
+              isCurrentUser: user.id === userId,
+            }))
         )
         .then((users) => users.sort((a, b) => b.connections - a.connections));
 

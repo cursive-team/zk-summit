@@ -28,6 +28,7 @@ import { encryptFoldedProofMessage } from "@/lib/client/jubSignal";
 import { loadMessages } from "@/lib/client/jubSignalClient";
 import { useWorker } from "@/hooks/useWorker";
 import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
+import { Spinner } from "../Spinner";
 
 dayjs.extend(duration);
 const UNFOLDED_DATE = "2024-03-10 15:59:59";
@@ -104,7 +105,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
 
   const [numTotalProvingRequirements, setNumTotalProvingRequirements] =
     useState(0);
-  const [proofLink, setProofLink] = useState<string>();
+  const [proofId, setProofId] = useState<string>();
 
   useEffect(() => {
     const users = getUsers();
@@ -117,7 +118,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     setNumTalks(Object.keys(talks).length);
 
     if (foldedProof) {
-      setProofLink(foldedProof.pfLink);
+      setProofId(foldedProof.pfId);
     }
   }, []);
 
@@ -130,11 +131,13 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   };
 
   const getTwitterShareUrl = () => {
-    if (!proofLink) return "";
+    if (!proofId) return "";
 
     return `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       `🧺 zkSummit 11 FOLDED 🧺: I made a Nova folding proof attesting to my zkSummit Athens experience, built by @cursive_team and @mach34_. Go verify it yourself!`
-    )}&url=${encodeURIComponent(proofLink)}`;
+    )}&url=${encodeURIComponent(
+      `https://zksummit.cursive.team/folded/${proofId}`
+    )}`;
   };
 
   /**
@@ -177,38 +180,37 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     }
 
     const { proofUuid } = await response.json();
-    return "";
 
-    // const senderPrivateKey = keys.encryptionPrivateKey;
-    // const recipientPublicKey = profile.encryptionPublicKey;
-    // const encryptedMessage = await encryptFoldedProofMessage({
-    //   proofId: proofUuid,
-    //   proofData: P,
-    //   senderPrivateKey,
-    //   recipientPublicKey,
-    // });
+    const senderPrivateKey = keys.encryptionPrivateKey;
+    const recipientPublicKey = profile.encryptionPublicKey;
+    const encryptedMessage = await encryptFoldedProofMessage({
+      proofId: proofUuid,
+      proofLink: "",
+      senderPrivateKey,
+      recipientPublicKey,
+    });
 
-    // // Send folded proof info as encrypted jubSignal message to self
-    // // Simultaneously refresh activity feed
-    // try {
-    //   await loadMessages({
-    //     forceRefresh: false,
-    //     messageRequests: [
-    //       {
-    //         encryptedMessage,
-    //         recipientPublicKey,
-    //       },
-    //     ],
-    //   });
-    // } catch (error) {
-    //   console.error(
-    //     "Error sending encrypted folded proof info to server: ",
-    //     error
-    //   );
-    //   toast.error("An error occured while saving the proof. Please try again.");
-    // }
+    // Send folded proof info as encrypted jubSignal message to self
+    // Simultaneously refresh activity feed
+    try {
+      await loadMessages({
+        forceRefresh: false,
+        messageRequests: [
+          {
+            encryptedMessage,
+            recipientPublicKey,
+          },
+        ],
+      });
+    } catch (error) {
+      console.error(
+        "Error sending encrypted folded proof info to server: ",
+        error
+      );
+      toast.error("An error occured while saving the proof. Please try again.");
+    }
 
-    // return proofUuid;
+    return proofUuid;
   };
 
   const beginProving = async () => {
@@ -267,23 +269,9 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
       talks: proofUris.get(TreeType.Talk),
     };
 
-    await saveFinalizedProofs(proofPost);
-
+    const proofUuid = await saveFinalizedProofs(proofPost);
+    setProofId(proofUuid);
     setProvingStarted(false);
-  };
-
-  const doneProving = async () => {
-    // try {
-    //   const proofUuid = await uploadAndSaveFoldingProof(proof);
-    //   setProofLink(`${window.location.origin}/folded/${proofUuid}`);
-    // } catch (error) {
-    //   console.error("Failed to upload proof: ", error);
-    //   toast.error("Failed to upload proof. Please try again");
-    //   return;
-    // }
-
-    setProvingStarted(false);
-    setProofLink("https://zksummit.cursive.team/folded/1234");
   };
 
   return (
@@ -368,7 +356,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                   )}
                   {itemIndex === items.length - 1 && (
                     <>
-                      {proofLink && (
+                      {proofId && (
                         <>
                           <h4 className="text-primary leading-[32px] font-medium font-sans text-3xl text-center">
                             {"Proof is ready"}
@@ -392,7 +380,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           </Link>
                         </>
                       )}
-                      {!proofLink && provingStarted && (
+                      {!proofId && provingStarted && (
                         <>
                           <h4 className="text-primary leading-[32px] font-medium font-sans text-3xl text-center">
                             {"Generating your proof..."}
@@ -400,10 +388,10 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           <span className="text-primary font-bold font-sans text-lg text-center">
                             {"This may take a minute. Please be patient!"}
                           </span>
-                          <Button onClick={doneProving}>Done Proving</Button>
+                          <Spinner />
                         </>
                       )}
-                      {!proofLink && !provingStarted && (
+                      {!proofId && !provingStarted && (
                         <>
                           {children}
                           {title && (

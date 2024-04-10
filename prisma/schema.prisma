@@ -169,11 +169,16 @@ model QuestProof {
 }
 
 model FoldedProof {
-  id              String   @id @default(uuid())
-  userId          Int
-  foldedProofLink String
-  createdAt       DateTime @default(now())
-  user            User     @relation(fields: [userId], references: [id])
+  id                String   @id @default(uuid())
+  userId            Int
+  attendeeProofLink String?
+  attendeeNumFolded Int?
+  speakerProofLink  String?
+  speakerNumFolded  Int?
+  talkProofLink     String?
+  talkNumFolded     Int?
+  createdAt         DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id])
 }
 
 model UserSigNullifier {

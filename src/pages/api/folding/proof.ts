@@ -6,7 +6,13 @@ import { ErrorResponse } from "@/types";
 export type GetFoldingProofResponse = {
   id: string;
   userName: string;
-  foldingProofLink: string;
+  userPublicKey: string;
+  attendeeProofUrl?: string;
+  attendeeProofCount?: number;
+  speakerProofUrl?: string;
+  speakerProofCount?: number;
+  talkProofUrl?: string;
+  talkProofCount?: number;
 };
 
 // GET request handler
@@ -24,10 +30,16 @@ async function handleGetRequest(
     const foldingProof = await prisma.foldedProof.findUnique({
       where: { id: proofUuid },
       select: {
-        foldedProofLink: true,
+        attendeeProofLink: true,
+        attendeeNumFolded: true,
+        speakerProofLink: true,
+        speakerNumFolded: true,
+        talkProofLink: true,
+        talkNumFolded: true,
         user: {
           select: {
             displayName: true,
+            signaturePublicKey: true,
           },
         },
       },
@@ -40,7 +52,25 @@ async function handleGetRequest(
     return res.status(200).json({
       id: proofUuid,
       userName: foldingProof.user.displayName,
-      foldingProofLink: foldingProof.foldedProofLink,
+      userPublicKey: foldingProof.user.signaturePublicKey,
+      attendeeProofUrl: foldingProof.attendeeProofLink
+        ? foldingProof.attendeeProofLink
+        : undefined,
+      attendeeProofCount: foldingProof.attendeeNumFolded
+        ? foldingProof.attendeeNumFolded
+        : undefined,
+      speakerProofUrl: foldingProof.speakerProofLink
+        ? foldingProof.speakerProofLink
+        : undefined,
+      speakerProofCount: foldingProof.speakerNumFolded
+        ? foldingProof.speakerNumFolded
+        : undefined,
+      talkProofUrl: foldingProof.talkProofLink
+        ? foldingProof.talkProofLink
+        : undefined,
+      talkProofCount: foldingProof.talkNumFolded
+        ? foldingProof.talkNumFolded
+        : undefined,
     });
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
@@ -49,9 +79,9 @@ async function handleGetRequest(
 
 // POST request handler
 async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
-  const { authToken, proofUrl } = req.body;
+  const { authToken, data } = req.body;
 
-  if (!authToken || typeof proofUrl !== "string") {
+  if (!authToken) {
     return res.status(400).json({ error: "Invalid input parameters" });
   }
 
@@ -68,10 +98,17 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
       return res.status(404).json({ error: "User not found" });
     }
 
+    const { attendees, speakers, talks } = data;
+
     const newFoldingProof = await prisma.foldedProof.create({
       data: {
         userId,
-        foldedProofLink: proofUrl,
+        attendeeProofLink: attendees ? attendees.uri : null,
+        attendeeNumFolded: attendees ? attendees.numFolded : null,
+        speakerProofLink: speakers ? speakers.uri : null,
+        speakerNumFolded: speakers ? speakers.numFolded : null,
+        talkProofLink: talks ? talks.uri : null,
+        talkNumFolded: talks ? talks.numFolded : null,
       },
     });
 

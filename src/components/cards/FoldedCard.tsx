@@ -233,6 +233,12 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
 
     let proofUris: Map<TreeType, ProofData> = new Map();
     const finalizeProof = async (treeType: TreeType) => {
+      // check that the proof is not already finalized
+      const storedProofData = await db.getFold(treeType);
+      if (storedProofData && storedProofData.obfuscated) {
+        console.log(`Not obfuscating ${treeType} proof: already obfuscated`);
+        return;
+      }
       // obfuscate the proof
       let success = await finalize(treeType);
       if (!success) {

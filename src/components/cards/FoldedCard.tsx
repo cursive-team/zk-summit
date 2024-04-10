@@ -185,7 +185,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     const recipientPublicKey = profile.encryptionPublicKey;
     const encryptedMessage = await encryptFoldedProofMessage({
       proofId: proofUuid,
-      proofLink: "",
+      proofLink: proofUuid,
       senderPrivateKey,
       recipientPublicKey,
     });

@@ -32,6 +32,7 @@ import { IconCircle } from "@/components/IconCircle";
 import { NoResultContent } from "@/components/NoResultContent";
 import { classed } from "@tw-classed/react";
 import { logClientEvent } from "@/lib/client/metrics";
+import { useWorker } from "@/hooks/useWorker";
 
 interface LinkCardProps {
   name: string;
@@ -209,6 +210,8 @@ export default function Social() {
   const [numConnections, setNumConnections] = useState<number>(0);
   const [tabsItems, setTabsItems] = useState<TabsProps["items"]>();
   const [isLoading, setLoading] = useState(false);
+
+  const { work, folding } = useWorker();
 
   const isMenuOpen = getState().isMenuOpen ?? false;
 
@@ -411,6 +414,13 @@ export default function Social() {
             await loadMessages({ forceRefresh: false });
           } catch (error) {
             console.error("Failed to load messages upon page reload:", error);
+          }
+
+          // Begin running folding worker on refresh
+          if (!folding) {
+            const users = getUsers();
+            const locationSignatures = getLocationSignatures();
+            work(Object.values(users), Object.values(locationSignatures));
           }
         }
       }

@@ -1,3 +1,4 @@
+import { TreeType } from "@/lib/client/indexDB";
 import { LocationSignature, User } from "@/lib/client/localStorage";
 import { Remote, wrap } from "comlink";
 import { useRef, useState } from "react";
@@ -5,6 +6,7 @@ import { useRef, useState } from "react";
 export const useWorker = () => {
 
     const [folding, setFolding] = useState<boolean>(false);
+    const [obfuscating, setObfuscating] = useState<boolean>(false);
     const [completed, setCompleted] = useState<boolean>(false);
     const [downloadingChunks, setDownloadingChunks] = useState<boolean>(false);
     const [chunksDownloaded, setChunksDownloaded] = useState<boolean>(false)
@@ -12,7 +14,7 @@ export const useWorker = () => {
 
     const workerAPIRef = useRef<Remote<{
         work: (users: User[], talks: LocationSignature[]) => Promise<void>,
-        workerObfuscateFold: () => Promise<void>,
+        finalize: (treeType: TreeType) => Promise<boolean>,
     }> | null>();
 
     const init = () => {
@@ -31,12 +33,13 @@ export const useWorker = () => {
         terminate();
     }
 
-    const obfuscateFold = async () => {
+    const finalize = async (treeType: TreeType): Promise<boolean> => {
         init();
-        setFolding(true);
-        await workerAPIRef.current?.workerObfuscateFold();
-        setFolding(false);
-        terminate()
+        setObfuscating(true);
+        const success = await workerAPIRef.current?.finalize(treeType);
+        setObfuscating(false);
+        terminate();
+        return success!;
     }
 
     const terminate = () => {
@@ -47,7 +50,8 @@ export const useWorker = () => {
 
     return {
         work,
-        obfuscateFold,
+        finalize,
+        obfuscating,
         folding,
         completed,
         downloadingChunks,

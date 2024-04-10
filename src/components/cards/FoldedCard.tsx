@@ -26,9 +26,11 @@ import { type PutBlobResult } from "@vercel/blob";
 import { upload } from "@vercel/blob/client";
 import { encryptFoldedProofMessage } from "@/lib/client/jubSignal";
 import { loadMessages } from "@/lib/client/jubSignalClient";
+import { useWorker } from "@/hooks/useWorker";
+import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
 
 dayjs.extend(duration);
-const UNFOLDED_DATE = "2024-04-10 15:59:59";
+const UNFOLDED_DATE = "2024-03-10 15:59:59";
 const CountdownLabel = classed.span("text-primary font-semibold text-xs");
 
 interface FoldedItemProps {
@@ -42,6 +44,17 @@ interface FoldedItemProps {
 interface FolderCardProps {
   items: FoldedItemProps[];
   onClose?: () => void;
+}
+
+export type ProofData = {
+  uri: string;
+  numFolded: number;
+}
+
+export type ProofPost = {
+  attendees: ProofData | undefined;
+  speakers: ProofData | undefined;
+  talks: ProofData | undefined;
 }
 
 export const FOLDED_MOCKS: FolderCardProps["items"] = [
@@ -76,18 +89,19 @@ export const FOLDED_MOCKS: FolderCardProps["items"] = [
   },
   {
     title: "Knowledge blossomed through interaction.",
-    description: () => `You were 1 of 500 at ZK11.`,
+    description: () => `You were 1 of 500 at ZK11!`,
   },
 ];
 
 const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
+  const { work, finalize, folding, obfuscating } = useWorker();
+  const [finalizedProgress, setFinalizedProgress] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [numAttendees, setNumAttendees] = useState(0);
   const [numTalks, setNumTalks] = useState(0);
   const [numSpeakers, setNumSpeakers] = useState(0);
   const [provingStarted, setProvingStarted] = useState(false);
-  const [numCompletedProvingRequirements, setNumCompletedProvingRequirements] =
-    useState(0);
+
   const [numTotalProvingRequirements, setNumTotalProvingRequirements] =
     useState(0);
   const [proofLink, setProofLink] = useState<string>();
@@ -119,11 +133,27 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     if (!proofLink) return "";
 
     return `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-      `🧺 zkSummit 11 FOLDED 🧺: I made a Nova zero knowledge proof attesting to my zkSummit Athens experience, built by @cursive_team. Go verify it yourself!`
+      `🧺 zkSummit 11 FOLDED 🧺: I made a Nova folding proof attesting to my zkSummit Athens experience, built by @cursive_team and @mach34_. Go verify it yourself!`
     )}&url=${encodeURIComponent(proofLink)}`;
   };
 
-  const uploadAndSaveFoldingProof = async (data: string): Promise<string> => {
+  /**
+   * Upload a proof blob and return the url to the blob
+   * 
+   * @param proof - the compressed obfuscated proof
+   * @param treeType - the type of tree the proof is for
+   * @returns the url to the uploaded proof
+   */
+  const uploadProof = async (proof: Blob, treeType: TreeType): Promise<string> => {
+    const name = `${treeType}Proof`;
+    const newBlob: PutBlobResult = await upload(name, proof, {
+      access: "public",
+      handleUploadUrl: "/api/folding/upload",
+    });
+    return newBlob.url;
+  }
+
+  const saveFinalizedProofs = async (data: ProofPost): Promise<string> => {
     const token = getAuthToken();
     const keys = getKeys();
     const profile = getProfile();
@@ -131,19 +161,12 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
       throw new Error("Please sign in to save your proof.");
     }
 
-    const name = "foldingProof";
-    const newBlob: PutBlobResult = await upload(name, data, {
-      access: "public",
-      handleUploadUrl: "/api/folding/upload",
-    });
-    const proofUrl = newBlob.url;
-
     const response = await fetch("/api/folding/proof", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ authToken: token.value, proofUrl }),
+      body: JSON.stringify({ authToken: token.value, data }),
     });
 
     if (!response.ok) {
@@ -151,37 +174,38 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     }
 
     const { proofUuid } = await response.json();
+    return "";
 
-    const senderPrivateKey = keys.encryptionPrivateKey;
-    const recipientPublicKey = profile.encryptionPublicKey;
-    const encryptedMessage = await encryptFoldedProofMessage({
-      proofId: proofUuid,
-      proofLink: proofUrl,
-      senderPrivateKey,
-      recipientPublicKey,
-    });
+    // const senderPrivateKey = keys.encryptionPrivateKey;
+    // const recipientPublicKey = profile.encryptionPublicKey;
+    // const encryptedMessage = await encryptFoldedProofMessage({
+    //   proofId: proofUuid,
+    //   proofData: P,
+    //   senderPrivateKey,
+    //   recipientPublicKey,
+    // });
 
-    // Send folded proof info as encrypted jubSignal message to self
-    // Simultaneously refresh activity feed
-    try {
-      await loadMessages({
-        forceRefresh: false,
-        messageRequests: [
-          {
-            encryptedMessage,
-            recipientPublicKey,
-          },
-        ],
-      });
-    } catch (error) {
-      console.error(
-        "Error sending encrypted folded proof info to server: ",
-        error
-      );
-      toast.error("An error occured while saving the proof. Please try again.");
-    }
+    // // Send folded proof info as encrypted jubSignal message to self
+    // // Simultaneously refresh activity feed
+    // try {
+    //   await loadMessages({
+    //     forceRefresh: false,
+    //     messageRequests: [
+    //       {
+    //         encryptedMessage,
+    //         recipientPublicKey,
+    //       },
+    //     ],
+    //   });
+    // } catch (error) {
+    //   console.error(
+    //     "Error sending encrypted folded proof info to server: ",
+    //     error
+    //   );
+    //   toast.error("An error occured while saving the proof. Please try again.");
+    // }
 
-    return proofUuid;
+    // return proofUuid;
   };
 
   const beginProving = async () => {
@@ -192,7 +216,55 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
       return;
     }
 
+    // ensure all proofs are folded
+    await work(Object.values(getUsers()), Object.values(getLocationSignatures()));
+
+    const db = new IndexDBWrapper();
+    await db.init();
+
     setProvingStarted(true);
+    let proofUris: Map<TreeType, ProofData> = new Map();
+    const finalizeProof = async (treeType: TreeType) => {
+      // obfuscate the proof
+      let success = await finalize(treeType);
+      if (!success) {
+        console.log(`No membership proof of type ${treeType} was ever made`);
+        return;
+      }
+      setFinalizedProgress((prev) => prev + 1);
+      console.log("Finalized proof for treeType: ", treeType);
+      // get the proof from the db
+      const proofData = await db.getFold(treeType);
+      if (proofData === undefined) {
+        console.log(`No proof data found for ${treeType} tree`);
+      } else {
+        // post the proof to blob store
+        let proofBlobUri = await uploadProof(proofData!.proof, treeType);
+        console.log(`Posted ${treeType} proof to ${proofBlobUri}`);
+        // track the proof and numFolded for each tree
+        proofUris.set(treeType, {
+          uri: proofBlobUri,
+          numFolded: proofData!.numFolds
+        });
+      }
+
+    }
+    await Promise.all([
+      finalizeProof(TreeType.Attendee),
+      finalizeProof(TreeType.Speaker),
+      finalizeProof(TreeType.Talk)
+    ]);
+
+    // post the results to the server
+    const proofPost = {
+      attendees: proofUris.get(TreeType.Attendee),
+      speakers: proofUris.get(TreeType.Speaker),
+      talks: proofUris.get(TreeType.Talk)
+    }
+
+    await saveFinalizedProofs(proofPost);
+
+    setProvingStarted(false);
   };
 
   const doneProving = async () => {
@@ -350,7 +422,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           <Button onClick={beginProving}>Prove it</Button>
                         </>
                       )}
-                      {}
+                      { }
                     </>
                   )}
                 </div>

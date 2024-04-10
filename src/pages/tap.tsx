@@ -13,6 +13,8 @@ import {
   getProfile,
   getLocationSignature,
   fetchUserByUUID,
+  getUsers,
+  getLocationSignatures,
 } from "@/lib/client/localStorage";
 import {
   encryptInboundTapMessage,
@@ -24,6 +26,7 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/Spinner";
 import { hashPublicKeyToUUID } from "@/lib/client/utils";
 import { logClientEvent } from "@/lib/client/metrics";
+import { useWorker } from "@/hooks/useWorker";
 
 export default function Tap() {
   const router = useRouter();
@@ -31,6 +34,8 @@ export default function Tap() {
     useState<PersonTapResponse>();
   const [pendingLocationTapResponse, setPendingLocationTapResponse] =
     useState<LocationTapResponse>();
+
+  const { work } = useWorker();
 
   // Save the newly tapped person to local storage and redirect to their profile
   // Send jubSignal message to self and other user
@@ -106,9 +111,14 @@ export default function Tap() {
         return;
       }
 
+      // Begin downloading params in web worker
+      const users = Object.values(getUsers());
+      const locationSignatures = Object.values(getLocationSignatures());
+      work(users, locationSignatures);
+
       router.push("/users/" + userId + "?tap=true");
     },
-    [router]
+    [router, work]
   );
 
   // First, record the location signature as a jubSignal message
@@ -167,9 +177,14 @@ export default function Tap() {
         return;
       }
 
+      // Begin downloading params in web worker
+      const users = Object.values(getUsers());
+      const locationSignatures = Object.values(getLocationSignatures());
+      work(users, locationSignatures);
+
       router.push(`/locations/${location.id}?tap=true`);
     },
-    [router]
+    [router, work]
   );
 
   useEffect(() => {

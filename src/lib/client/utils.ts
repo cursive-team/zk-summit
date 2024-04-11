@@ -76,6 +76,7 @@ export const fetchWithRetry = async (
     }
     return response;
   } catch (e) {
+    console.log(`Failed fetch of "${url}" with ${retries} retries left`);
     if (retries > 0) {
       await new Promise(resolve => setTimeout(resolve, backoff));
       return fetchWithRetry(url, options, retries - 1, backoff * 2);

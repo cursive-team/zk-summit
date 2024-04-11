@@ -1,7 +1,10 @@
 {
   "functions": {
     "src/pages/api/admin/keygen.ts": {
-      "maxDuration": 300 
+      "maxDuration": 300
+    },
+    "src/pages/api/quest/submit_proof.tsx": {
+      "maxDuration": 300
     }
   }
 }

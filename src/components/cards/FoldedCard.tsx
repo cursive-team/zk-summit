@@ -112,16 +112,16 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   useEffect(() => {
     const users = getUsers();
     const talks = getLocationSignatures();
-    const foldedProof = getFoldedProof();
+    // const foldedProof = getFoldedProof();
 
     const userSignatures = Object.values(users).filter((user) => user.sig);
     setNumAttendees(userSignatures.filter((user) => !user.isSpeaker).length);
     setNumSpeakers(userSignatures.filter((user) => user.isSpeaker).length);
     setNumTalks(Object.keys(talks).length);
 
-    if (foldedProof) {
-      setProofId(foldedProof.pfId);
-    }
+    // if (foldedProof) {
+    //   setProofId(foldedProof.pfId);
+    // }
   }, []);
 
   const pagination = {

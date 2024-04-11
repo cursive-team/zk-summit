@@ -392,6 +392,12 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                               {"Share on Twitter"}
                             </Button>
                           </Link>
+                          <Button 
+                            onClick={beginProving}
+                            variant="white"
+                          >
+                            {"Regenerate Proof"}
+                          </Button>
                         </>
                       )}
                       {!proofId && provingStarted && (

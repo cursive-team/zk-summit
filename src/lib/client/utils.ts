@@ -54,3 +54,33 @@ export const handleUsername = (username?: string): string => {
   }
   return `@${username}`;
 };
+
+/**
+ * Makes a fetch request and retries it a specified number of times until success
+ * 
+ * @param url - the url to make http request to
+ * @param options - request options
+ * @param retries - number of times to retry
+ * @param backoff - delay period before retrying
+ */
+export const fetchWithRetry = async (
+  url: string,
+  options?: RequestInit,
+  retries: number = 3,
+  backoff: number = 200
+): Promise<Response> => {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok && retries > 0) {
+      throw new Error("Fetch failed");
+    }
+    return response;
+  } catch (e) {
+    if (retries > 0) {
+      await new Promise(resolve => setTimeout(resolve, backoff));
+      return fetchWithRetry(url, options, retries - 1, backoff * 2);
+    } else {
+      throw e;
+    }
+  }
+}

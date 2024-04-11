@@ -11,6 +11,7 @@ import {
 } from "babyjubjub-ecdsa";
 import { TreeRoots } from "@/pages/api/tree/root";
 import { TreeType } from "./indexDB";
+import { fetchWithRetry } from "./utils";
 
 export type NovaWasm = typeof import("bjj_ecdsa_nova_wasm");
 
@@ -47,7 +48,7 @@ export class MembershipFolder {
     // get wasm
     let wasm = await getWasm();
     // get tree roots
-    let roots: TreeRoots = await fetch("/api/tree/root").then(
+    let roots: TreeRoots = await fetchWithRetry("/api/tree/root").then(
       async (res) => await res.json()
     );
     // get params
@@ -65,7 +66,7 @@ export class MembershipFolder {
     // get wasm
     // let wasm = await getWasm();
     // get tree roots
-    let roots: TreeRoots = await fetch("/api/tree/root").then(
+    let roots: TreeRoots = await fetchWithRetry("/api/tree/root").then(
       async (res) => await res.json()
     );
 
@@ -98,7 +99,7 @@ export class MembershipFolder {
     treeType: TreeType
   ): Promise<string> {
     // fetch merkle proof for the user
-    const merkleProof = await fetch(
+    const merkleProof = await fetchWithRetry(
       `/api/tree/proof?treeType=${treeType}&pubkey=${pk}`
     )
       .then(async (res) => await res.json())
@@ -137,7 +138,7 @@ export class MembershipFolder {
     treeType: "attendee" | "speaker" | "talk"
   ): Promise<string> {
     // fetch merkle proof for the user
-    const merkleProof = await fetch(
+    const merkleProof = await fetchWithRetry(
       `/api/tree/proof?treeType=${treeType}&pubkey=${pk}`
     )
       .then(async (res) => await res.json())
@@ -295,7 +296,7 @@ export const getAllParamsByChunk = async (): Promise<string> => {
   for (let i = 0; i < 10; i++) {
     let req = async () => {
       let full_url = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${i}.gz`;
-      let res = await fetch(full_url, {
+      let res = await fetchWithRetry(full_url, {
         headers: { "Content-Type": "application/x-binary" },
       }).then(async (res) => await res.blob());
       data.set(i, res);

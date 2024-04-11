@@ -96,7 +96,7 @@ export const FOLDED_MOCKS: FolderCardProps['items'] = [
 ];
 
 const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
-  const { foldingCompleted, numParams, updateProgress } = useProgress();
+  const { foldingCompleted, numFoldedAttendees, numParams, updateProgress } = useProgress();
   const { work, finalize, folding, obfuscating } = useWorker();
   const [finalizedProgress, setFinalizedProgress] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -300,7 +300,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     return () => clearInterval(interval);
   }, [foldingCompleted]);
 
-  console.log('Folding completed: ', foldingCompleted);
+  console.log('Folded attendees: ', numFoldedAttendees);
 
   return (
     <main className='relative'>

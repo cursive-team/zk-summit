@@ -219,7 +219,8 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     return proofUuid;
   };
 
-  const beginProving = async (regenerate = false) => {
+  // Regenerate indicates if proof should be regenerated from scratch
+  const beginProving = async (regenerate: boolean) => {
     setProofId(undefined);
     logClientEvent("foldedProvingStarted", {});
 
@@ -232,8 +233,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     const db = new IndexDBWrapper();
     await db.init();
 
-    if (regenerate)
-      await db.logoutIndexDB()
+    if (regenerate) await db.logoutIndexDB();
 
     // ensure all proofs are folded
     await work(
@@ -386,7 +386,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           </Link>
                           <Link href="">
                             <Button
-                              onClick={beginProving}
+                              onClick={() => beginProving(true)}
                               variant="white"
                             >
                               {"Regenerate Proof From Scratch"}
@@ -404,8 +404,6 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                               {"Share on Twitter"}
                             </Button>
                           </Link>
-                          
-
                         </>
                       )}
                       {!proofId && provingStarted && (
@@ -440,10 +438,12 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                               {![2, 3, 4].includes(itemIndex) && description(0)}
                             </span>
                           )}
-                          <Button onClick={beginProving}>Prove it</Button>
+                          <Button onClick={() => beginProving(false)}>
+                            Prove it
+                          </Button>
                         </>
                       )}
-                      { }
+                      {}
                     </>
                   )}
                 </div>
@@ -522,8 +522,8 @@ export const FolderCard = ({ items }: FolderCardProps) => {
               {days === 1
                 ? `${days} day, `
                 : days === 0
-                  ? ""
-                  : `${days} days, `}
+                ? ""
+                : `${days} days, `}
               {hours.toString().padStart(2, "0")}:
               {minutes.toString().padStart(2, "0")}:
               {seconds.toString().padStart(2, "0")}

@@ -1,15 +1,14 @@
 import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
-import { getLocationSignatures, getUsers, LocationSignature, User } from "@/lib/client/localStorage";
-import { Remote, wrap } from "comlink";
-import { useEffect, useRef, useState } from "react";
+import { getLocationSignatures, getUsers } from "@/lib/client/localStorage";
+import { useEffect, useState } from "react";
 
-export const useWorker = () => {
+export const useProgress = () => {
     const [db, setDB] = useState<IndexDBWrapper | null>(null);
     const [numParams, setNumParams] = useState<number>(0);
     const [numAttendees, setNumAttendees] = useState<number>(0);
     const [numFoldedAttendees, setNumFoldedAttendees] = useState<number>(0);
     const [numSpeakers, setNumSpeakers] = useState<number>(0);
-    const [numFoldedSpeakers, setNumFoldedSperakser] = useState<number>(0);
+    const [numFoldedSpeakers, setNumFoldedSpeaker] = useState<number>(0);
     const [numTalks, setFoldedTalks] = useState<number>(0);
     const [numFoldedTalks, setNumFoldedTalks] = useState<number>(0);
     const [foldingCompleted, setFoldingCompleted] = useState(false);
@@ -17,16 +16,14 @@ export const useWorker = () => {
     useEffect(() => {
         if (db) return;
         (async () => {
-            const init = async () => {
-                const db = new IndexDBWrapper();
-                await db.init();
-                setDB(db);
-            }
+            const db = new IndexDBWrapper();
+            await db.init();
+            setDB(db);
         })();
     }, []);
 
     const updateProgress = async () => {
-        if (!db || isComplete) return;
+        if (!db || foldingCompleted) return;
         // check if params is done
         if (numParams <= 9) {
             // if params not done, check # and return
@@ -65,7 +62,7 @@ export const useWorker = () => {
         setNumAttendees(attendees.length);
         setNumFoldedAttendees(numAttendeesFolded);
         setNumSpeakers(speakers.length);
-        setNumFoldedSperakser(numSpeakersFolded);
+        setNumFoldedSpeaker(numSpeakersFolded);
         setNumFoldedTalks(talks.length);
         setFoldedTalks(numTalksFolded);
 

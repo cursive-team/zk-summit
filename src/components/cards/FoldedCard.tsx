@@ -220,6 +220,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   };
 
   const beginProving = async () => {
+    setProofId(undefined);
     logClientEvent("foldedProvingStarted", {});
 
     if (numAttendees === 0 && numTalks === 0 && numSpeakers === 0) {

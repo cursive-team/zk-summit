@@ -10,6 +10,7 @@ import { GetFoldingProofResponse } from "../api/folding/proof";
 import { Spinner } from "@/components/Spinner";
 import { useWorker } from "@/hooks/useWorker";
 import Link from "next/link";
+import { fetchWithRetry } from "@/lib/client/utils";
 
 type UserProofs = {
   attendee?: {
@@ -144,14 +145,14 @@ const Folded = (): JSX.Element => {
   useEffect(() => {
     (async () => {
       // Check if proof id exists or not
-      const response = await fetch(`/api/folding/proof?proofUuid=${id}`);
+      const response = await fetchWithRetry(`/api/folding/proof?proofUuid=${id}`);
       if (response.ok) {
         // get proof data for the user
         const foldingData: GetFoldingProofResponse = await response.json();
         // get blobs for each proof type
         const proofBlobs: Map<TreeType, Blob> = new Map();
         const getProof = async (uri: string, treeType: TreeType) => {
-          const proof = await fetch(uri).then(async (res) => await res.blob());
+          const proof = await fetchWithRetry(uri).then(async (res) => await res.blob());
           proofBlobs.set(treeType, proof);
         };
         let requests = [];

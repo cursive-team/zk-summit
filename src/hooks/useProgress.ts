@@ -12,6 +12,7 @@ export const useWorker = () => {
     const [numFoldedSpeakers, setNumFoldedSperakser] = useState<number>(0);
     const [numTalks, setFoldedTalks] = useState<number>(0);
     const [numFoldedTalks, setNumFoldedTalks] = useState<number>(0);
+    const [foldingCompleted, setFoldingCompleted] = useState(false);
 
     useEffect(() => {
         if (db) return;
@@ -25,7 +26,7 @@ export const useWorker = () => {
     }, []);
 
     const updateProgress = async () => {
-        if (!db) return;
+        if (!db || isComplete) return;
         // check if params is done
         if (numParams <= 9) {
             // if params not done, check # and return
@@ -60,13 +61,21 @@ export const useWorker = () => {
 
         const talksFold = await db.getFold(TreeType.Talk);
         const numTalksFolded = talksFold ? talksFold.numFolds : 0;
-        
+
         setNumAttendees(attendees.length);
         setNumFoldedAttendees(numAttendeesFolded);
         setNumSpeakers(speakers.length);
         setNumFoldedSperakser(numSpeakersFolded);
         setNumFoldedTalks(talks.length);
         setFoldedTalks(numTalksFolded);
+
+        if (
+            attendees.length === numAttendeesFolded
+            && speakers.length === numSpeakersFolded
+            && talks.length === numTalksFolded
+        ) {
+            setFoldingCompleted(true);
+        }
     }
 
     return {
@@ -78,5 +87,6 @@ export const useWorker = () => {
         numFoldedSpeakers,
         numTalks,
         numFoldedTalks,
+        foldingCompleted
     };
 };

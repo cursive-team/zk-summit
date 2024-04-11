@@ -219,7 +219,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     return proofUuid;
   };
 
-  const beginProving = async () => {
+  const beginProving = async (regenerate = false) => {
     setProofId(undefined);
     logClientEvent("foldedProvingStarted", {});
 
@@ -229,14 +229,17 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     }
     setProvingStarted(true);
 
+    const db = new IndexDBWrapper();
+    await db.init();
+
+    if (regenerate)
+      await db.logoutIndexDB()
+
     // ensure all proofs are folded
     await work(
       Object.values(getUsers()),
       Object.values(getLocationSignatures())
     );
-
-    const db = new IndexDBWrapper();
-    await db.init();
 
     let proofUris: Map<TreeType, ProofData> = new Map();
     const finalizeProof = async (treeType: TreeType) => {
@@ -381,6 +384,14 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                               {"View Proof"}
                             </Button>
                           </Link>
+                          <Link href="">
+                            <Button
+                              onClick={beginProving}
+                              variant="white"
+                            >
+                              {"Regenerate Proof From Scratch"}
+                            </Button>
+                          </Link>
                           <Link href={getTwitterShareUrl()} target="_blank">
                             <Button
                               onClick={() =>
@@ -393,12 +404,8 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                               {"Share on Twitter"}
                             </Button>
                           </Link>
-                          <Button 
-                            onClick={beginProving}
-                            variant="white"
-                          >
-                            {"Regenerate Proof"}
-                          </Button>
+                          
+
                         </>
                       )}
                       {!proofId && provingStarted && (
@@ -436,7 +443,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           <Button onClick={beginProving}>Prove it</Button>
                         </>
                       )}
-                      {}
+                      { }
                     </>
                   )}
                 </div>
@@ -515,8 +522,8 @@ export const FolderCard = ({ items }: FolderCardProps) => {
               {days === 1
                 ? `${days} day, `
                 : days === 0
-                ? ""
-                : `${days} days, `}
+                  ? ""
+                  : `${days} days, `}
               {hours.toString().padStart(2, "0")}:
               {minutes.toString().padStart(2, "0")}:
               {seconds.toString().padStart(2, "0")}

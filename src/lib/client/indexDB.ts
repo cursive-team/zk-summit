@@ -286,22 +286,14 @@ export class IndexDBWrapper {
     } else {
       throw Error("DB not initialized");
     }
-    
+
   }
 
   async logoutIndexDB() {
     if (this.db) {
-      const tx = this.db.transaction(
-        [
-          INDEXDB_STORES.FOLDS,
-          INDEXDB_STORES.LOCKS,
-        ],
-        "readwrite"
-      );
+      const tx = this.db.transaction(INDEXDB_STORES.FOLDS, "readwrite");
       const foldsStore = tx.objectStore(INDEXDB_STORES.FOLDS);
-      const locksStore = tx.objectStore(INDEXDB_STORES.LOCKS);
       await foldsStore.clear();
-      await locksStore.clear();
     }
   }
 }

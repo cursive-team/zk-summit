@@ -96,7 +96,8 @@ export const FOLDED_MOCKS: FolderCardProps['items'] = [
 ];
 
 const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
-  const { foldingCompleted, numFoldedAttendees, numParams, updateProgress } = useProgress();
+  const { foldingCompleted, numFoldedAttendees, numParams, updateProgress } =
+    useProgress();
   const { work, finalize, folding, obfuscating } = useWorker();
   const [finalizedProgress, setFinalizedProgress] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -221,7 +222,9 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     return proofUuid;
   };
 
-  const beginProving = async () => {
+  // Regenerate indicates if proof should be regenerated from scratch
+  const beginProving = async (regenerate: boolean) => {
+    setProofId(undefined);
     logClientEvent('foldedProvingStarted', {});
 
     if (numAttendees === 0 && numTalks === 0 && numSpeakers === 0) {
@@ -230,14 +233,16 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     }
     setProvingStarted(true);
 
+    const db = new IndexDBWrapper();
+    await db.init();
+
+    if (regenerate) await db.logoutIndexDB();
+
     // ensure all proofs are folded
     await work(
       Object.values(getUsers()),
       Object.values(getLocationSignatures())
     );
-
-    const db = new IndexDBWrapper();
-    await db.init();
 
     let proofUris: Map<TreeType, ProofData> = new Map();
     const finalizeProof = async (treeType: TreeType) => {
@@ -396,6 +401,14 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                               {'View Proof'}
                             </Button>
                           </Link>
+                          <Link href=''>
+                            <Button
+                              onClick={() => beginProving(true)}
+                              variant='white'
+                            >
+                              {'Regenerate Proof From Scratch'}
+                            </Button>
+                          </Link>
                           <Link href={getTwitterShareUrl()} target='_blank'>
                             <Button
                               onClick={() =>
@@ -454,7 +467,9 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                               {![2, 3, 4].includes(itemIndex) && description(0)}
                             </span>
                           )}
-                          <Button onClick={beginProving}>Prove it</Button>
+                          <Button onClick={() => beginProving(false)}>
+                            Prove it
+                          </Button>
                         </>
                       )}
                       {}

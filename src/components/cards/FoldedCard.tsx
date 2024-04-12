@@ -29,7 +29,6 @@ import { loadMessages } from '@/lib/client/jubSignalClient';
 import { useWorker } from '@/hooks/useWorker';
 import { IndexDBWrapper, TreeType } from '@/lib/client/indexDB';
 import { Spinner } from '../Spinner';
-import { useProgress } from '@/hooks/useProgress';
 
 dayjs.extend(duration);
 const UNFOLDED_DATE = '2024-04-10 15:59:59';
@@ -113,6 +112,16 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   const [proofId, setProofId] = useState<string>();
 
   useEffect(() => {
+    (async () => {
+      const db = new IndexDBWrapper();
+      await db.init();
+      const attendeeFold = await db.getFold(TreeType.Attendee);
+      setNumAttendeesFolded(attendeeFold ? attendeeFold.numFolds : 0);
+      const speakerFold = await db.getFold(TreeType.Speaker);
+      setNumSpeakersFolded(speakerFold ? speakerFold.numFolds : 0);
+      const talkFold = await db.getFold(TreeType.Talk);
+      setNumTalksFolded(talkFold ? talkFold.numFolds : 0);
+    })()
     const users = getUsers();
     const talks = getLocationSignatures();
     // const foldedProof = getFoldedProof();
@@ -125,9 +134,6 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     setNumSpeakers(userSignatures.filter((user) => user.isSpeaker).length);
     setNumTalks(Object.keys(talks).length);
 
-    // if (foldedProof) {
-    //   setProofId(foldedProof.pfId);
-    // }
   }, []);
 
   const pagination = {
@@ -301,6 +307,8 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
   const progress = useMemo(() => {
     let progressPercent = 0;
     let progressText = '';
+    console.log("numAttendees", numAttendees);
+    console.log("numFoldedAttendees", numAttendeesFolded);
     if (numParamsDownloaded < 10) {
       progressPercent = numParamsDownloaded / 10;
       progressText = `Downloaded ${numParamsDownloaded} out of 10 chunked params`;

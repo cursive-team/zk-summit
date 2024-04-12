@@ -96,8 +96,7 @@ export const FOLDED_MOCKS: FolderCardProps['items'] = [
 ];
 
 const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
-  const { foldingCompleted, numFoldedAttendees, numParams, updateProgress } =
-    useProgress();
+  const { foldingCompleted, progress, updateProgress } = useProgress();
   const { work, finalize, folding, obfuscating } = useWorker();
   const [finalizedProgress, setFinalizedProgress] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -300,12 +299,10 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
       } else {
         await updateProgress();
       }
-    }, 5000);
+    }, 2500);
 
     return () => clearInterval(interval);
-  }, [foldingCompleted]);
-
-  console.log('Folded attendees: ', numFoldedAttendees);
+  }, [foldingCompleted, updateProgress]);
 
   return (
     <main className='relative'>
@@ -432,18 +429,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                             {'This may take a minute. Please be patient!'}
                           </span>
                           <Spinner />
-                          {numParams !== 10 && (
-                            <div>
-                              <div>Downloding params</div>
-                              <div className='relative'>
-                                <Card.Progress
-                                  style={{
-                                    width: `${numParams / 10}%`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          )}
+                          {progress}
                         </>
                       )}
                       {!proofId && !provingStarted && (

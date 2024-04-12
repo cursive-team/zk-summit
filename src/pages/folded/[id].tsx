@@ -1,16 +1,16 @@
-import { Button } from "@/components/Button";
-import { createFlower } from "@/lib/client/flower";
-import { useScripts } from "@/hooks/useScripts";
-import { useEffect, useMemo, useState } from "react";
-import { Icons } from "@/components/Icons";
-import { Card } from "@/components/cards/Card";
-import { useParams } from "next/navigation";
-import { IndexDBWrapper, TreeType } from "@/lib/client/indexDB";
-import { GetFoldingProofResponse } from "../api/folding/proof";
-import { Spinner } from "@/components/Spinner";
-import { useWorker } from "@/hooks/useWorker";
-import Link from "next/link";
-import { fetchWithRetry } from "@/lib/client/utils";
+import { Button } from '@/components/Button';
+import { createFlower } from '@/lib/client/flower';
+import { useScripts } from '@/hooks/useScripts';
+import { useEffect, useMemo, useState } from 'react';
+import { Icons } from '@/components/Icons';
+import { Card } from '@/components/cards/Card';
+import { useParams } from 'next/navigation';
+import { IndexDBWrapper, TreeType } from '@/lib/client/indexDB';
+import { GetFoldingProofResponse } from '../api/folding/proof';
+import { Spinner } from '@/components/Spinner';
+import { useWorker } from '@/hooks/useWorker';
+import Link from 'next/link';
+import { fetchWithRetry } from '@/lib/client/utils';
 
 type UserProofs = {
   attendee?: {
@@ -57,7 +57,7 @@ const Folded = (): JSX.Element => {
       for (let i = chunkIndex; i < 10; i++) {
         const chunkURI = `${process.env.NEXT_PUBLIC_NOVA_BUCKET_URL}/params_${i}.gz`;
         const chunk = await fetch(chunkURI, {
-          headers: { "Content-Type": "application/x-binary" },
+          headers: { 'Content-Type': 'application/x-binary' },
         }).then(async (res) => await res.blob());
         await db.addChunk(i, chunk);
         setDownloadingParams((prev) => prev + 10);
@@ -120,11 +120,11 @@ const Folded = (): JSX.Element => {
   const stats = useMemo(() => {
     if (!user) return [];
     const attendeeCount = user.attendeeProofCount ?? 0;
-    const attendeeText = `Connection${attendeeCount === 1 ? "" : "s"} made`;
+    const attendeeText = `Connection${attendeeCount === 1 ? '' : 's'} made`;
     const speakerCount = user.speakerProofCount ?? 0;
-    const speakerText = `Speaker${speakerCount === 1 ? "" : "s"} met`;
+    const speakerText = `Speaker${speakerCount === 1 ? '' : 's'} met`;
     const talkCount = user.talkProofCount ?? 0;
-    const talkText = `Talk${talkCount === 1 ? "" : "s"} attended`;
+    const talkText = `Talk${talkCount === 1 ? '' : 's'} attended`;
     return [
       { count: talkCount, title: talkText },
       { count: attendeeCount, title: attendeeText },
@@ -135,7 +135,7 @@ const Folded = (): JSX.Element => {
   useEffect(() => {
     if (!isLoaded || !user) return;
     const stage = new window.createjs.Stage(
-      document.getElementById("propic-modal")
+      document.getElementById('propic-modal')
     );
     const center_x = stage.canvas.width / 2;
     const center_y = stage.canvas.height / 2;
@@ -145,14 +145,18 @@ const Folded = (): JSX.Element => {
   useEffect(() => {
     (async () => {
       // Check if proof id exists or not
-      const response = await fetchWithRetry(`/api/folding/proof?proofUuid=${id}`);
+      const response = await fetchWithRetry(
+        `/api/folding/proof?proofUuid=${id}`
+      );
       if (response.ok) {
         // get proof data for the user
         const foldingData: GetFoldingProofResponse = await response.json();
         // get blobs for each proof type
         const proofBlobs: Map<TreeType, Blob> = new Map();
         const getProof = async (uri: string, treeType: TreeType) => {
-          const proof = await fetchWithRetry(uri).then(async (res) => await res.blob());
+          const proof = await fetchWithRetry(uri).then(
+            async (res) => await res.blob()
+          );
           proofBlobs.set(treeType, proof);
         };
         let requests = [];
@@ -196,7 +200,7 @@ const Folded = (): JSX.Element => {
         setUser(foldingData);
       } else {
         const { error } = await response.json();
-        if (error === "Proof not found") {
+        if (error === 'Proof not found') {
           // TODO: User not found
         }
       }
@@ -208,7 +212,7 @@ const Folded = (): JSX.Element => {
 
   if (isProofLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
+      <div className='flex flex-col items-center justify-center h-full'>
         <Spinner />
         <div>Loading proof...</div>
       </div>
@@ -216,45 +220,45 @@ const Folded = (): JSX.Element => {
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="p-4">
-        <Icons.Cursive color="#4015EC" />
+    <div className='flex flex-col items-center'>
+      <div className='p-4'>
+        <Icons.Cursive color='#4015EC' />
       </div>
-      <div className="p-16 pt-0 max-w-[390px] w-full">
-        <div className="flex flex-col items-center gap-2">
+      <div className='p-16 pt-0 max-w-[390px] w-full'>
+        <div className='flex flex-col items-center gap-2'>
           <canvas
-            className="artwork-webgl flex p-0 m-0 rounded-[8px]"
-            id="propic-modal"
+            className='artwork-webgl flex p-0 m-0 rounded-[8px]'
+            id='propic-modal'
             height={flowerSize}
             width={flowerSize}
           />
         </div>
-        <div className="text-center">
-          <div className="text-primary text-3xl">{user?.userName}</div>
-          <div className="mt-2 text-primary text-2xl">went to ZK Summit 11</div>
+        <div className='text-center'>
+          <div className='text-primary text-3xl'>{user?.userName}</div>
+          <div className='mt-2 text-primary text-2xl'>went to ZK Summit 11</div>
         </div>
-        <div className="mt-4">
+        <div className='mt-4'>
           {stats.map((stat, index) => (
             <div
               key={index}
               className={`border ${
-                index ? "border-t-0" : "border-t"
+                index ? 'border-t-0' : 'border-t'
               }  border-primary flex gap-4 items-center p-4 text-primary`}
             >
-              <div className="bg-white border border-primary px-1.5 py-0.5">
+              <div className='bg-white border border-primary px-1.5 py-0.5'>
                 {stat.count}
               </div>
-              <div className="font-bold">{stat.title}</div>
+              <div className='font-bold'>{stat.title}</div>
             </div>
           ))}
         </div>
-        <div className="mt-4">
+        <div className='mt-4'>
           {dowloadingParams ? (
-            <div className="text-center">
-              <div className="mb-2">
+            <div className='text-center'>
+              <div className='mb-2'>
                 Downloading params {Math.floor(dowloadingParams) / 10} of 10
               </div>
-              <div className="relative">
+              <div className='relative'>
                 <Card.Progress
                   style={{
                     width: `${dowloadingParams}%`,
@@ -263,19 +267,19 @@ const Folded = (): JSX.Element => {
               </div>
             </div>
           ) : verified ? (
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex gap-2 items-center font-bold text-primary">
-                <Icons.checkedCircle stroke="#4015EC" />
+            <div className='flex flex-col items-center gap-4'>
+              <div className='flex gap-2 items-center font-bold text-primary'>
+                <Icons.checkedCircle stroke='#4015EC' />
                 <div>Valid proof</div>
               </div>
               <a
-                className="font-bold text-primary underline text-center"
-                href="https://github.com/cursive-team/zk-summit?tab=readme-ov-file#zk-summit-folded"
+                className='font-bold text-primary underline text-center'
+                href='https://github.com/cursive-team/zk-summit?tab=readme-ov-file#zk-summit-folded'
               >
                 How was this proof generated?
               </a>
               <Link
-                className="font-bold text-primary underline text-center"
+                className='font-bold text-primary underline text-center'
                 href={`/folded/proof/${id}`}
               >
                 View proof
@@ -286,28 +290,28 @@ const Folded = (): JSX.Element => {
               {isVerifying ? (
                 <>
                   {isDownloadingParams ? (
-                    <div className="text-center">
-                      <div className="mb-2">
-                        Downloading public params {dowloadingParams / 10} of{" "}
+                    <div className='text-center'>
+                      <div className='mb-2'>
+                        Downloading public params {dowloadingParams / 10} of{' '}
                         {10}...
                       </div>
-                      <div className="relative">
+                      <div className='relative'>
                         <Card.Progress
                           style={{
-                            width: `${dowloadingParams / 10}%`,
+                            width: `${(dowloadingParams / 10) * 100}%`,
                           }}
                         />
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center">
-                      <div className="mb-2">
+                    <div className='text-center'>
+                      <div className='mb-2'>
                         Verifying proof {verifyingCount} of {numToVerify}...
                       </div>
-                      <div className="relative">
+                      <div className='relative'>
                         <Card.Progress
                           style={{
-                            width: `${verifyingCount / numToVerify}%`,
+                            width: `${(verifyingCount / numToVerify) * 100}%`,
                           }}
                         />
                       </div>
@@ -316,7 +320,7 @@ const Folded = (): JSX.Element => {
                 </>
               ) : (
                 <Button onClick={() => handleVerify()}>
-                  {isProofLoading ? "Loading Proof..." : "Verify Proof"}
+                  {isProofLoading ? 'Loading Proof...' : 'Verify Proof'}
                 </Button>
               )}
             </div>

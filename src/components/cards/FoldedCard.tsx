@@ -7,7 +7,7 @@ import 'swiper/css/effect-fade';
 import 'swiper/css/pagination';
 import { classed } from '@tw-classed/react';
 import { Card } from './Card';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/client/utils';
 import { Icons } from '../Icons';
 import {
@@ -96,13 +96,16 @@ export const FOLDED_MOCKS: FolderCardProps['items'] = [
 ];
 
 const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
-  const { foldingCompleted, progress, updateProgress } = useProgress();
-  const { work, finalize, folding, obfuscating } = useWorker();
-  const [finalizedProgress, setFinalizedProgress] = useState(0);
+  // const { foldingCompleted, progress, updateProgress } = useProgress();
+  const { work, worker, finalize } = useWorker();
   const [activeIndex, setActiveIndex] = useState(0);
   const [numAttendees, setNumAttendees] = useState(0);
+  const [numAttendeesFolded, setNumAttendeesFolded] = useState(0);
+  const [numParamsDownloaded, setNumParamsDownloaded] = useState(0);
   const [numTalks, setNumTalks] = useState(0);
+  const [numTalksFolded, setNumTalksFolded] = useState(0);
   const [numSpeakers, setNumSpeakers] = useState(0);
+  const [numSpeakersFolded, setNumSpeakersFolded] = useState(0);
   const [provingStarted, setProvingStarted] = useState(false);
 
   const [numTotalProvingRequirements, setNumTotalProvingRequirements] =
@@ -115,7 +118,10 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     // const foldedProof = getFoldedProof();
 
     const userSignatures = Object.values(users).filter((user) => user.sig);
-    setNumAttendees(userSignatures.filter((user) => !user.isSpeaker).length);
+    setNumAttendees(
+      userSignatures.filter((user) => !user.isSpeaker && user.pkId !== '0')
+        .length
+    );
     setNumSpeakers(userSignatures.filter((user) => user.isSpeaker).length);
     setNumTalks(Object.keys(talks).length);
 
@@ -257,7 +263,6 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
         console.log(`No membership proof of type ${treeType} was ever made`);
         return;
       }
-      setFinalizedProgress((prev) => prev + 1);
       console.log('Finalized proof for treeType: ', treeType);
       // get the proof from the db
       const proofData = await db.getFold(treeType);
@@ -292,17 +297,72 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
     setProvingStarted(false);
   };
 
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      if (foldingCompleted) {
-        clearInterval(interval);
-      } else {
-        await updateProgress();
-      }
-    }, 2500);
+  const progress = useMemo(() => {
+    let progressPercent = 0;
+    let progressText = '';
+    if (numParamsDownloaded < 10) {
+      progressPercent = numParamsDownloaded / 10;
+      progressText = `Downloaded ${numParamsDownloaded} out of 10 chunked params`;
+    } else if (numAttendeesFolded !== numAttendees) {
+      progressPercent = numAttendeesFolded / numAttendees;
+      progressText = `Folded ${numAttendeesFolded} of ${numAttendees} attendees`;
+    } else if (numSpeakersFolded !== numSpeakers) {
+      progressPercent = numSpeakersFolded / numSpeakers;
+      progressText = `Folded ${numSpeakersFolded} of ${numSpeakers} speakers`;
+    } else if (numTalksFolded !== numTalks) {
+      progressPercent = numTalksFolded / numTalks;
+      progressText = `Folded ${numTalksFolded} of ${numTalks} talks`;
+    } else if (numTalksFolded === numTalks) {
+      progressPercent = 1;
+      progressText = `Finalizing proof`;
+    }
 
-    return () => clearInterval(interval);
-  }, [foldingCompleted, updateProgress]);
+    return (
+      <div>
+        <div className='mb-2'>{progressText}</div>
+        <div className='relative'>
+          <Card.Progress
+            style={{
+              width: `${!isNaN(progressPercent) ? progressPercent * 100 : 0}%`,
+            }}
+          />
+        </div>
+      </div>
+    );
+  }, [
+    numAttendees,
+    numAttendeesFolded,
+    numParamsDownloaded,
+    numSpeakers,
+    numSpeakersFolded,
+    numTalks,
+    numTalksFolded,
+  ]);
+
+  useEffect(() => {
+    // If num params is 0 then fetch previously downloaded
+    if (!numParamsDownloaded) {
+      (async () => {
+        const db = new IndexDBWrapper();
+        await db.init();
+        const downloaded = await db.countChunks();
+        setNumParamsDownloaded(downloaded);
+      })();
+    }
+    if (!worker) return;
+    worker.onmessage = async (event) => {
+      const { updateType } = event.data;
+      if (updateType === 'paramDownloaded') {
+        setNumParamsDownloaded((prev) => prev + 1);
+      } else if (updateType === 'attendeeFolded') {
+        setNumAttendeesFolded((prev) => prev + 1);
+      } else if (updateType === 'speakerFolded') {
+        setNumSpeakersFolded((prev) => prev + 1);
+      } else if (updateType === 'talkFolded') {
+        setNumTalksFolded((prev) => prev + 1);
+      }
+    };
+  }, [worker]);
 
   return (
     <main className='relative'>
@@ -400,7 +460,12 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
                           </Link>
                           <Link href=''>
                             <Button
-                              onClick={() => beginProving(true)}
+                              onClick={() => {
+                                setNumAttendeesFolded(0);
+                                setNumSpeakersFolded(0);
+                                setNumTalksFolded(0);
+                                beginProving(true);
+                              }}
                               variant='white'
                             >
                               {'Regenerate Proof From Scratch'}

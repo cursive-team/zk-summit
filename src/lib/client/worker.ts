@@ -175,6 +175,7 @@ async function fold(
         return;
       }
     }
+    postMessage({ index: 0, updateType: `${treeType}Folded` });
   }
 
   // fold sequentially
@@ -209,6 +210,7 @@ async function fold(
         return;
       }
     }
+    postMessage({ index: i, updateType: `${treeType}Folded` });
   }
   return newLock;
 }
@@ -288,7 +290,7 @@ async function verify(proofBlob: Blob, numFolded: number, treeType: TreeType): P
   let proof = await membershipFolder.decompressProof(
     new Uint8Array(await proofBlob.arrayBuffer())
   );
-  
+
   // verify proof
   try {
     await membershipFolder.verify(proof, numFolded, treeType, true);
@@ -336,6 +338,7 @@ async function downloadParams(lock: number): Promise<number | undefined> {
         return;
       }
     }
+    postMessage({ index: i, updateType: 'paramDownloaded' });
   }
   return newLock;
 }

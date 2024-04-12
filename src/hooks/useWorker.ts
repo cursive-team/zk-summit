@@ -62,6 +62,7 @@ export const useWorker = () => {
     work,
     finalize,
     verify,
+    worker,
     obfuscating,
     folding,
     completed,

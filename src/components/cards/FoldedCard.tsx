@@ -229,6 +229,7 @@ const FoldedCardSteps = ({ items = [], onClose }: FolderCardProps) => {
 
   // Regenerate indicates if proof should be regenerated from scratch
   const beginProving = async (regenerate: boolean) => {
+    if (provingStarted) return true;
     setProofId(undefined);
     logClientEvent('foldedProvingStarted', {});
 
